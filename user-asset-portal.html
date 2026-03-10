@@ -423,94 +423,26 @@ const ini = (f,l) => ((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase
 const uid = () => 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
 const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'}) : '—';
 
-/* ══ DATA ══ */
-let users = [
-  {id:'u1',first:'Ajay Christopher',last:'Hubert',email:'ajay.christopher.hubert@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u2',first:'Karthi',last:'',email:'karthi@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u3',first:'Ahamad',last:'Riyas',email:'ahamad.riyas@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u4',first:'Kavipriya',last:'',email:'kavipriya@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u5',first:'Ananya',last:'',email:'ananya@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u6',first:'Shunmugavel',last:'',email:'shunmugavel@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u7',first:'Prasanna',last:'Kumar',email:'prasanna.kumar@terzocloud.com',role:'Viewer',status:'Active',dept:'QA',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u8',first:'Hariharan',last:'',email:'hariharan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u9',first:'Paventhan',last:'',email:'paventhan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u10',first:'Vinotha',last:'',email:'vinotha@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u11',first:'Mythilipriya',last:'',email:'mythilipriya@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u12',first:'Divya',last:'R',email:'divya.r@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u13',first:'Dineshkumar',last:'V',email:'dineshkumar.v@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u14',first:'Dinesh',last:'B',email:'dinesh.b@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u15',first:'Vasanth',last:'Pandian',email:'vasanth.pandian@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u16',first:'Mohanamala',last:'',email:'mohanamala@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u17',first:'Divya',last:'M',email:'divya.m@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u18',first:'Gowtham',last:'V',email:'gowtham.v@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u19',first:'Iyyappan',last:'',email:'iyyappan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u20',first:'Ragav',last:'',email:'ragav@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u21',first:'Harshni',last:'',email:'harshni@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u22',first:'Priyadharshini',last:'',email:'priyadharshini@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u23',first:'Aswini',last:'',email:'aswini@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u24',first:'Dharshini',last:'',email:'dharshini@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u25',first:'Kavimitraa',last:'',email:'kavimitraa@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u26',first:'Nivetha',last:'',email:'nivetha@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u27',first:'Dhanusha',last:'',email:'dhanusha@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u28',first:'Sowmya',last:'',email:'sowmya@terzocloud.com',role:'Viewer',status:'Active',dept:'QA',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u29',first:'Harish',last:'',email:'harish@terzocloud.com',role:'Viewer',status:'Active',dept:'Customer Support',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u30',first:'Praveen',last:'M',email:'praveen.m@terzocloud.com',role:'Admin',status:'Active',dept:'IT',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u31',first:'Karthick',last:'R',email:'karthick.r@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u32',first:'Leo',last:'Deepak',email:'leo.deepak@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u33',first:'Gowtham',last:'Manohar',email:'gowtham.manohar@terzocloud.com',role:'Manager',status:'Active',dept:'HR',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u34',first:'Himalaya',last:'',email:'himalaya@terzocloud.com',role:'Manager',status:'Active',dept:'Product',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u35',first:'Yogesh',last:'',email:'yogesh@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
-  {id:'u36',first:'Mohanraja',last:'',email:'mohanraja@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u37',first:'Urvasi',last:'',email:'urvasi@terzocloud.com',role:'Viewer',status:'Active',dept:'Accounts',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u38',first:'Pradeep',last:'',email:'pradeep@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u39',first:'Niranjan',last:'',email:'niranjan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-  {id:'u40',first:'Revathi',last:'',email:'revathi@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
-];
+/* ── Data – loaded from API ── */
+let users = [];
+let assets = [];
+const API = 'http://localhost:3000/api';
 
-let assets = [
-  {id:'a01',csvId:'A-01',name:'Macbook Pro 14',type:'Laptop',serial:'KP93V707J0',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u1',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a02',csvId:'A-02',name:'Macbook Pro 14',type:'Laptop',serial:'GF4R65H4DH',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u2',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a03',csvId:'A-03',name:'Macbook Pro 14',type:'Laptop',serial:'L043T093TR',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u3',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a04',csvId:'A-04',name:'Macbook Pro 14',type:'Laptop',serial:'RVM9Q97FJD',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u4',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a05',csvId:'A-05',name:'Macbook Pro 14',type:'Laptop',serial:'G59R0CG61T',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u5',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a06',csvId:'A-06',name:'Macbook Pro 14',type:'Laptop',serial:'XVGHD2R64D',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u6',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a07',csvId:'A-07',name:'Macbook Pro 14',type:'Laptop',serial:'X4L9414L27',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u7',location:'Chennai',dept:'QA',vendor:'Sniper Systems',notes:''},
-  {id:'a08',csvId:'A-08',name:'Macbook Pro 14',type:'Laptop',serial:'P4Y43FNJWR',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u8',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a09',csvId:'A-09',name:'Macbook Pro 14',type:'Laptop',serial:'FQKJ3X4X13',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u9',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a10',csvId:'A-10',name:'Macbook Pro 14',type:'Laptop',serial:'JQRXPG4X5Y',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'Available',assignTo:'',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:'MLB Replaced & Speaker 9/01/2026 (Murali)'},
-  {id:'a11',csvId:'A-11',name:'Macbook Pro 14',type:'Laptop',serial:'GR242J52P1',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u11',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a12',csvId:'A-12',name:'Macbook Pro 14',type:'Laptop',serial:'LQJ326N9Y5',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u12',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a13',csvId:'A-13',name:'Macbook Pro 14',type:'Laptop',serial:'SQ95WC16JDP',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u13',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a14',csvId:'A-14',name:'Macbook Pro 14',type:'Laptop',serial:'SC7XG64K4M0',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u14',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a15',csvId:'A-15',name:'Macbook Pro 14',type:'Laptop',serial:'ST6DP29K320',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u15',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a16',csvId:'A-16',name:'Macbook Pro 14',type:'Laptop',serial:'KG4P92VL2F',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u16',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:'Display, battery, speaker replaced 03/10/2023'},
-  {id:'a17',csvId:'A-17',name:'Macbook Pro 14',type:'Laptop',serial:'SPYH4X30W36',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u17',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a18',csvId:'A-18',name:'Macbook Pro 14',type:'Laptop',serial:'X1YJ2WGFTH',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u18',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:'MLB Replaced 30/01/2024'},
-  {id:'a19',csvId:'A-19',name:'Macbook Pro 14',type:'Laptop',serial:'WXQG52LV27',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u19',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a20',csvId:'A-20',name:'Macbook Pro 14',type:'Laptop',serial:'K06D165GJF',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u20',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a21',csvId:'A-21',name:'Macbook Pro 13',type:'Laptop',serial:'SFVHFJ132Q05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u21',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a22',csvId:'A-22',name:'Macbook Pro 13',type:'Laptop',serial:'SFVHFJ13MQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u22',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a23',csvId:'A-23',name:'Macbook Pro 13',type:'Laptop',serial:'SFVFG3WSPQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u23',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a24',csvId:'A-24',name:'Macbook Pro 13',type:'Laptop',serial:'SFVFFHMRQQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u24',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a25',csvId:'A-25',name:'Macbook Pro 13',type:'Laptop',serial:'SFVFFJ2YKQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u25',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a26',csvId:'A-26',name:'Macbook Pro 13',type:'Laptop',serial:'FVHFJ157Q05D',brand:'Apple / Intel i5',desc:'8GB RAM - 128GB SSD Intel i5',status:'In-Use',assignTo:'u26',location:'Chennai',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a27',csvId:'A-27',name:'Macbook Pro 13',type:'Laptop',serial:'FVFFFL1UQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u27',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a28',csvId:'A-28',name:'Macbook Pro 13',type:'Laptop',serial:'FVFFHMRBQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u28',location:'Coimbatore',dept:'QA',vendor:'Sniper Systems',notes:''},
-  {id:'a29',csvId:'A-29',name:'Macbook Air 13',type:'Laptop',serial:'C02F29NWQ6L7',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u29',location:'Chennai',dept:'Customer Support',vendor:'Sniper Systems',notes:''},
-  {id:'a30',csvId:'A-30',name:'Macbook Air 13',type:'Laptop',serial:'SC02G37NBQ6L4',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u30',location:'Chennai',dept:'IT',vendor:'Sniper Systems',notes:''},
-  {id:'a31',csvId:'A-31',name:'Macbook Air 13',type:'Laptop',serial:'SFVFJK7D0Q6L4',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u31',location:'Chennai',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a32',csvId:'A-32',name:'Macbook Air 13',type:'Laptop',serial:'SFVFJK743Q6L4',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u32',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a33',csvId:'A-33',name:'Macbook Air 13',type:'Laptop',serial:'SDY2VLXJ6MH',brand:'Apple / M2',desc:'8GB RAM - 256GB SSD M2',status:'In-Use',assignTo:'u33',location:'Chennai',dept:'HR',vendor:'Sniper Systems',notes:''},
-  {id:'a34',csvId:'A-34',name:'Macbook Air 13',type:'Laptop',serial:'SK9242NXCJ3',brand:'Apple / M2',desc:'8GB RAM - 256GB SSD M2',status:'In-Use',assignTo:'u34',location:'Chennai',dept:'Product',vendor:'Sniper Systems',notes:''},
-  {id:'a35',csvId:'A-35',name:'Macbook Air 13',type:'Laptop',serial:'C0XCLQ1WR1',brand:'Apple / M2',desc:'8GB RAM - 256GB SSD M2',status:'In-Use',assignTo:'u35',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
-  {id:'a36',csvId:'A-36',name:'Macbook Pro 15',type:'Laptop',serial:'C02XH82KJG5L',brand:'Apple / Intel i9',desc:'16GB RAM - 512GB SSD Intel i9',status:'In-Use',assignTo:'u36',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a37',csvId:'A-37',name:'Lenovo Ideapad',type:'Laptop',serial:'PG02HQZX',brand:'Lenovo / AMD R5',desc:'8GB RAM - 512GB SSD AMD R5',status:'In-Use',assignTo:'u30',location:'Chennai',dept:'IT',vendor:'—',notes:''},
-  {id:'a38',csvId:'A-38',name:'Lenovo Ideapad',type:'Laptop',serial:'PF34LNF2',brand:'Lenovo / AMD R5',desc:'8GB RAM - 512GB SSD AMD R5',status:'In-Use',assignTo:'u37',location:'Chennai',dept:'Accounts',vendor:'—',notes:''},
-  {id:'a39',csvId:'A-39',name:'Macbook Air 13',type:'Laptop',serial:'SCPF9R49RXV',brand:'Apple / M4',desc:'24GB RAM - 512GB SSD M4',status:'In-Use',assignTo:'u38',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a40',csvId:'A-40',name:'Macbook Pro 16',type:'Laptop',serial:'SJYCRWJQ9DW',brand:'Apple / M4 Pro',desc:'24GB RAM - 512GB SSD M4 Pro',status:'In-Use',assignTo:'u36',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
-  {id:'a41',csvId:'A-41',name:'Macbook Pro 14',type:'Laptop',serial:'J73DKJ34PP',brand:'Apple / M4 Pro',desc:'24GB RAM - 512GB SSD M4 Pro',status:'In-Use',assignTo:'u39',location:'Chennai',dept:'Engineering',vendor:'Apple',notes:''},
-  {id:'a42',csvId:'A-42',name:'Macbook Pro 15',type:'Laptop',serial:'J6R7D6Y6LF',brand:'Apple / M4 Pro',desc:'24GB RAM - 512GB SSD M4 Pro',status:'In-Use',assignTo:'u40',location:'Chennai',dept:'Engineering',vendor:'—',notes:''},
-];
+async function loadData(){
+  try {
+    const [us, as] = await Promise.all([
+      fetch(`${API}/users`).then(r=>r.json()),
+      fetch(`${API}/assets`).then(r=>r.json()),
+    ]);
+    users  = us;
+    assets = as.map(a=>({...a, assignTo: a.assignedTo||''}));
+    renderAll();
+  } catch(e){
+    console.error('Failed to load data:', e);
+    showToast('Could not connect to server','danger');
+  }
+}
+
 
 let currentPage='dashboard', userPage=1, assetPage=1, searchQ='';
 const PAGE_SIZE=10;
@@ -721,9 +653,12 @@ function renderAssignments(){
   }).join('');
 }
 
-function unassign(id){
-  const a=assets.find(x=>x.id===id);
-  if(a){ a.assignTo=''; a.status='Available'; showToast('Asset unassigned'); renderAll(); }
+async function unassign(id){
+  try {
+    await fetch(`${API}/assets/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({assignedTo:null,status:'Available'})});
+    showToast('Asset unassigned'); await loadData();
+  } catch(e){ showToast('Unassign failed','danger'); }
 }
 
 /* ══ PAGINATION ══ */
@@ -761,7 +696,7 @@ function openUserModal(u=null){
 
 function editUser(id){ openUserModal(users.find(u=>u.id===id)); }
 
-function saveUser(){
+async function saveUser(){
   const first=document.getElementById('userFirst').value.trim();
   const email=document.getElementById('userEmail').value.trim();
   if(!first||!email){ showToast('First name and email are required','danger'); return; }
@@ -769,18 +704,23 @@ function saveUser(){
   const data={ first,last:document.getElementById('userLast').value.trim(),email,
     dept:document.getElementById('userDept').value,role:document.getElementById('userRole').value,
     location:document.getElementById('userLocation').value,status:document.getElementById('userStatus').value,
-    phone:document.getElementById('userPhone').value.trim(),
-    joined:id?users.find(u=>u.id===id)?.joined:new Date().toISOString().slice(0,10) };
-  if(id){ Object.assign(users.find(u=>u.id===id),data); showToast('User updated','success'); }
-  else { users.push({id:uid(),...data}); showToast('User added','success'); }
-  closeModal(); renderAll();
+    phone:document.getElementById('userPhone').value.trim() };
+  try {
+    const res = id
+      ? await fetch(`${API}/users/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      : await fetch(`${API}/users`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
+    showToast(id?'User updated':'User added','success');
+    closeModal(); await loadData();
+  } catch(e){ showToast(e.message,'danger'); }
 }
 
 function deleteUser(id){
-  openConfirm('Delete User','This will permanently remove the user and unassign their assets.',()=>{
-    users=users.filter(u=>u.id!==id);
-    assets.forEach(a=>{ if(a.assignTo===id){ a.assignTo=''; a.status='Available'; } });
-    showToast('User deleted'); renderAll();
+  openConfirm('Delete User','This will permanently remove the user and unassign their assets.',async()=>{
+    try {
+      await fetch(`${API}/users/${id}`,{method:'DELETE'});
+      showToast('User deleted'); await loadData();
+    } catch(e){ showToast('Delete failed','danger'); }
   });
 }
 
@@ -810,17 +750,17 @@ function openAssetModal(a=null){
 
 function editAsset(id){ openAssetModal(assets.find(a=>a.id===id)); }
 
-function saveAsset(){
+async function saveAsset(){
   const name=document.getElementById('assetName').value.trim();
   if(!name){ showToast('Asset name is required','danger'); return; }
   const id=document.getElementById('assetId').value;
-  const assignTo=document.getElementById('assetAssignTo').value;
+  const assignedTo=document.getElementById('assetAssignTo').value;
   let status=document.getElementById('assetStatus').value;
-  if(assignTo && status==='Available') status='In-Use';
-  if(!assignTo && status==='In-Use') status='Available';
-  const u=assignTo?users.find(x=>x.id===assignTo):null;
+  if(assignedTo && status==='Available') status='In-Use';
+  if(!assignedTo && status==='In-Use') status='Available';
+  const u=assignedTo?users.find(x=>x.id===assignedTo):null;
   const data={
-    name,status,assignTo,type:document.getElementById('assetType').value,
+    name,status,assignedTo:assignedTo||null,type:document.getElementById('assetType').value,
     csvId:document.getElementById('assetCsvId').value.trim(),
     serial:document.getElementById('assetSerial').value.trim(),
     brand:document.getElementById('assetBrand').value.trim(),
@@ -830,14 +770,22 @@ function saveAsset(){
     vendor:document.getElementById('assetVendor').value.trim(),
     notes:document.getElementById('assetNotes').value.trim(),
   };
-  if(id){ Object.assign(assets.find(a=>a.id===id),data); showToast('Asset updated','success'); }
-  else { assets.push({id:'a'+uid(),...data}); showToast('Asset added','success'); }
-  closeModal(); renderAll();
+  try {
+    const res = id
+      ? await fetch(`${API}/assets/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      : await fetch(`${API}/assets`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
+    showToast(id?'Asset updated':'Asset added','success');
+    closeModal(); await loadData();
+  } catch(e){ showToast(e.message,'danger'); }
 }
 
 function deleteAsset(id){
-  openConfirm('Delete Asset','This will permanently remove this asset record.',()=>{
-    assets=assets.filter(a=>a.id!==id); showToast('Asset deleted'); renderAll();
+  openConfirm('Delete Asset','This will permanently remove this asset record.',async()=>{
+    try {
+      await fetch(`${API}/assets/${id}`,{method:'DELETE'});
+      showToast('Asset deleted'); await loadData();
+    } catch(e){ showToast('Delete failed','danger'); }
   });
 }
 
@@ -860,7 +808,7 @@ function showToast(msg,type='success'){
 }
 
 /* ══ INIT ══ */
-renderAll();
+loadData();
 </script>
 </body>
 </html>
