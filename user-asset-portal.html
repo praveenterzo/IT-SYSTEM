@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TerzoCloud – User & Asset Management Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1e40af; --primary-light: #3b82f6; --primary-lighter: #eff6ff; --primary-dark: #1e3a8a;
+      --accent: #0ea5e9; --success: #16a34a; --success-bg: #f0fdf4;
+      --warning: #d97706; --warning-bg: #fffbeb; --danger: #dc2626; --danger-bg: #fef2f2;
+      --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-300: #cbd5e1;
+      --gray-400: #94a3b8; --gray-600: #475569; --gray-700: #334155; --gray-800: #1e293b;
+      --sidebar-w: 240px;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-50); color: var(--gray-800); display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--gray-200); display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow-y: auto; }
+    .logo { padding: 18px 18px 14px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; }
+    .logo-text { font-size: 13px; font-weight: 700; color: var(--primary-dark); line-height: 1.2; }
+    .logo-sub { font-size: 10px; color: var(--gray-400); }
+    nav { padding: 14px 10px; flex: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .08em; padding: 8px 8px 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 11px; border-radius: 8px; cursor: pointer; color: var(--gray-600); font-size: 13px; font-weight: 500; transition: all .14s; margin-bottom: 1px; user-select: none; }
+    .nav-item svg { width: 17px; height: 17px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-item:hover { background: var(--gray-100); color: var(--gray-800); }
+    .nav-item.active { background: var(--primary-lighter); color: var(--primary); }
+    .nav-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 9999px; min-width: 20px; text-align: center; }
+    .sidebar-footer { padding: 14px; border-top: 1px solid var(--gray-200); }
+    .user-chip { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .user-info strong { display: block; color: var(--gray-800); font-size: 12.5px; }
+    .user-info span { color: var(--gray-400); font-size: 11px; }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 60px; background: #fff; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar h1 { font-size: 17px; font-weight: 700; color: var(--gray-800); flex: 1; }
+    .search-wrap { position: relative; }
+    .search-wrap input { padding: 7px 12px 7px 34px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 13px; width: 210px; background: var(--gray-50); outline: none; transition: border .14s; }
+    .search-wrap input:focus { border-color: var(--primary-light); background: #fff; }
+    .search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--gray-400); fill: none; stroke-width: 2; pointer-events: none; }
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .14s; white-space: nowrap; }
+    .btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
+    .btn-secondary:hover { background: var(--gray-200); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-sm { padding: 4px 9px; font-size: 11.5px; border-radius: 6px; }
+    .btn-icon { padding: 6px; border-radius: 6px; }
+    .content { flex: 1; overflow-y: auto; padding: 22px 24px; }
+
+    /* STAT CARDS */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .stat-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 13px; }
+    .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .stat-icon.blue { background: #eff6ff; color: var(--primary); }
+    .stat-icon.green { background: #f0fdf4; color: var(--success); }
+    .stat-icon.yellow { background: #fffbeb; color: var(--warning); }
+    .stat-icon.red { background: #fef2f2; color: var(--danger); }
+    .stat-icon.sky { background: #f0f9ff; color: var(--accent); }
+    .stat-icon.purple { background: #faf5ff; color: #9333ea; }
+    .stat-num { font-size: 26px; font-weight: 800; color: var(--gray-800); line-height: 1; }
+    .stat-label { font-size: 11.5px; color: var(--gray-400); margin-top: 2px; }
+
+    /* TABLES */
+    .card { background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden; }
+    .card-header { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--gray-800); flex: 1; }
+    .filter-bar { display: flex; gap: 7px; flex-wrap: wrap; }
+    .filter-select { padding: 6px 9px; border: 1px solid var(--gray-200); border-radius: 7px; font-size: 12px; background: var(--gray-50); outline: none; color: var(--gray-700); cursor: pointer; }
+    .filter-select:focus { border-color: var(--primary-light); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-50); }
+    th { padding: 9px 15px; text-align: left; font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+    td { padding: 11px 15px; border-top: 1px solid var(--gray-100); vertical-align: middle; }
+    tr:hover td { background: var(--gray-50); }
+
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; gap: 4px; }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .badge.active { background: var(--success-bg); color: var(--success); }
+    .badge.inactive { background: var(--gray-100); color: var(--gray-400); }
+    .badge.in-use { background: #eff6ff; color: var(--primary); }
+    .badge.available { background: #f0fdf4; color: var(--success); }
+    .badge.under-repair { background: #fffbeb; color: var(--warning); }
+    .badge.retired { background: #fef2f2; color: var(--danger); }
+    .badge.idle { background: var(--gray-100); color: var(--gray-400); }
+    .badge.role-admin { background: #fdf4ff; color: #9333ea; }
+    .badge.role-manager { background: #fff7ed; color: #ea580c; }
+    .badge.role-editor { background: #eff6ff; color: var(--primary); }
+    .badge.role-viewer { background: #f0fdf4; color: var(--success); }
+
+    .user-cell { display: flex; align-items: center; gap: 9px; }
+    .ava-sm { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .tag { display: inline-flex; align-items: center; background: var(--gray-100); color: var(--gray-600); padding: 2px 7px; border-radius: 9999px; font-size: 11px; font-weight: 500; }
+    .loc-tag { display: inline-flex; align-items: center; gap: 3px; color: var(--gray-400); font-size: 11.5px; }
+    .loc-tag svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .actions { display: flex; gap: 3px; }
+    .svc-note { font-size: 11px; color: var(--warning); font-style: italic; margin-top: 1px; }
+    .mono { font-family: 'Courier New', monospace; font-size: 11.5px; }
+
+    /* MODAL */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
+    .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.18); max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h2 { font-size: 15px; font-weight: 700; }
+    .modal-body { padding: 18px 22px; display: flex; flex-direction: column; gap: 12px; }
+    .modal-footer { padding: 14px 22px; border-top: 1px solid var(--gray-100); display: flex; gap: 8px; justify-content: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+    .form-group input, .form-group select, .form-group textarea { padding: 8px 11px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 13px; outline: none; transition: border .14s; font-family: inherit; background: #fff; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+    /* CONFIRM */
+    .confirm-box { background: #fff; border-radius: 12px; padding: 22px; max-width: 340px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.18); }
+    .confirm-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 7px; }
+    .confirm-box p { font-size: 13px; color: var(--gray-600); margin-bottom: 18px; }
+
+    /* TOAST */
+    .toast-wrap { position: fixed; bottom: 22px; right: 22px; z-index: 200; display: flex; flex-direction: column; gap: 7px; }
+    .toast { background: var(--gray-800); color: #fff; padding: 10px 16px; border-radius: 9px; font-size: 12.5px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,.2); animation: slideIn .22s ease; display: flex; align-items: center; gap: 7px; max-width: 300px; transition: opacity .4s; }
+    .toast.success { background: var(--success); }
+    .toast.danger { background: var(--danger); }
+    @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* PAGE */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* PAGINATION */
+    .pagination { display: flex; align-items: center; gap: 3px; justify-content: flex-end; padding: 12px 18px; border-top: 1px solid var(--gray-100); }
+    .page-btn { padding: 4px 9px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 12px; cursor: pointer; background: #fff; color: var(--gray-700); font-weight: 500; transition: all .13s; }
+    .page-btn:hover:not(:disabled) { background: var(--gray-100); }
+    .page-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .page-btn:disabled { opacity: .35; cursor: default; }
+
+    /* DEPT BREAKDOWN */
+    .dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
+    .dept-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .dept-name { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+    .dept-count { font-size: 20px; font-weight: 800; color: var(--primary); }
+
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">TerzoCloud</div>
+      <div class="logo-sub">Asset Management Portal</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard
+    </div>
+    <div class="nav-label" style="margin-top:10px">People</div>
+    <div class="nav-item" onclick="navigate('users',this)">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      All Users <span class="nav-badge" id="navUsersCount">40</span>
+    </div>
+    <div class="nav-label" style="margin-top:10px">Assets</div>
+    <div class="nav-item" onclick="navigate('assets',this)">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Asset Inventory <span class="nav-badge" id="navAssetsCount">42</span>
+    </div>
+    <div class="nav-item" onclick="navigate('assignments',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+      Assignments
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar">PM</div>
+      <div class="user-info">
+        <strong>Praveen M.</strong>
+        <span>IT Admin</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Dashboard</h1>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="globalSearch" placeholder="Search…" oninput="handleSearch(this.value)">
+    </div>
+    <button class="btn btn-primary" id="addBtn" onclick="openAddModal()" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="addBtnLabel">Add</span>
+    </button>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid" id="statGrid"></div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px">Users by Department</div>
+        <div class="dept-grid" id="deptGrid"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Users</div></div>
+          <table><thead><tr><th>Name</th><th>Dept</th><th>Location</th></tr></thead>
+          <tbody id="recentUsers"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Assets</div></div>
+          <table><thead><tr><th>Asset</th><th>Spec</th><th>Status</th></tr></thead>
+          <tbody id="recentAssets"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">All Users <span style="color:var(--gray-400);font-weight:400;font-size:12px" id="userCountLabel"></span></div>
+          <div class="filter-bar">
+            <select class="filter-select" id="userDeptFilter" onchange="renderUsers()">
+              <option value="">All Departments</option>
+              <option>Engineering</option><option>AI-Service</option><option>QA</option>
+              <option>IT</option><option>HR</option><option>Product</option>
+              <option>Customer Support</option><option>Accounts</option>
+            </select>
+            <select class="filter-select" id="userRoleFilter" onchange="renderUsers()">
+              <option value="">All Roles</option>
+              <option>Admin</option><option>Manager</option><option>Editor</option><option>Viewer</option>
+            </select>
+            <select class="filter-select" id="userLocFilter" onchange="renderUsers()">
+              <option value="">All Locations</option><option>Chennai</option><option>Coimbatore</option>
+            </select>
+            <select class="filter-select" id="userStatusFilter" onchange="renderUsers()">
+              <option value="">All Status</option><option>Active</option><option>Inactive</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Location</th><th>Status</th><th>Assets</th><th>Actions</th></tr></thead>
+          <tbody id="userTableBody"></tbody>
+        </table>
+        <div class="pagination" id="userPagination"></div>
+      </div>
+    </div>
+
+    <!-- ASSETS -->
+    <div class="page" id="page-assets">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Asset Inventory <span style="color:var(--gray-400);font-weight:400;font-size:12px" id="assetCountLabel"></span></div>
+          <div class="filter-bar">
+            <select class="filter-select" id="assetDeptFilter" onchange="renderAssets()">
+              <option value="">All Departments</option>
+              <option>Engineering</option><option>AI-Service</option><option>QA</option>
+              <option>IT</option><option>HR</option><option>Product</option>
+              <option>Customer Support</option><option>Accounts</option>
+            </select>
+            <select class="filter-select" id="assetLocFilter" onchange="renderAssets()">
+              <option value="">All Locations</option><option>Chennai</option><option>Coimbatore</option>
+            </select>
+            <select class="filter-select" id="assetTypeFilter" onchange="renderAssets()">
+              <option value="">All Types</option><option>Laptop</option><option>Monitor</option><option>Phone</option><option>Tablet</option><option>Other</option>
+            </select>
+            <select class="filter-select" id="assetStatusFilter" onchange="renderAssets()">
+              <option value="">All Status</option><option>In-Use</option><option>Available</option><option>Under Repair</option><option>Retired</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Asset ID</th><th>Name & Spec</th><th>Serial No.</th><th>Assigned To</th><th>Department</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="assetTableBody"></tbody>
+        </table>
+        <div class="pagination" id="assetPagination"></div>
+      </div>
+    </div>
+
+    <!-- ASSIGNMENTS -->
+    <div class="page" id="page-assignments">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Current Asset Assignments</div></div>
+        <table>
+          <thead><tr><th>Asset ID</th><th>Asset Name</th><th>Assigned To</th><th>Department</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="assignmentTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="overlay" style="display:none" onclick="closeModalOnOverlay(event)">
+
+  <!-- User Modal -->
+  <div class="modal" id="userModal" style="display:none">
+    <div class="modal-header">
+      <h2 id="userModalTitle">Add User</h2>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="userId">
+      <div class="form-row">
+        <div class="form-group"><label>First Name *</label><input type="text" id="userFirst"></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="userLast"></div>
+      </div>
+      <div class="form-group"><label>Email *</label><input type="email" id="userEmail"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Department *</label>
+          <select id="userDept">
+            <option>Engineering</option><option>AI-Service</option><option>QA</option>
+            <option>IT</option><option>HR</option><option>Product</option>
+            <option>Customer Support</option><option>Accounts</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Role *</label>
+          <select id="userRole"><option>Admin</option><option>Manager</option><option>Editor</option><option>Viewer</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Location</label>
+          <select id="userLocation"><option>Chennai</option><option>Coimbatore</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="userStatus"><option>Active</option><option>Inactive</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Phone</label><input type="text" id="userPhone" placeholder="+91 …"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+
+  <!-- Asset Modal -->
+  <div class="modal" id="assetModal" style="display:none">
+    <div class="modal-header">
+      <h2 id="assetModalTitle">Add Asset</h2>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assetId">
+      <div class="form-row">
+        <div class="form-group"><label>Asset ID</label><input type="text" id="assetCsvId" placeholder="A-43"></div>
+        <div class="form-group"><label>Asset Name *</label><input type="text" id="assetName"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Type</label>
+          <select id="assetType"><option>Laptop</option><option>Monitor</option><option>Phone</option><option>Tablet</option><option>Keyboard</option><option>Mouse</option><option>Headset</option><option>Other</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="assetStatus"><option>Available</option><option>In-Use</option><option>Under Repair</option><option>Retired</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Serial Number</label><input type="text" id="assetSerial"></div>
+        <div class="form-group"><label>Brand / Chip</label><input type="text" id="assetBrand" placeholder="Apple / M2 Pro"></div>
+      </div>
+      <div class="form-group"><label>Specification</label><input type="text" id="assetDesc" placeholder="16GB RAM - 512GB SSD M2-PRO CHIP"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Location</label>
+          <select id="assetLocation"><option>Chennai</option><option>Coimbatore</option></select>
+        </div>
+        <div class="form-group"><label>Vendor</label><input type="text" id="assetVendor" placeholder="Sniper Systems"></div>
+      </div>
+      <div class="form-group"><label>Assign To User</label>
+        <select id="assetAssignTo"><option value="">— Unassigned —</option></select>
+      </div>
+      <div class="form-group"><label>Service History / Notes</label>
+        <textarea id="assetNotes" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAsset()">Save Asset</button>
+    </div>
+  </div>
+
+  <!-- Confirm -->
+  <div class="confirm-box" id="confirmBox" style="display:none">
+    <h3 id="confirmTitle">Confirm Delete</h3>
+    <p id="confirmMsg">Are you sure?</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ══ HELPERS ══ */
+const COLORS=['#1e40af','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#9333ea','#0ea5e9','#be185d','#0f766e'];
+const aColor = n => COLORS[(n.charCodeAt(0)+(n.charCodeAt(n.length-1)||0))%COLORS.length];
+const ini = (f,l) => ((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase() || ((f||'')[0]||'?').toUpperCase();
+const uid = () => 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'}) : '—';
+
+/* ══ DATA ══ */
+let users = [
+  {id:'u1',first:'Ajay Christopher',last:'Hubert',email:'ajay.christopher.hubert@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u2',first:'Karthi',last:'',email:'karthi@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u3',first:'Ahamad',last:'Riyas',email:'ahamad.riyas@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u4',first:'Kavipriya',last:'',email:'kavipriya@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u5',first:'Ananya',last:'',email:'ananya@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u6',first:'Shunmugavel',last:'',email:'shunmugavel@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u7',first:'Prasanna',last:'Kumar',email:'prasanna.kumar@terzocloud.com',role:'Viewer',status:'Active',dept:'QA',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u8',first:'Hariharan',last:'',email:'hariharan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u9',first:'Paventhan',last:'',email:'paventhan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u10',first:'Vinotha',last:'',email:'vinotha@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u11',first:'Mythilipriya',last:'',email:'mythilipriya@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u12',first:'Divya',last:'R',email:'divya.r@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u13',first:'Dineshkumar',last:'V',email:'dineshkumar.v@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u14',first:'Dinesh',last:'B',email:'dinesh.b@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u15',first:'Vasanth',last:'Pandian',email:'vasanth.pandian@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u16',first:'Mohanamala',last:'',email:'mohanamala@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u17',first:'Divya',last:'M',email:'divya.m@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u18',first:'Gowtham',last:'V',email:'gowtham.v@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u19',first:'Iyyappan',last:'',email:'iyyappan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u20',first:'Ragav',last:'',email:'ragav@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u21',first:'Harshni',last:'',email:'harshni@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u22',first:'Priyadharshini',last:'',email:'priyadharshini@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u23',first:'Aswini',last:'',email:'aswini@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u24',first:'Dharshini',last:'',email:'dharshini@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u25',first:'Kavimitraa',last:'',email:'kavimitraa@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u26',first:'Nivetha',last:'',email:'nivetha@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u27',first:'Dhanusha',last:'',email:'dhanusha@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u28',first:'Sowmya',last:'',email:'sowmya@terzocloud.com',role:'Viewer',status:'Active',dept:'QA',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u29',first:'Harish',last:'',email:'harish@terzocloud.com',role:'Viewer',status:'Active',dept:'Customer Support',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u30',first:'Praveen',last:'M',email:'praveen.m@terzocloud.com',role:'Admin',status:'Active',dept:'IT',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u31',first:'Karthick',last:'R',email:'karthick.r@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u32',first:'Leo',last:'Deepak',email:'leo.deepak@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u33',first:'Gowtham',last:'Manohar',email:'gowtham.manohar@terzocloud.com',role:'Manager',status:'Active',dept:'HR',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u34',first:'Himalaya',last:'',email:'himalaya@terzocloud.com',role:'Manager',status:'Active',dept:'Product',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u35',first:'Yogesh',last:'',email:'yogesh@terzocloud.com',role:'Editor',status:'Active',dept:'AI-Service',location:'Coimbatore',phone:'',joined:'2023-01-01'},
+  {id:'u36',first:'Mohanraja',last:'',email:'mohanraja@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u37',first:'Urvasi',last:'',email:'urvasi@terzocloud.com',role:'Viewer',status:'Active',dept:'Accounts',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u38',first:'Pradeep',last:'',email:'pradeep@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u39',first:'Niranjan',last:'',email:'niranjan@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+  {id:'u40',first:'Revathi',last:'',email:'revathi@terzocloud.com',role:'Editor',status:'Active',dept:'Engineering',location:'Chennai',phone:'',joined:'2023-01-01'},
+];
+
+let assets = [
+  {id:'a01',csvId:'A-01',name:'Macbook Pro 14',type:'Laptop',serial:'KP93V707J0',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u1',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a02',csvId:'A-02',name:'Macbook Pro 14',type:'Laptop',serial:'GF4R65H4DH',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u2',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a03',csvId:'A-03',name:'Macbook Pro 14',type:'Laptop',serial:'L043T093TR',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u3',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a04',csvId:'A-04',name:'Macbook Pro 14',type:'Laptop',serial:'RVM9Q97FJD',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u4',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a05',csvId:'A-05',name:'Macbook Pro 14',type:'Laptop',serial:'G59R0CG61T',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u5',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a06',csvId:'A-06',name:'Macbook Pro 14',type:'Laptop',serial:'XVGHD2R64D',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u6',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a07',csvId:'A-07',name:'Macbook Pro 14',type:'Laptop',serial:'X4L9414L27',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u7',location:'Chennai',dept:'QA',vendor:'Sniper Systems',notes:''},
+  {id:'a08',csvId:'A-08',name:'Macbook Pro 14',type:'Laptop',serial:'P4Y43FNJWR',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u8',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a09',csvId:'A-09',name:'Macbook Pro 14',type:'Laptop',serial:'FQKJ3X4X13',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u9',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a10',csvId:'A-10',name:'Macbook Pro 14',type:'Laptop',serial:'JQRXPG4X5Y',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'Available',assignTo:'',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:'MLB Replaced & Speaker 9/01/2026 (Murali)'},
+  {id:'a11',csvId:'A-11',name:'Macbook Pro 14',type:'Laptop',serial:'GR242J52P1',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u11',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a12',csvId:'A-12',name:'Macbook Pro 14',type:'Laptop',serial:'LQJ326N9Y5',brand:'Apple / M2 Pro',desc:'16GB RAM - 512GB SSD M2-PRO',status:'In-Use',assignTo:'u12',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a13',csvId:'A-13',name:'Macbook Pro 14',type:'Laptop',serial:'SQ95WC16JDP',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u13',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a14',csvId:'A-14',name:'Macbook Pro 14',type:'Laptop',serial:'SC7XG64K4M0',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u14',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a15',csvId:'A-15',name:'Macbook Pro 14',type:'Laptop',serial:'ST6DP29K320',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u15',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a16',csvId:'A-16',name:'Macbook Pro 14',type:'Laptop',serial:'KG4P92VL2F',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u16',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:'Display, battery, speaker replaced 03/10/2023'},
+  {id:'a17',csvId:'A-17',name:'Macbook Pro 14',type:'Laptop',serial:'SPYH4X30W36',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u17',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a18',csvId:'A-18',name:'Macbook Pro 14',type:'Laptop',serial:'X1YJ2WGFTH',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u18',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:'MLB Replaced 30/01/2024'},
+  {id:'a19',csvId:'A-19',name:'Macbook Pro 14',type:'Laptop',serial:'WXQG52LV27',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u19',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a20',csvId:'A-20',name:'Macbook Pro 14',type:'Laptop',serial:'K06D165GJF',brand:'Apple / M1 Pro',desc:'16GB RAM - 512GB SSD M1-PRO',status:'In-Use',assignTo:'u20',location:'Coimbatore',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a21',csvId:'A-21',name:'Macbook Pro 13',type:'Laptop',serial:'SFVHFJ132Q05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u21',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a22',csvId:'A-22',name:'Macbook Pro 13',type:'Laptop',serial:'SFVHFJ13MQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u22',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a23',csvId:'A-23',name:'Macbook Pro 13',type:'Laptop',serial:'SFVFG3WSPQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u23',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a24',csvId:'A-24',name:'Macbook Pro 13',type:'Laptop',serial:'SFVFFHMRQQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u24',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a25',csvId:'A-25',name:'Macbook Pro 13',type:'Laptop',serial:'SFVFFJ2YKQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u25',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a26',csvId:'A-26',name:'Macbook Pro 13',type:'Laptop',serial:'FVHFJ157Q05D',brand:'Apple / Intel i5',desc:'8GB RAM - 128GB SSD Intel i5',status:'In-Use',assignTo:'u26',location:'Chennai',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a27',csvId:'A-27',name:'Macbook Pro 13',type:'Laptop',serial:'FVFFFL1UQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u27',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a28',csvId:'A-28',name:'Macbook Pro 13',type:'Laptop',serial:'FVFFHMRBQ05D',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u28',location:'Coimbatore',dept:'QA',vendor:'Sniper Systems',notes:''},
+  {id:'a29',csvId:'A-29',name:'Macbook Air 13',type:'Laptop',serial:'C02F29NWQ6L7',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u29',location:'Chennai',dept:'Customer Support',vendor:'Sniper Systems',notes:''},
+  {id:'a30',csvId:'A-30',name:'Macbook Air 13',type:'Laptop',serial:'SC02G37NBQ6L4',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u30',location:'Chennai',dept:'IT',vendor:'Sniper Systems',notes:''},
+  {id:'a31',csvId:'A-31',name:'Macbook Air 13',type:'Laptop',serial:'SFVFJK7D0Q6L4',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u31',location:'Chennai',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a32',csvId:'A-32',name:'Macbook Air 13',type:'Laptop',serial:'SFVFJK743Q6L4',brand:'Apple / M1',desc:'8GB RAM - 256GB SSD M1',status:'In-Use',assignTo:'u32',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a33',csvId:'A-33',name:'Macbook Air 13',type:'Laptop',serial:'SDY2VLXJ6MH',brand:'Apple / M2',desc:'8GB RAM - 256GB SSD M2',status:'In-Use',assignTo:'u33',location:'Chennai',dept:'HR',vendor:'Sniper Systems',notes:''},
+  {id:'a34',csvId:'A-34',name:'Macbook Air 13',type:'Laptop',serial:'SK9242NXCJ3',brand:'Apple / M2',desc:'8GB RAM - 256GB SSD M2',status:'In-Use',assignTo:'u34',location:'Chennai',dept:'Product',vendor:'Sniper Systems',notes:''},
+  {id:'a35',csvId:'A-35',name:'Macbook Air 13',type:'Laptop',serial:'C0XCLQ1WR1',brand:'Apple / M2',desc:'8GB RAM - 256GB SSD M2',status:'In-Use',assignTo:'u35',location:'Coimbatore',dept:'AI-Service',vendor:'Sniper Systems',notes:''},
+  {id:'a36',csvId:'A-36',name:'Macbook Pro 15',type:'Laptop',serial:'C02XH82KJG5L',brand:'Apple / Intel i9',desc:'16GB RAM - 512GB SSD Intel i9',status:'In-Use',assignTo:'u36',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a37',csvId:'A-37',name:'Lenovo Ideapad',type:'Laptop',serial:'PG02HQZX',brand:'Lenovo / AMD R5',desc:'8GB RAM - 512GB SSD AMD R5',status:'In-Use',assignTo:'u30',location:'Chennai',dept:'IT',vendor:'—',notes:''},
+  {id:'a38',csvId:'A-38',name:'Lenovo Ideapad',type:'Laptop',serial:'PF34LNF2',brand:'Lenovo / AMD R5',desc:'8GB RAM - 512GB SSD AMD R5',status:'In-Use',assignTo:'u37',location:'Chennai',dept:'Accounts',vendor:'—',notes:''},
+  {id:'a39',csvId:'A-39',name:'Macbook Air 13',type:'Laptop',serial:'SCPF9R49RXV',brand:'Apple / M4',desc:'24GB RAM - 512GB SSD M4',status:'In-Use',assignTo:'u38',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a40',csvId:'A-40',name:'Macbook Pro 16',type:'Laptop',serial:'SJYCRWJQ9DW',brand:'Apple / M4 Pro',desc:'24GB RAM - 512GB SSD M4 Pro',status:'In-Use',assignTo:'u36',location:'Chennai',dept:'Engineering',vendor:'Sniper Systems',notes:''},
+  {id:'a41',csvId:'A-41',name:'Macbook Pro 14',type:'Laptop',serial:'J73DKJ34PP',brand:'Apple / M4 Pro',desc:'24GB RAM - 512GB SSD M4 Pro',status:'In-Use',assignTo:'u39',location:'Chennai',dept:'Engineering',vendor:'Apple',notes:''},
+  {id:'a42',csvId:'A-42',name:'Macbook Pro 15',type:'Laptop',serial:'J6R7D6Y6LF',brand:'Apple / M4 Pro',desc:'24GB RAM - 512GB SSD M4 Pro',status:'In-Use',assignTo:'u40',location:'Chennai',dept:'Engineering',vendor:'—',notes:''},
+];
+
+let currentPage='dashboard', userPage=1, assetPage=1, searchQ='';
+const PAGE_SIZE=10;
+
+/* ══ NAV ══ */
+function navigate(page, el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  currentPage=page;
+  const titles={dashboard:'Dashboard',users:'User Management',assets:'Asset Inventory',assignments:'Assignments'};
+  document.getElementById('pageTitle').textContent=titles[page]||page;
+  const showAdd=page==='users'||page==='assets';
+  document.getElementById('addBtn').style.display=showAdd?'inline-flex':'none';
+  document.getElementById('addBtnLabel').textContent=page==='users'?'Add User':'Add Asset';
+  searchQ=''; document.getElementById('globalSearch').value='';
+  userPage=1; assetPage=1;
+  renderAll();
+}
+
+function handleSearch(v){ searchQ=v.toLowerCase(); userPage=1; assetPage=1; renderAll(); }
+
+/* ══ RENDER ALL ══ */
+function renderAll(){ updateBadges(); renderDashboard(); renderUsers(); renderAssets(); renderAssignments(); }
+
+function updateBadges(){
+  document.getElementById('navUsersCount').textContent=users.length;
+  document.getElementById('navAssetsCount').textContent=assets.length;
+}
+
+/* ══ DASHBOARD ══ */
+function renderDashboard(){
+  const inUse=assets.filter(a=>a.status==='In-Use').length;
+  const avail=assets.filter(a=>a.status==='Available').length;
+
+  // dept breakdown
+  const deptCounts={};
+  users.forEach(u=>{ deptCounts[u.dept]=(deptCounts[u.dept]||0)+1; });
+  const deptColors={'Engineering':'var(--primary)','AI-Service':'#9333ea','QA':'#ea580c','IT':'#0891b2','HR':'#16a34a','Product':'#d97706','Customer Support':'#dc2626','Accounts':'#be185d'};
+  document.getElementById('deptGrid').innerHTML=Object.entries(deptCounts).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`
+    <div class="dept-card">
+      <div>
+        <div class="dept-name">${d}</div>
+        <div style="font-size:11px;color:var(--gray-400)">${c} member${c>1?'s':''}</div>
+      </div>
+      <div class="dept-count" style="color:${deptColors[d]||'var(--primary)'}">${c}</div>
+    </div>`).join('');
+
+  document.getElementById('statGrid').innerHTML=`
+    ${sc('blue','<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',users.length,'Total Users')}
+    ${sc('green','<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',users.filter(u=>u.status==='Active').length,'Active Users')}
+    ${sc('sky','<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',assets.length,'Total Assets')}
+    ${sc('blue','<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',inUse,'Assets In-Use')}
+    ${sc('green','<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',avail,'Available')}
+    ${sc('purple','<rect x="2" y="3" width="20" height="14" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M10 10h8"/>',Object.keys(deptCounts).length,'Departments')}
+  `;
+
+  // recent users
+  document.getElementById('recentUsers').innerHTML=[...users].slice(-5).reverse().map(u=>`<tr>
+    <td><div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div><strong>${u.first} ${u.last}</strong></div></td>
+    <td><span class="tag">${u.dept}</span></td>
+    <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
+  </tr>`).join('');
+
+  document.getElementById('recentAssets').innerHTML=[...assets].slice(-5).reverse().map(a=>{
+    const sc2={Available:'available','In-Use':'in-use','Under Repair':'under-repair','Retired':'retired'}[a.status]||'available';
+    return `<tr>
+      <td><strong>${a.name}</strong> <span style="color:var(--gray-400);font-size:10.5px">${a.csvId}</span></td>
+      <td style="color:var(--gray-400);font-size:11.5px">${a.desc}</td>
+      <td><span class="badge ${sc2}">${a.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function sc(color,icon,num,label){
+  return `<div class="stat-card">
+    <div class="stat-icon ${color}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${icon}</svg></div>
+    <div><div class="stat-num">${num}</div><div class="stat-label">${label}</div></div>
+  </div>`;
+}
+
+/* ══ USERS ══ */
+function filteredUsers(){
+  const df=document.getElementById('userDeptFilter')?.value||'';
+  const rf=document.getElementById('userRoleFilter')?.value||'';
+  const lf=document.getElementById('userLocFilter')?.value||'';
+  const sf=document.getElementById('userStatusFilter')?.value||'';
+  return users.filter(u=>{
+    if(searchQ && !`${u.first} ${u.last} ${u.email} ${u.dept} ${u.role} ${u.location}`.toLowerCase().includes(searchQ)) return false;
+    if(df && u.dept!==df) return false;
+    if(rf && u.role!==rf) return false;
+    if(lf && u.location!==lf) return false;
+    if(sf && u.status!==sf) return false;
+    return true;
+  });
+}
+
+function renderUsers(){
+  const list=filteredUsers();
+  const pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+  if(userPage>pages) userPage=pages;
+  const slice=list.slice((userPage-1)*PAGE_SIZE, userPage*PAGE_SIZE);
+  const lbl=document.getElementById('userCountLabel');
+  if(lbl) lbl.textContent=`(${list.length} of ${users.length})`;
+  const body=document.getElementById('userTableBody');
+  if(!body) return;
+  if(!slice.length){ body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray-400)">No users found</td></tr>`; }
+  else {
+    body.innerHTML=slice.map(u=>{
+      const uAssets=assets.filter(a=>a.assignTo===u.id);
+      return `<tr>
+        <td><div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>
+          <div><strong>${u.first} ${u.last}</strong><br><span style="color:var(--gray-400);font-size:11px">${u.email}</span></div></div></td>
+        <td style="display:none">${u.email}</td>
+        <td><span class="tag">${u.dept}</span></td>
+        <td><span class="badge role-${u.role.toLowerCase()}">${u.role}</span></td>
+        <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
+        <td><span class="badge ${u.status.toLowerCase()}">${u.status}</span></td>
+        <td style="color:var(--gray-600)">${uAssets.length?`<span class="tag">${uAssets.length} asset${uAssets.length>1?'s':''}</span>`:'<span style="color:var(--gray-400)">—</span>'}</td>
+        <td><div class="actions">
+          <button class="btn btn-secondary btn-sm btn-icon" title="Edit" onclick="editUser('${u.id}')">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+          </button>
+          <button class="btn btn-danger btn-sm btn-icon" title="Delete" onclick="deleteUser('${u.id}')">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+  renderPag('userPagination',userPage,pages,p=>{userPage=p;renderUsers();});
+}
+
+/* ══ ASSETS ══ */
+function filteredAssets(){
+  const df=document.getElementById('assetDeptFilter')?.value||'';
+  const lf=document.getElementById('assetLocFilter')?.value||'';
+  const tf=document.getElementById('assetTypeFilter')?.value||'';
+  const sf=document.getElementById('assetStatusFilter')?.value||'';
+  return assets.filter(a=>{
+    const u=users.find(x=>x.id===a.assignTo);
+    const un=u?`${u.first} ${u.last}`:'';
+    if(searchQ && !`${a.csvId} ${a.name} ${a.serial} ${a.brand} ${a.desc} ${un} ${a.dept}`.toLowerCase().includes(searchQ)) return false;
+    if(df && a.dept!==df) return false;
+    if(lf && a.location!==lf) return false;
+    if(tf && a.type!==tf) return false;
+    if(sf && a.status!==sf) return false;
+    return true;
+  });
+}
+
+function renderAssets(){
+  const list=filteredAssets();
+  const pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+  if(assetPage>pages) assetPage=pages;
+  const slice=list.slice((assetPage-1)*PAGE_SIZE, assetPage*PAGE_SIZE);
+  const lbl=document.getElementById('assetCountLabel');
+  if(lbl) lbl.textContent=`(${list.length} of ${assets.length})`;
+  const body=document.getElementById('assetTableBody');
+  if(!body) return;
+  if(!slice.length){ body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray-400)">No assets found</td></tr>`; }
+  else {
+    body.innerHTML=slice.map(a=>{
+      const stcls={Available:'available','In-Use':'in-use','Under Repair':'under-repair','Retired':'retired'}[a.status]||'available';
+      const u=users.find(x=>x.id===a.assignTo);
+      const assignHtml=u?`<div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)};width:22px;height:22px;font-size:9px">${ini(u.first,u.last)}</div><span>${u.first} ${u.last}</span></div>`:'<span style="color:var(--gray-400)">—</span>';
+      return `<tr>
+        <td class="mono" style="color:var(--gray-400)">${a.csvId}</td>
+        <td><strong>${a.name}</strong><br><span style="color:var(--gray-400);font-size:11px">${a.desc}</span>${a.notes?`<div class="svc-note">⚠ ${a.notes}</div>`:''}</td>
+        <td class="mono" style="font-size:11px;color:var(--gray-600)">${a.serial}</td>
+        <td>${assignHtml}</td>
+        <td><span class="tag">${a.dept}</span></td>
+        <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${a.location}</span></td>
+        <td><span class="badge ${stcls}">${a.status}</span></td>
+        <td><div class="actions">
+          <button class="btn btn-secondary btn-sm btn-icon" title="Edit" onclick="editAsset('${a.id}')">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+          </button>
+          <button class="btn btn-danger btn-sm btn-icon" title="Delete" onclick="deleteAsset('${a.id}')">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+  renderPag('assetPagination',assetPage,pages,p=>{assetPage=p;renderAssets();});
+}
+
+/* ══ ASSIGNMENTS ══ */
+function renderAssignments(){
+  const body=document.getElementById('assignmentTableBody');
+  if(!body) return;
+  const assigned=assets.filter(a=>a.assignTo);
+  if(!assigned.length){ body.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray-400)">No assignments</td></tr>`; return; }
+  body.innerHTML=assigned.map(a=>{
+    const u=users.find(x=>x.id===a.assignTo);
+    const stcls={Available:'available','In-Use':'in-use','Under Repair':'under-repair'}[a.status]||'in-use';
+    return `<tr>
+      <td class="mono" style="color:var(--gray-400)">${a.csvId}</td>
+      <td><strong>${a.name}</strong><br><span style="font-size:11px;color:var(--gray-400)">${a.brand}</span></td>
+      <td>${u?`<div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>${u.first} ${u.last}</div>`:'—'}</td>
+      <td><span class="tag">${u?.dept||a.dept}</span></td>
+      <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${a.location}</span></td>
+      <td><span class="badge ${stcls}">${a.status}</span></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="unassign('${a.id}')">Unassign</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function unassign(id){
+  const a=assets.find(x=>x.id===id);
+  if(a){ a.assignTo=''; a.status='Available'; showToast('Asset unassigned'); renderAll(); }
+}
+
+/* ══ PAGINATION ══ */
+function renderPag(cid,cur,total,cb){
+  const el=document.getElementById(cid);
+  if(!el) return;
+  let h=`<button class="page-btn" ${cur===1?'disabled':''} onclick="(${cb.toString()})(${cur-1})">‹ Prev</button>`;
+  for(let i=1;i<=total;i++){
+    if(total>8 && i>2 && i<total-1 && Math.abs(i-cur)>1){ if(i===3||i===total-2) h+='<span style="padding:4px 2px;color:var(--gray-400)">…</span>'; continue; }
+    h+=`<button class="page-btn${i===cur?' current':''}" onclick="(${cb.toString()})(${i})">${i}</button>`;
+  }
+  h+=`<button class="page-btn" ${cur===total?'disabled':''} onclick="(${cb.toString()})(${cur+1})">Next ›</button>`;
+  el.innerHTML=h;
+}
+
+/* ══ MODALS ══ */
+function openAddModal(){ currentPage==='users'?openUserModal():openAssetModal(); }
+function showOverlay(mid){ document.getElementById('overlay').style.display='flex'; document.getElementById(mid).style.display='block'; }
+function closeModal(){ document.getElementById('overlay').style.display='none'; ['userModal','assetModal','confirmBox'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; }); }
+function closeModalOnOverlay(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+
+function openUserModal(u=null){
+  document.getElementById('userModalTitle').textContent=u?'Edit User':'Add User';
+  document.getElementById('userId').value=u?.id||'';
+  document.getElementById('userFirst').value=u?.first||'';
+  document.getElementById('userLast').value=u?.last||'';
+  document.getElementById('userEmail').value=u?.email||'';
+  document.getElementById('userDept').value=u?.dept||'Engineering';
+  document.getElementById('userRole').value=u?.role||'Editor';
+  document.getElementById('userLocation').value=u?.location||'Chennai';
+  document.getElementById('userStatus').value=u?.status||'Active';
+  document.getElementById('userPhone').value=u?.phone||'';
+  showOverlay('userModal');
+}
+
+function editUser(id){ openUserModal(users.find(u=>u.id===id)); }
+
+function saveUser(){
+  const first=document.getElementById('userFirst').value.trim();
+  const email=document.getElementById('userEmail').value.trim();
+  if(!first||!email){ showToast('First name and email are required','danger'); return; }
+  const id=document.getElementById('userId').value;
+  const data={ first,last:document.getElementById('userLast').value.trim(),email,
+    dept:document.getElementById('userDept').value,role:document.getElementById('userRole').value,
+    location:document.getElementById('userLocation').value,status:document.getElementById('userStatus').value,
+    phone:document.getElementById('userPhone').value.trim(),
+    joined:id?users.find(u=>u.id===id)?.joined:new Date().toISOString().slice(0,10) };
+  if(id){ Object.assign(users.find(u=>u.id===id),data); showToast('User updated','success'); }
+  else { users.push({id:uid(),...data}); showToast('User added','success'); }
+  closeModal(); renderAll();
+}
+
+function deleteUser(id){
+  openConfirm('Delete User','This will permanently remove the user and unassign their assets.',()=>{
+    users=users.filter(u=>u.id!==id);
+    assets.forEach(a=>{ if(a.assignTo===id){ a.assignTo=''; a.status='Available'; } });
+    showToast('User deleted'); renderAll();
+  });
+}
+
+function populateUserSelect(selectedId=''){
+  const sel=document.getElementById('assetAssignTo');
+  sel.innerHTML='<option value="">— Unassigned —</option>'+
+    users.filter(u=>u.status==='Active').sort((a,b)=>`${a.first} ${a.last}`.localeCompare(`${b.first} ${b.last}`))
+    .map(u=>`<option value="${u.id}"${u.id===selectedId?' selected':''}>${u.first} ${u.last} — ${u.dept}</option>`).join('');
+}
+
+function openAssetModal(a=null){
+  populateUserSelect(a?.assignTo||'');
+  document.getElementById('assetModalTitle').textContent=a?'Edit Asset':'Add Asset';
+  document.getElementById('assetId').value=a?.id||'';
+  document.getElementById('assetCsvId').value=a?.csvId||'';
+  document.getElementById('assetName').value=a?.name||'';
+  document.getElementById('assetType').value=a?.type||'Laptop';
+  document.getElementById('assetStatus').value=a?.status||'Available';
+  document.getElementById('assetSerial').value=a?.serial||'';
+  document.getElementById('assetBrand').value=a?.brand||'';
+  document.getElementById('assetDesc').value=a?.desc||'';
+  document.getElementById('assetLocation').value=a?.location||'Chennai';
+  document.getElementById('assetVendor').value=a?.vendor||'';
+  document.getElementById('assetNotes').value=a?.notes||'';
+  showOverlay('assetModal');
+}
+
+function editAsset(id){ openAssetModal(assets.find(a=>a.id===id)); }
+
+function saveAsset(){
+  const name=document.getElementById('assetName').value.trim();
+  if(!name){ showToast('Asset name is required','danger'); return; }
+  const id=document.getElementById('assetId').value;
+  const assignTo=document.getElementById('assetAssignTo').value;
+  let status=document.getElementById('assetStatus').value;
+  if(assignTo && status==='Available') status='In-Use';
+  if(!assignTo && status==='In-Use') status='Available';
+  const u=assignTo?users.find(x=>x.id===assignTo):null;
+  const data={
+    name,status,assignTo,type:document.getElementById('assetType').value,
+    csvId:document.getElementById('assetCsvId').value.trim(),
+    serial:document.getElementById('assetSerial').value.trim(),
+    brand:document.getElementById('assetBrand').value.trim(),
+    desc:document.getElementById('assetDesc').value.trim(),
+    location:document.getElementById('assetLocation').value,
+    dept:u?.dept||'',
+    vendor:document.getElementById('assetVendor').value.trim(),
+    notes:document.getElementById('assetNotes').value.trim(),
+  };
+  if(id){ Object.assign(assets.find(a=>a.id===id),data); showToast('Asset updated','success'); }
+  else { assets.push({id:'a'+uid(),...data}); showToast('Asset added','success'); }
+  closeModal(); renderAll();
+}
+
+function deleteAsset(id){
+  openConfirm('Delete Asset','This will permanently remove this asset record.',()=>{
+    assets=assets.filter(a=>a.id!==id); showToast('Asset deleted'); renderAll();
+  });
+}
+
+function openConfirm(title,msg,cb){
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmOk').onclick=()=>{ closeModal(); cb(); };
+  document.getElementById('overlay').style.display='flex';
+  document.getElementById('confirmBox').style.display='block';
+}
+
+/* ══ TOAST ══ */
+function showToast(msg,type='success'){
+  const w=document.getElementById('toastWrap');
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  const ic={success:'✓',danger:'✕'};
+  t.textContent=(ic[type]||'•')+' '+msg;
+  w.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),500); },2500);
+}
+
+/* ══ INIT ══ */
+renderAll();
+</script>
+</body>
+</html>
