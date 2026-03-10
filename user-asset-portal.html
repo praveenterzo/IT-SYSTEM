@@ -556,8 +556,8 @@ function renderUsers(){
       const uAssets=assets.filter(a=>a.assignTo===u.id);
       return `<tr>
         <td><div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>
-          <div><strong>${u.first} ${u.last}</strong><br><span style="color:var(--gray-400);font-size:11px">${u.email}</span></div></div></td>
-        <td style="display:none">${u.email}</td>
+          <strong>${u.first} ${u.last}</strong></div></td>
+        <td style="color:var(--gray-600);font-size:12px">${u.email}</td>
         <td><span class="tag">${u.dept}</span></td>
         <td><span class="badge role-${u.role.toLowerCase()}">${u.role}</span></td>
         <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
