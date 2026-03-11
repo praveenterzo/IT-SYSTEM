@@ -43,5 +43,6 @@ async function disconnect() {
 //   const { User, Asset } = require('./db');
 const User  = require('./models/User');
 const Asset = require('./models/Asset');
+const Log   = require('./models/Log');
 
-module.exports = { connect, disconnect, User, Asset };
+module.exports = { connect, disconnect, User, Asset, Log };
