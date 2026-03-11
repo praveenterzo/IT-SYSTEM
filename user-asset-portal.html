@@ -1384,7 +1384,7 @@ async function renderLogs(page=1){
 
     // Pagination
     const totalPages = Math.ceil(data.total / limit);
-    renderPag('logPagination', page, Math.max(1,totalPages), p=>`renderLogs(${p})`);
+    renderPag('logPagination', page, Math.max(1,totalPages), p=>{renderLogs(p);});
 
   } catch(e){
     document.getElementById('logTableBody').innerHTML=
@@ -1494,7 +1494,7 @@ function renderSoftware(){
       </tr>`;
     }).join('');
   }
-  renderPag('swPagination', swPage, pages, p=>`swPage=${p};renderSoftware()`);
+  renderPag('swPagination', swPage, pages, p=>{swPage=p;renderSoftware();});
 }
 
 /* software budget dashboard widget */
