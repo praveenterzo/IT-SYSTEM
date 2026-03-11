@@ -286,6 +286,28 @@
     body.theme-white .user-table-scroll::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius:10px; }
     body.theme-white #logSearch { background: #fff; color: var(--gray-800); }
 
+    /* ── Software Inventory ── */
+    .sw-type-badge { display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600; }
+    .sw-type-badge.SAAS        { background:rgba(14,165,233,0.15); color:#38bdf8; }
+    .sw-type-badge.On-premises { background:rgba(147,51,234,0.15); color:#c084fc; }
+    .sw-type-badge.Freeware    { background:rgba(22,163,74,0.15);  color:#4ade80; }
+    .sw-type-badge.Open-Source { background:rgba(217,119,6,0.15);  color:#fbbf24; }
+    .lic-bar { width:80px;height:6px;background:var(--gray-200);border-radius:3px;display:inline-block;vertical-align:middle;overflow:hidden; }
+    .lic-bar-fill { height:100%;border-radius:3px;transition:width .3s; }
+    .lic-bar-fill.ok      { background:#4ade80; }
+    .lic-bar-fill.warning { background:#fbbf24; }
+    .lic-bar-fill.over    { background:#f87171; }
+    .budget-bar-row { display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--gray-200); }
+    .budget-bar-row:last-child { border-bottom:none; }
+    .budget-bar-label { font-size:12px;color:var(--gray-700);min-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .budget-bar-track { flex:1;height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden; }
+    .budget-bar-fill  { height:100%;border-radius:4px;transition:width .4s; }
+    .budget-bar-cost  { font-size:11.5px;font-weight:600;color:var(--gray-600);min-width:60px;text-align:right; }
+    .sw-budget-chip { display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;font-size:12px;font-weight:600;background:var(--gray-100);border:1px solid var(--gray-200);cursor:pointer;transition:all .15s; }
+    .sw-budget-chip:hover { border-color:var(--primary); }
+    .sw-budget-chip .chip-val { font-size:18px;font-weight:800;color:var(--primary);display:block;line-height:1.1; }
+    .sw-budget-chip .chip-lbl { font-size:11px;color:var(--gray-400);font-weight:400; }
+
     /* ── Activity Log ── */
     .log-event-badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -351,6 +373,10 @@
       <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
       Assignments
     </div>
+    <div class="nav-item" onclick="navigate('software',this)">
+      <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Software <span class="nav-badge" id="navSoftwareCount">33</span>
+    </div>
     <div class="nav-label" style="margin-top:10px">Audit</div>
     <div class="nav-item" onclick="navigate('logs',this)">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -396,7 +422,7 @@
         <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px">Users by Department</div>
         <div class="dept-grid" id="deptGrid"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
         <div class="card">
           <div class="card-header"><div class="card-title">Recent Users</div></div>
           <table><thead><tr><th>Name</th><th>Dept</th><th>Location</th></tr></thead>
@@ -406,6 +432,21 @@
           <div class="card-header"><div class="card-title">Recent Assets</div></div>
           <table><thead><tr><th>Asset</th><th>Spec</th><th>Status</th></tr></thead>
           <tbody id="recentAssets"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SOFTWARE BUDGET OVERVIEW -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" id="softwareBudgetSection">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💰 Software Budget — Top Spends</div>
+            <div style="font-size:11px;color:var(--gray-400)" id="budgetTotalLabel"></div>
+          </div>
+          <div id="topAppsWidget"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📊 Budget Breakdown</div></div>
+          <div id="budgetBreakdownWidget" style="padding:4px 0"></div>
         </div>
       </div>
     </div>
@@ -483,6 +524,44 @@
           <thead><tr><th>Asset ID</th><th>Asset Name</th><th>Assigned To</th><th>Department</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="assignmentTableBody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- SOFTWARE INVENTORY -->
+    <div class="page" id="page-software">
+      <!-- Budget summary chips -->
+      <div id="swBudgetChips" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap;gap:10px">
+          <div class="card-title">Software Inventory <span style="color:var(--gray-400);font-weight:400;font-size:12px" id="swCountLabel"></span></div>
+          <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
+            <select class="filter-select" id="swTypeFilter" onchange="renderSoftware()">
+              <option value="">All Types</option>
+              <option value="SAAS">SAAS</option>
+              <option value="On-premises">On-premises</option>
+              <option value="Freeware">Freeware</option>
+              <option value="Open Source">Open Source</option>
+            </select>
+            <select class="filter-select" id="swRenewalFilter" onchange="renderSoftware()">
+              <option value="">All Renewals</option>
+              <option value="Annual">Annual</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Freeware">Freeware</option>
+              <option value="Pay-as-you-go">Pay-as-you-go</option>
+            </select>
+            <select class="filter-select" id="swStatusFilter" onchange="renderSoftware()">
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead id="swTableHead"></thead>
+          <tbody id="swTableBody"></tbody>
+        </table>
+        <div class="pagination" id="swPagination"></div>
       </div>
     </div>
 
@@ -643,6 +722,68 @@
     </div>
   </div>
 
+  <!-- Software Modal -->
+  <div class="modal" id="softwareModal" style="display:none;max-width:560px">
+    <div class="modal-header">
+      <h2 id="swModalTitle">Add Software</h2>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="swId">
+      <div class="form-row">
+        <div class="form-group"><label>App ID *</label><input type="text" id="swCsvId" placeholder="A-34"></div>
+        <div class="form-group"><label>Name *</label><input type="text" id="swName" placeholder="e.g. Notion"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Type</label>
+          <select id="swType"><option>SAAS</option><option>On-premises</option><option>Freeware</option><option>Open Source</option></select>
+        </div>
+        <div class="form-group"><label>Renewal Period</label>
+          <select id="swRenewal"><option value="">—</option><option>Annual</option><option>Monthly</option><option>Quarterly</option><option>Freeware</option><option>Pay-as-you-go</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Department</label><input type="text" id="swDept" placeholder="Engineering"></div>
+        <div class="form-group"><label>Purpose</label><input type="text" id="swPurpose" placeholder="e.g. CI/CD"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Annual Cost ($)</label><input type="number" id="swCost" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>Subscription Plan</label><input type="text" id="swPlan" placeholder="e.g. Business Pro"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Purchased Licenses</label><input type="number" id="swPurchased" placeholder="0" min="0"></div>
+        <div class="form-group"><label>Used Licenses</label><input type="number" id="swUsed" placeholder="0" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Owner</label><input type="text" id="swOwner" placeholder="Owner name"></div>
+        <div class="form-group"><label>Admin(s)</label><input type="text" id="swAdmins" placeholder="Admin names"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Billed To</label><input type="text" id="swBilledTo" placeholder="e.g. Eric Pritchett"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="swStatus"><option>Active</option><option>Inactive</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Sites</label>
+        <div style="display:flex;gap:14px;margin-top:6px;font-size:13px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swUSA"> 🇺🇸 USA</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swCAN"> 🇨🇦 CAN</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swIND"> 🇮🇳 IND</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-danger" id="swDeleteBtn" style="display:none" onclick="deleteCurrentSoftware()">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Delete
+      </button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSoftware()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Confirm -->
   <div class="confirm-box" id="confirmBox" style="display:none">
     <h3 id="confirmTitle">Confirm Delete</h3>
@@ -668,15 +809,19 @@ const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN',{year:'numeric',
 /* ── Data – loaded from API ── */
 let users = [];
 let assets = [];
+let software = [];
 const API = 'http://localhost:3000/api';
 
 async function loadData(){
   try {
-    const [us, as] = await Promise.all([
+    const safeFetch = url => fetch(url).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).catch(()=>null);
+    const [us, as, sw] = await Promise.all([
       fetch(`${API}/users`).then(r=>r.json()),
       fetch(`${API}/assets`).then(r=>r.json()),
+      safeFetch(`${API}/software`),
     ]);
-    users  = us;
+    users    = us;
+    software = sw || [];
     assets = as.map(a=>({...a, assignTo: a.assignedTo||''}));
     renderAll();
   } catch(e){
@@ -715,14 +860,15 @@ function navigate(page, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   currentPage=page;
-  const titles={dashboard:'Dashboard',users:'User Management',assets:'Asset Inventory',assignments:'Assignments',logs:'Activity Log'};
+  const titles={dashboard:'Dashboard',users:'User Management',assets:'Asset Inventory',assignments:'Assignments',software:'Software Inventory',logs:'Activity Log'};
   document.getElementById('pageTitle').textContent=titles[page]||page;
-  const showAdd=page==='users'||page==='assets';
+  const showAdd=page==='users'||page==='assets'||page==='software';
   document.getElementById('addBtn').style.display=showAdd?'inline-flex':'none';
-  document.getElementById('addBtnLabel').textContent=page==='users'?'Add User':'Add Asset';
+  document.getElementById('addBtnLabel').textContent=page==='users'?'Add User':page==='software'?'Add Software':'Add Asset';
   searchQ=''; document.getElementById('globalSearch').value='';
   userPage=1; assetPage=1;
   if(page==='logs') renderLogs(1);
+  else if(page==='software') renderSoftware();
   else renderAll();
 }
 
@@ -734,6 +880,7 @@ function renderAll(){ updateBadges(); renderDashboard(); renderUsers(); renderAs
 function updateBadges(){
   document.getElementById('navUsersCount').textContent=users.length;
   document.getElementById('navAssetsCount').textContent=assets.length;
+  document.getElementById('navSoftwareCount').textContent=software.length;
 }
 
 /* ══ DASHBOARD ══ */
@@ -754,6 +901,7 @@ function renderDashboard(){
       <div class="dept-count" style="color:${deptColors[d]||'var(--primary)'}">${c}</div>
     </div>`).join('');
 
+  const totalSwBudget = software.reduce((s,x)=>s+(x.annualCost||0),0);
   document.getElementById('statGrid').innerHTML=`
     ${sc('blue','<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',users.length,'Total Users')}
     ${sc('green','<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',users.filter(u=>u.status==='Active').length,'Active Users')}
@@ -761,7 +909,17 @@ function renderDashboard(){
     ${sc('blue','<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',inUse,'Assets In-Use')}
     ${sc('green','<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',avail,'Available')}
     ${sc('purple','<rect x="2" y="3" width="20" height="14" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M10 10h8"/>',Object.keys(deptCounts).length,'Departments')}
+    <div class="stat-card" onclick="navigate('software',document.querySelector('.nav-item[onclick*=software]'))" style="cursor:pointer">
+      <div class="stat-icon yellow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div><div class="stat-num" id="statSoftwareBudget" style="font-size:18px">${totalSwBudget>0?'$'+(totalSwBudget/1000).toFixed(0)+'K':'—'}</div><div class="stat-label">Software Spend</div></div>
+    </div>
+    <div class="stat-card" onclick="navigate('software',document.querySelector('.nav-item[onclick*=software]'))" style="cursor:pointer">
+      <div class="stat-icon purple"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+      <div><div class="stat-num" id="statSoftwareApps">${software.length}</div><div class="stat-label">Software Apps</div></div>
+    </div>
   `;
+  // Render budget widgets asynchronously
+  renderSoftwareBudgetWidget();
 
   // recent users
   document.getElementById('recentUsers').innerHTML=[...users].slice(-5).reverse().map(u=>`<tr>
@@ -980,9 +1138,13 @@ function renderPag(cid,cur,total,cb){
 }
 
 /* ══ MODALS ══ */
-function openAddModal(){ currentPage==='users'?openUserModal():openAssetModal(); }
+function openAddModal(){
+  if(currentPage==='users') openUserModal();
+  else if(currentPage==='software') openSoftwareModal();
+  else openAssetModal();
+}
 function showOverlay(mid){ document.getElementById('overlay').style.display='flex'; document.getElementById(mid).style.display='block'; }
-function closeModal(){ document.getElementById('overlay').style.display='none'; ['userModal','assetModal','confirmBox'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; }); }
+function closeModal(){ document.getElementById('overlay').style.display='none'; ['userModal','assetModal','softwareModal','confirmBox'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; }); }
 function closeModalOnOverlay(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
 
 function openUserModal(u=null){
@@ -1239,6 +1401,223 @@ function renderLogChips(total, logs){
     Object.entries(counts).map(([k,v])=>
       `<span class="log-chip" style="cursor:pointer" onclick="document.getElementById('logTypeFilter').value='${k}';renderLogs(1)">${LOG_EVENT_LABELS[k]||k} <span>${v}</span></span>`
     ).join('');
+}
+
+/* ══ SOFTWARE INVENTORY ══ */
+let swPage = 1;
+const SW_PAGE_SIZE = 15;
+let swSort = { col: null, dir: 1 };
+
+const fmtCost = n => {
+  if (!n || n === 0) return '<span style="color:var(--gray-400)">Free</span>';
+  if (n >= 1000) return '$' + (n/1000).toFixed(n%1000===0?0:1) + 'K';
+  return '$' + n.toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:2});
+};
+
+function renderSoftware(){
+  const typeF    = document.getElementById('swTypeFilter').value;
+  const renewF   = document.getElementById('swRenewalFilter').value;
+  const statusF  = document.getElementById('swStatusFilter').value;
+  const q        = searchQ;
+
+  let list = software.filter(s =>
+    (!typeF   || s.deploymentType === typeF) &&
+    (!renewF  || s.renewalPeriod  === renewF) &&
+    (!statusF || s.status         === statusF) &&
+    (!q || [s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q))
+  );
+
+  if(swSort.col){
+    list.sort((a,b)=>{
+      const va = a[swSort.col]||''; const vb = b[swSort.col]||'';
+      return (typeof va==='number' ? va-vb : String(va).localeCompare(String(vb))) * swSort.dir;
+    });
+  }
+
+  const total = list.length;
+  const pages = Math.ceil(total/SW_PAGE_SIZE) || 1;
+  if(swPage > pages) swPage = 1;
+  const slice = list.slice((swPage-1)*SW_PAGE_SIZE, swPage*SW_PAGE_SIZE);
+
+  document.getElementById('swCountLabel').textContent = `${total} app${total!==1?'s':''}`;
+  document.getElementById('navSoftwareCount').textContent = software.length;
+
+  // Budget summary chips at top of page
+  const totalBudget = software.reduce((s,x)=>s+(x.annualCost||0),0);
+  const paidApps    = software.filter(x=>x.annualCost>0).length;
+  const freeApps    = software.filter(x=>!x.annualCost).length;
+  const totalLic    = software.reduce((s,x)=>s+(x.purchasedLicenses||0),0);
+  const usedLic     = software.reduce((s,x)=>s+(x.usedLicenses||0),0);
+  document.getElementById('swBudgetChips').innerHTML = [
+    ['Total Annual Spend', fmtCost(totalBudget).replace('<span style="color:var(--gray-400)">','').replace('</span>',''), '💰'],
+    ['Paid Apps', paidApps, '📦'],
+    ['Free / Open Source', freeApps, '🆓'],
+    ['License Utilization', `${usedLic}/${totalLic}`, '🎫'],
+  ].map(([lbl,val,icon])=>`<div class="sw-budget-chip"><span>${icon}</span><span><span class="chip-val">${val}</span><span class="chip-lbl">${lbl}</span></span></div>`).join('');
+
+  // Table head
+  const cols = [
+    ['csvId','ID',60],['name','Name',200],['department','Dept',160],
+    ['deploymentType','Type',110],['subscriptionPlan','Plan',130],
+    ['renewalPeriod','Renewal',90],['annualCost','Annual Cost',100],
+    [null,'Licenses',90],[null,'Sites',80],[null,'',70],
+  ];
+  document.getElementById('swTableHead').innerHTML = '<tr>'+cols.map(([col,lbl,w])=>
+    col ? `<th class="${sortClass(col,swSort)} sortable" style="width:${w}px" onclick="thSort('${col}',swSort,renderSoftware)">${lbl}${sortArrow(col,swSort)}</th>`
+        : `<th style="width:${w}px">${lbl}</th>`
+  ).join('')+'</tr>';
+
+  // Table body
+  if(!slice.length){
+    document.getElementById('swTableBody').innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--gray-400)">No software found.</td></tr>';
+  } else {
+    document.getElementById('swTableBody').innerHTML = slice.map(s=>{
+      const licPct = s.purchasedLicenses>0 ? Math.min(s.usedLicenses/s.purchasedLicenses,1.5) : 0;
+      const licClass = licPct>1.05?'over':licPct>0.85?'warning':'ok';
+      const licLabel = s.purchasedLicenses>0 ? `${s.usedLicenses}/${s.purchasedLicenses}` : (s.usedLicenses?`${s.usedLicenses} users`:'—');
+      const sites = [s.siteUSA&&'🇺🇸',s.siteCAN&&'🇨🇦',s.siteIND&&'🇮🇳'].filter(Boolean).join(' ');
+      const typeKey = s.deploymentType?.replace(' ','-') || 'SAAS';
+      return `<tr>
+        <td style="font-size:11px;color:var(--gray-400);font-weight:600">${s.csvId}</td>
+        <td><div style="font-weight:600;font-size:13px">${s.name}</div>${s.purpose?`<div style="font-size:11px;color:var(--gray-400)">${s.purpose}</div>`:''}</td>
+        <td style="font-size:12px;color:var(--gray-600)">${s.department||'—'}</td>
+        <td><span class="sw-type-badge ${typeKey}">${s.deploymentType}</span></td>
+        <td style="font-size:11.5px;color:var(--gray-600)">${s.subscriptionPlan||'—'}</td>
+        <td style="font-size:12px">${s.renewalPeriod||'—'}</td>
+        <td style="font-weight:700;font-size:13px">${fmtCost(s.annualCost)}</td>
+        <td>
+          <div style="font-size:12px">${licLabel}</div>
+          ${s.purchasedLicenses>0?`<div><div class="lic-bar"><div class="lic-bar-fill ${licClass}" style="width:${Math.min(licPct*100,100)}%"></div></div></div>`:''}
+        </td>
+        <td style="font-size:15px">${sites||'—'}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="editSoftware('${s.id}')">Edit</button></td>
+      </tr>`;
+    }).join('');
+  }
+  renderPag('swPagination', swPage, pages, p=>`swPage=${p};renderSoftware()`);
+}
+
+/* software budget dashboard widget */
+async function renderSoftwareBudgetWidget(){
+  try {
+    const b = await fetch(`${API}/software/budget`).then(r=>r.json());
+
+    // Update stat grid software cards
+    const el1 = document.getElementById('statSoftwareBudget');
+    const el2 = document.getElementById('statSoftwareApps');
+    if(el1) el1.textContent = fmtCost(b.totalSpend).replace(/<[^>]+>/g,'');
+    if(el2) el2.textContent = b.totalApps;
+
+    // Top 5
+    const top = document.getElementById('topAppsWidget');
+    const bl  = document.getElementById('budgetTotalLabel');
+    if(bl) bl.textContent = `Total annual: ${fmtCost(b.totalSpend).replace(/<[^>]+>/g,'')}`;
+    if(top){
+      top.innerHTML = (b.topApps||[]).map((a,i)=>{
+        const pct = b.totalSpend>0 ? (a.annualCost/b.totalSpend*100).toFixed(1) : 0;
+        const typeKey = a.deploymentType?.replace(' ','-')||'SAAS';
+        return `<div class="budget-bar-row">
+          <div class="budget-bar-label">${i+1}. ${a.name}</div>
+          <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${pct}%;background:${['#3b82f6','#8b5cf6','#06b6d4','#10b981','#f59e0b'][i]}"></div></div>
+          <div class="budget-bar-cost">${fmtCost(a.annualCost).replace(/<[^>]+>/g,'')}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Breakdown by type
+    const bw = document.getElementById('budgetBreakdownWidget');
+    if(bw && b.byType){
+      const COLORS = {SAAS:'#3b82f6','On-premises':'#8b5cf6',Freeware:'#10b981','Open Source':'#f59e0b'};
+      const entries = Object.entries(b.byType).sort((a,b)=>b[1]-a[1]);
+      const maxVal  = Math.max(...entries.map(e=>e[1]),1);
+
+      // License utilization row
+      const licPct = b.totalLic>0 ? Math.min(b.usedLic/b.totalLic*100,100).toFixed(1) : 0;
+      bw.innerHTML = entries.map(([type, cost])=>`
+        <div class="budget-bar-row">
+          <div class="budget-bar-label"><span class="sw-type-badge ${type.replace(' ','-')}" style="font-size:10px">${type}</span></div>
+          <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${cost/maxVal*100}%;background:${COLORS[type]||'#64748b'}"></div></div>
+          <div class="budget-bar-cost">${fmtCost(cost).replace(/<[^>]+>/g,'')}</div>
+        </div>`).join('') +
+      `<div class="budget-bar-row" style="margin-top:4px">
+        <div class="budget-bar-label" style="font-size:11px;color:var(--gray-400)">License Usage</div>
+        <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${licPct}%;background:#10b981"></div></div>
+        <div class="budget-bar-cost" style="font-size:11px">${b.usedLic}/${b.totalLic}</div>
+      </div>`;
+    }
+  } catch(e){ console.warn('Budget widget error', e); }
+}
+
+/* Software CRUD */
+function openSoftwareModal(s=null){
+  document.getElementById('swModalTitle').textContent = s ? 'Edit Software' : 'Add Software';
+  document.getElementById('swId').value       = s?.id||'';
+  document.getElementById('swCsvId').value    = s?.csvId||'';
+  document.getElementById('swName').value     = s?.name||'';
+  document.getElementById('swType').value     = s?.deploymentType||'SAAS';
+  document.getElementById('swRenewal').value  = s?.renewalPeriod||'';
+  document.getElementById('swDept').value     = s?.department||'';
+  document.getElementById('swPurpose').value  = s?.purpose||'';
+  document.getElementById('swCost').value     = s?.annualCost||0;
+  document.getElementById('swPlan').value     = s?.subscriptionPlan||'';
+  document.getElementById('swPurchased').value= s?.purchasedLicenses||0;
+  document.getElementById('swUsed').value     = s?.usedLicenses||0;
+  document.getElementById('swOwner').value    = s?.owner||'';
+  document.getElementById('swAdmins').value   = s?.admins||'';
+  document.getElementById('swBilledTo').value = s?.billedTo||'';
+  document.getElementById('swStatus').value   = s?.status||'Active';
+  document.getElementById('swUSA').checked    = s?.siteUSA||false;
+  document.getElementById('swCAN').checked    = s?.siteCAN||false;
+  document.getElementById('swIND').checked    = s?.siteIND||false;
+  document.getElementById('swDeleteBtn').style.display = s ? 'inline-flex' : 'none';
+  showOverlay('softwareModal');
+}
+
+function editSoftware(id){ openSoftwareModal(software.find(s=>s.id===id)); }
+
+async function saveSoftware(){
+  const name = document.getElementById('swName').value.trim();
+  const csvId= document.getElementById('swCsvId').value.trim().toUpperCase();
+  if(!name||!csvId){ showToast('App ID and Name are required','danger'); return; }
+  const id = document.getElementById('swId').value;
+  const data = {
+    csvId, name,
+    deploymentType: document.getElementById('swType').value,
+    renewalPeriod:  document.getElementById('swRenewal').value,
+    department:     document.getElementById('swDept').value.trim(),
+    purpose:        document.getElementById('swPurpose').value.trim(),
+    annualCost:     parseFloat(document.getElementById('swCost').value)||0,
+    subscriptionPlan: document.getElementById('swPlan').value.trim(),
+    purchasedLicenses: parseInt(document.getElementById('swPurchased').value)||0,
+    usedLicenses:   parseInt(document.getElementById('swUsed').value)||0,
+    owner:          document.getElementById('swOwner').value.trim(),
+    admins:         document.getElementById('swAdmins').value.trim(),
+    billedTo:       document.getElementById('swBilledTo').value.trim(),
+    status:         document.getElementById('swStatus').value,
+    siteUSA:        document.getElementById('swUSA').checked,
+    siteCAN:        document.getElementById('swCAN').checked,
+    siteIND:        document.getElementById('swIND').checked,
+  };
+  try {
+    const res = id
+      ? await fetch(`${API}/software/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      : await fetch(`${API}/software`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
+    showToast(id?'Software updated':'Software added','success');
+    closeModal(); await loadData(); renderSoftware();
+  } catch(e){ showToast(e.message,'danger'); }
+}
+
+function deleteCurrentSoftware(){
+  const id = document.getElementById('swId').value;
+  if(!id) return;
+  closeModal();
+  openConfirm('Delete Software','This will permanently remove this software record.',async()=>{
+    try {
+      await fetch(`${API}/software/${id}`,{method:'DELETE'});
+      showToast('Software deleted'); await loadData(); renderSoftware();
+    } catch(e){ showToast('Delete failed','danger'); }
+  });
 }
 
 /* ══ THEME ══ */

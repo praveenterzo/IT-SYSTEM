@@ -41,8 +41,9 @@ async function disconnect() {
 
 // Re-export models so callers can do:
 //   const { User, Asset } = require('./db');
-const User  = require('./models/User');
-const Asset = require('./models/Asset');
-const Log   = require('./models/Log');
+const User     = require('./models/User');
+const Asset    = require('./models/Asset');
+const Log      = require('./models/Log');
+const Software = require('./models/Software');
 
-module.exports = { connect, disconnect, User, Asset, Log };
+module.exports = { connect, disconnect, User, Asset, Log, Software };
