@@ -308,6 +308,37 @@
     .sw-budget-chip .chip-val { font-size:18px;font-weight:800;color:var(--primary);display:block;line-height:1.1; }
     .sw-budget-chip .chip-lbl { font-size:11px;color:var(--gray-400);font-weight:400; }
 
+    /* ── Advanced Search Panel ── */
+    .adv-search-panel { padding:12px 18px 14px; border-bottom:1px solid var(--gray-100); background:var(--gray-50); display:none; flex-wrap:wrap; gap:8px; align-items:flex-end; }
+    .adv-search-panel.open { display:flex; }
+    .adv-field { display:flex; flex-direction:column; gap:3px; min-width:110px; flex:1; max-width:190px; }
+    .adv-field label { font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.06em; }
+    .adv-field input { padding:6px 9px; border:1px solid var(--gray-200); border-radius:6px; font-size:12px; outline:none; background:#fff; color:var(--gray-800); transition:border .13s; }
+    .adv-field input:focus { border-color:var(--primary-light); box-shadow:0 0 0 2px rgba(59,130,246,.1); }
+    body.theme-dark .adv-search-panel  { background:var(--gray-100) !important; }
+    body.theme-dark .adv-field input   { background:#1e1525 !important; color:#faf9fa !important; }
+    body.theme-purple .adv-search-panel{ background:var(--gray-100) !important; }
+    body.theme-purple .adv-field input { background:#2d1260 !important; color:#f5eeff !important; }
+
+    /* ── Modal Tabs ── */
+    .modal-tabs { display:flex; gap:0; padding:0 22px; border-bottom:1px solid var(--gray-100); flex-shrink:0; background:#fff; }
+    .modal-tab-btn { padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer; background:none; border:none; color:var(--gray-400); border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
+    .modal-tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .modal-tab-btn:hover:not(.active) { color:var(--gray-700); }
+    .modal-tab-panel { display:none; }
+    .modal-tab-panel.active { display:flex; flex-direction:column; gap:12px; padding:18px 22px; }
+    body.theme-dark .modal-tabs  { background:#16101a !important; }
+    body.theme-purple .modal-tabs{ background:#1e0e40 !important; }
+
+    /* ── Services inline table ── */
+    .svc-mini-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .svc-mini-table th { padding:5px 6px; text-align:left; font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; border-bottom:1px solid var(--gray-200); white-space:nowrap; }
+    .svc-mini-table td { padding:4px 4px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    .svc-mini-table input, .svc-mini-table select { padding:4px 6px; border:1px solid var(--gray-200); border-radius:5px; font-size:11.5px; width:100%; background:#fff; color:var(--gray-800); outline:none; }
+    .svc-mini-table input:focus, .svc-mini-table select:focus { border-color:var(--primary-light); }
+    body.theme-dark .svc-mini-table input, body.theme-dark .svc-mini-table select   { background:#1e1525 !important; color:#faf9fa !important; }
+    body.theme-purple .svc-mini-table input, body.theme-purple .svc-mini-table select { background:#2d1260 !important; color:#f5eeff !important; }
+
     /* ── Activity Log ── */
     .log-event-badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -473,7 +504,15 @@
             <select class="filter-select" id="userStatusFilter" onchange="renderUsers()">
               <option value="">All Status</option><option>Active</option><option>Inactive</option>
             </select>
+            <button class="btn btn-secondary btn-sm" id="usersAdvBtn" onclick="toggleAdvSearch('users')">🔍 Advanced ▼</button>
           </div>
+        </div>
+        <div class="adv-search-panel" id="usersAdvPanel">
+          <div class="adv-field"><label>Name</label><input type="text" id="advUserName" placeholder="Search name…" oninput="renderUsers()"></div>
+          <div class="adv-field"><label>Email</label><input type="text" id="advUserEmail" placeholder="email@…" oninput="renderUsers()"></div>
+          <div class="adv-field"><label>Job Title</label><input type="text" id="advUserJobTitle" placeholder="Job title…" oninput="renderUsers()"></div>
+          <div class="adv-field"><label>Reporting Manager</label><input type="text" id="advUserManager" placeholder="Manager name…" oninput="renderUsers()"></div>
+          <button class="btn btn-secondary btn-sm" onclick="clearAdvSearch('users')" style="align-self:flex-end">✕ Clear</button>
         </div>
         <div class="user-table-scroll">
           <table>
@@ -506,7 +545,15 @@
             <select class="filter-select" id="assetStatusFilter" onchange="renderAssets()">
               <option value="">All Status</option><option>In-Use</option><option>Available</option><option>Under Repair</option><option>Retired</option>
             </select>
+            <button class="btn btn-secondary btn-sm" id="assetsAdvBtn" onclick="toggleAdvSearch('assets')">🔍 Advanced ▼</button>
           </div>
+        </div>
+        <div class="adv-search-panel" id="assetsAdvPanel">
+          <div class="adv-field"><label>Name / Spec</label><input type="text" id="advAssetName" placeholder="Asset name…" oninput="renderAssets()"></div>
+          <div class="adv-field"><label>Serial No.</label><input type="text" id="advAssetSerial" placeholder="Serial…" oninput="renderAssets()"></div>
+          <div class="adv-field"><label>Brand / Chip</label><input type="text" id="advAssetBrand" placeholder="Brand…" oninput="renderAssets()"></div>
+          <div class="adv-field"><label>Assigned User</label><input type="text" id="advAssetUser" placeholder="User name…" oninput="renderAssets()"></div>
+          <button class="btn btn-secondary btn-sm" onclick="clearAdvSearch('assets')" style="align-self:flex-end">✕ Clear</button>
         </div>
         <table>
           <thead id="assetTableHead"></thead>
@@ -563,7 +610,16 @@
               <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               PDF
             </button>
+            <button class="btn btn-secondary btn-sm" id="softwareAdvBtn" onclick="toggleAdvSearch('software')">🔍 Advanced ▼</button>
           </div>
+        </div>
+        <div class="adv-search-panel" id="softwareAdvPanel">
+          <div class="adv-field"><label>App Name</label><input type="text" id="advSwName" placeholder="App name…" oninput="renderSoftware()"></div>
+          <div class="adv-field"><label>Department</label><input type="text" id="advSwDept" placeholder="Dept…" oninput="renderSoftware()"></div>
+          <div class="adv-field"><label>Owner</label><input type="text" id="advSwOwner" placeholder="Owner…" oninput="renderSoftware()"></div>
+          <div class="adv-field"><label>Min Cost ($)</label><input type="number" id="advSwCostMin" placeholder="0" min="0" oninput="renderSoftware()"></div>
+          <div class="adv-field"><label>Max Cost ($)</label><input type="number" id="advSwCostMax" placeholder="∞" min="0" oninput="renderSoftware()"></div>
+          <button class="btn btn-secondary btn-sm" onclick="clearAdvSearch('software')" style="align-self:flex-end">✕ Clear</button>
         </div>
         <table>
           <thead id="swTableHead"></thead>
@@ -731,12 +787,20 @@
   </div>
 
   <!-- Software Modal -->
-  <div class="modal" id="softwareModal" style="display:none;max-width:560px">
+  <div class="modal" id="softwareModal" style="display:none;max-width:600px">
     <div class="modal-header">
       <h2 id="swModalTitle">Add Software</h2>
       <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="modal-body">
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button class="modal-tab-btn active" id="swTabDetailsBtn" onclick="swSwitchTab('details')">Details</button>
+      <button class="modal-tab-btn" id="swTabServicesBtn" onclick="swSwitchTab('services')">
+        Additional Services <span id="swSvcCount" style="font-size:10px;background:var(--primary);color:#fff;padding:1px 6px;border-radius:9999px;margin-left:4px;vertical-align:middle">0</span>
+      </button>
+    </div>
+    <!-- Tab: Details -->
+    <div class="modal-tab-panel active" id="swTabDetails">
       <input type="hidden" id="swId">
       <div class="form-row">
         <div class="form-group"><label>App ID *</label><input type="text" id="swCsvId" placeholder="A-34"></div>
@@ -764,7 +828,7 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— auto from: Purchased × Price × 12</span></label>
+          <label>Base Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— Purchased × Price × 12</span></label>
           <input type="number" id="swCost" placeholder="0" min="0" step="0.01">
         </div>
         <div class="form-group" style="justify-content:flex-end;padding-top:22px">
@@ -787,6 +851,29 @@
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swCAN"> 🇨🇦 CAN</label>
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swIND"> 🇮🇳 IND</label>
         </div>
+      </div>
+    </div>
+    <!-- Tab: Additional Services -->
+    <div class="modal-tab-panel" id="swTabServices">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;color:var(--gray-400)">Add-on tiers / services within this app (e.g. Zoom → Zoom Phone, Zoom Rooms…)</div>
+        <button class="btn btn-primary btn-sm" onclick="addServiceRow()">+ Add Service</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="svc-mini-table">
+          <thead><tr>
+            <th>Service Name *</th><th>Plan</th><th>$/User/mo</th><th>Purch.</th><th>Used</th>
+            <th>Annual Cost ($)</th><th>Renewal</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody id="svcTableBody">
+            <tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No services added yet. Click "+ Add Service" to begin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:8px 10px;background:var(--gray-50);border-radius:8px;font-size:12px;color:var(--gray-600);border:1px solid var(--gray-200)">
+        <strong>Services Total:</strong> <span id="svcTotalCost" style="color:var(--primary);font-weight:700">$0</span> / year
+        &nbsp;·&nbsp; <strong>Base Cost:</strong> <span id="svcBaseCostLabel" style="color:var(--gray-600)">$0</span>
+        &nbsp;·&nbsp; <strong>Grand Total:</strong> <span id="svcGrandTotal" style="color:var(--success);font-weight:700">$0</span> / year
       </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;">
@@ -918,7 +1005,7 @@ function renderDashboard(){
       <div class="dept-count" style="color:${deptColors[d]||'var(--primary)'}">${c}</div>
     </div>`).join('');
 
-  const totalSwBudget = software.reduce((s,x)=>s+(x.annualCost||0),0);
+  const totalSwBudget = software.reduce((s,x)=>s+swTotalCost(x),0);
   document.getElementById('statGrid').innerHTML=`
     ${sc('blue','<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',users.length,'Total Users')}
     ${sc('green','<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',users.filter(u=>u.status==='Active').length,'Active Users')}
@@ -968,12 +1055,20 @@ function filteredUsers(){
   const rf=document.getElementById('userRoleFilter')?.value||'';
   const lf=document.getElementById('userLocFilter')?.value||'';
   const sf=document.getElementById('userStatusFilter')?.value||'';
+  const advName    = (document.getElementById('advUserName')?.value||'').toLowerCase();
+  const advEmail   = (document.getElementById('advUserEmail')?.value||'').toLowerCase();
+  const advJobTitle= (document.getElementById('advUserJobTitle')?.value||'').toLowerCase();
+  const advManager = (document.getElementById('advUserManager')?.value||'').toLowerCase();
   let list=users.filter(u=>{
     if(searchQ && !`${u.first} ${u.last} ${u.email} ${u.dept} ${u.role} ${u.location} ${u.jobTitle||''} ${u.reportingManager||''}`.toLowerCase().includes(searchQ)) return false;
     if(df && u.dept!==df) return false;
     if(rf && u.role!==rf) return false;
     if(lf && u.location!==lf) return false;
     if(sf && u.status!==sf) return false;
+    if(advName    && !`${u.first} ${u.last}`.toLowerCase().includes(advName))    return false;
+    if(advEmail   && !(u.email||'').toLowerCase().includes(advEmail))             return false;
+    if(advJobTitle&& !(u.jobTitle||'').toLowerCase().includes(advJobTitle))       return false;
+    if(advManager && !(u.reportingManager||'').toLowerCase().includes(advManager))return false;
     return true;
   });
   if(userSort.col){
@@ -1041,6 +1136,10 @@ function filteredAssets(){
   const lf=document.getElementById('assetLocFilter')?.value||'';
   const tf=document.getElementById('assetTypeFilter')?.value||'';
   const sf=document.getElementById('assetStatusFilter')?.value||'';
+  const advName   = (document.getElementById('advAssetName')?.value||'').toLowerCase();
+  const advSerial = (document.getElementById('advAssetSerial')?.value||'').toLowerCase();
+  const advBrand  = (document.getElementById('advAssetBrand')?.value||'').toLowerCase();
+  const advUser   = (document.getElementById('advAssetUser')?.value||'').toLowerCase();
   let list=assets.filter(a=>{
     const u=users.find(x=>x.id===a.assignTo);
     const un=u?`${u.first} ${u.last}`:'';
@@ -1049,6 +1148,10 @@ function filteredAssets(){
     if(lf && a.location!==lf) return false;
     if(tf && a.type!==tf) return false;
     if(sf && a.status!==sf) return false;
+    if(advName   && !(a.name||'').toLowerCase().includes(advName))   return false;
+    if(advSerial && !(a.serial||'').toLowerCase().includes(advSerial))return false;
+    if(advBrand  && !(a.brand||'').toLowerCase().includes(advBrand)) return false;
+    if(advUser   && !un.toLowerCase().includes(advUser))             return false;
     return true;
   });
   if(assetSort.col){
@@ -1425,6 +1528,113 @@ let swPage = 1;
 const SW_PAGE_SIZE = 15;
 let swSort = { col: null, dir: 1 };
 let swBudgetFilter = ''; // '' | 'paid' | 'free'
+let editingServices = []; // services being edited in the modal
+
+/* ── Modal tab switch ── */
+function swSwitchTab(tab){
+  document.getElementById('swTabDetailsBtn').classList.toggle('active', tab==='details');
+  document.getElementById('swTabServicesBtn').classList.toggle('active', tab==='services');
+  document.getElementById('swTabDetails').classList.toggle('active', tab==='details');
+  document.getElementById('swTabServices').classList.toggle('active', tab==='services');
+}
+
+/* ── Advanced search toggle ── */
+function toggleAdvSearch(page){
+  const panel = document.getElementById(page+'AdvPanel');
+  const btn   = document.getElementById(page+'AdvBtn');
+  if(!panel) return;
+  const open = panel.classList.toggle('open');
+  if(btn) btn.textContent = open ? '🔍 Advanced ▲' : '🔍 Advanced ▼';
+}
+function clearAdvSearch(page){
+  const ids = {
+    users:    ['advUserName','advUserEmail','advUserJobTitle','advUserManager'],
+    assets:   ['advAssetName','advAssetSerial','advAssetBrand','advAssetUser'],
+    software: ['advSwName','advSwDept','advSwOwner','advSwCostMin','advSwCostMax'],
+  };
+  (ids[page]||[]).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  if(page==='users') renderUsers();
+  else if(page==='assets') renderAssets();
+  else renderSoftware();
+}
+
+/* ── Total cost helper (base + active services) ── */
+function swTotalCost(s){
+  const base = s.annualCost||0;
+  const svcSum = (s.services||[]).filter(sv=>sv.status!=='Inactive').reduce((sum,sv)=>sum+(sv.annualCost||0),0);
+  return base + svcSum;
+}
+
+/* ── HTML escape helper ── */
+function esc(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+/* ── Services tab functions ── */
+function renderServicesTab(){
+  const body = document.getElementById('svcTableBody');
+  if(!body) return;
+  if(!editingServices.length){
+    body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No services added yet. Click "+ Add Service" to begin.</td></tr>';
+    _updateSvcSummary();
+    document.getElementById('swSvcCount').textContent='0';
+    return;
+  }
+  const renewalOpts=['','Annual','Monthly','Quarterly','Freeware','Pay-as-you-go'];
+  body.innerHTML = editingServices.map((svc,i)=>`
+    <tr>
+      <td><input type="text" value="${esc(svc.name)}" placeholder="Service name" oninput="editingServices[${i}].name=this.value"></td>
+      <td><input type="text" value="${esc(svc.plan||'')}" placeholder="Plan" oninput="editingServices[${i}].plan=this.value"></td>
+      <td><input type="number" value="${svc.licensePricePerUserMonth||0}" min="0" step="0.01" style="width:60px" oninput="editingServices[${i}].licensePricePerUserMonth=parseFloat(this.value)||0;calcSvcRow(${i})"></td>
+      <td><input type="number" value="${svc.purchasedLicenses||0}" min="0" style="width:55px" oninput="editingServices[${i}].purchasedLicenses=parseInt(this.value)||0;calcSvcRow(${i})"></td>
+      <td><input type="number" value="${svc.usedLicenses||0}" min="0" style="width:50px" oninput="editingServices[${i}].usedLicenses=parseInt(this.value)||0"></td>
+      <td><input type="number" id="svcCost_${i}" value="${svc.annualCost||0}" min="0" step="0.01" style="width:80px" oninput="editingServices[${i}].annualCost=parseFloat(this.value)||0;_updateSvcSummary()"></td>
+      <td><select style="width:90px" onchange="editingServices[${i}].renewalPeriod=this.value">${renewalOpts.map(r=>`<option${svc.renewalPeriod===r?' selected':''}>${r}</option>`).join('')}</select></td>
+      <td><select style="width:72px" onchange="editingServices[${i}].status=this.value">
+        <option${svc.status!=='Inactive'?' selected':''}>Active</option>
+        <option${svc.status==='Inactive'?' selected':''}>Inactive</option>
+      </select></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeServiceRow(${i})" title="Remove" style="padding:3px 6px;font-size:12px">✕</button></td>
+    </tr>`).join('');
+  _updateSvcSummary();
+  document.getElementById('swSvcCount').textContent = editingServices.length||'0';
+}
+
+function addServiceRow(){
+  editingServices.push({name:'',plan:'',annualCost:0,licensePricePerUserMonth:0,purchasedLicenses:0,usedLicenses:0,renewalPeriod:'',status:'Active'});
+  renderServicesTab();
+  // Scroll to new row
+  const body = document.getElementById('svcTableBody');
+  if(body) body.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function removeServiceRow(i){
+  editingServices.splice(i,1);
+  renderServicesTab();
+}
+
+function calcSvcRow(i){
+  const svc = editingServices[i];
+  if(svc.licensePricePerUserMonth>0 && svc.purchasedLicenses>0){
+    svc.annualCost = +(svc.purchasedLicenses * svc.licensePricePerUserMonth * 12).toFixed(2);
+    const input = document.getElementById('svcCost_'+i);
+    if(input) input.value = svc.annualCost;
+  }
+  _updateSvcSummary();
+}
+
+function _updateSvcSummary(){
+  const svcTotal = editingServices.reduce((s,sv)=>s+(sv.annualCost||0),0);
+  const base = parseFloat(document.getElementById('swCost')?.value)||0;
+  const grand = base + svcTotal;
+  const fmt = n => n>0 ? ('$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2})) : '$0';
+  const el1 = document.getElementById('svcTotalCost');
+  const el2 = document.getElementById('svcBaseCostLabel');
+  const el3 = document.getElementById('svcGrandTotal');
+  const cnt = document.getElementById('swSvcCount');
+  if(el1) el1.textContent = fmt(svcTotal);
+  if(el2) el2.textContent = fmt(base);
+  if(el3) el3.textContent = fmt(grand);
+  if(cnt) cnt.textContent = editingServices.length||'0';
+}
 
 const fmtCost = n => {
   if (!n || n === 0) return '<span style="color:var(--gray-400)">Free</span>';
@@ -1444,17 +1654,29 @@ function renderSoftware(){
   const renewF   = document.getElementById('swRenewalFilter').value;
   const statusF  = document.getElementById('swStatusFilter').value;
   const q        = searchQ;
+  const advSwName  = (document.getElementById('advSwName')?.value||'').toLowerCase();
+  const advSwDept  = (document.getElementById('advSwDept')?.value||'').toLowerCase();
+  const advSwOwner = (document.getElementById('advSwOwner')?.value||'').toLowerCase();
+  const advSwMin   = parseFloat(document.getElementById('advSwCostMin')?.value)||0;
+  const advSwMax   = parseFloat(document.getElementById('advSwCostMax')?.value)||Infinity;
 
-  let list = software.filter(s =>
-    (!typeF   || s.deploymentType === typeF) &&
-    (!renewF  || s.renewalPeriod  === renewF) &&
-    (!statusF || s.status         === statusF) &&
-    (!q || [s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q))
-  );
+  let list = software.filter(s => {
+    if(typeF   && s.deploymentType !== typeF)  return false;
+    if(renewF  && s.renewalPeriod  !== renewF) return false;
+    if(statusF && s.status         !== statusF)return false;
+    if(q && ![s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q)) return false;
+    if(advSwName  && !(s.name||'').toLowerCase().includes(advSwName))       return false;
+    if(advSwDept  && !(s.department||'').toLowerCase().includes(advSwDept)) return false;
+    if(advSwOwner && !(s.owner||'').toLowerCase().includes(advSwOwner))     return false;
+    const tc = swTotalCost(s);
+    if(tc < advSwMin) return false;
+    if(advSwMax < Infinity && tc > advSwMax) return false;
+    return true;
+  });
 
   // Budget chip filter
-  if(swBudgetFilter === 'paid') list = list.filter(s => (s.annualCost||0) > 0);
-  if(swBudgetFilter === 'free') list = list.filter(s => !(s.annualCost > 0));
+  if(swBudgetFilter === 'paid') list = list.filter(s => swTotalCost(s) > 0);
+  if(swBudgetFilter === 'free') list = list.filter(s => swTotalCost(s) === 0);
 
   if(swSort.col){
     list.sort((a,b)=>{
@@ -1471,10 +1693,10 @@ function renderSoftware(){
   document.getElementById('swCountLabel').textContent = `${total} app${total!==1?'s':''}${swBudgetFilter?' (filtered)':''}`;
   document.getElementById('navSoftwareCount').textContent = software.length;
 
-  // Budget summary chips at top of page
-  const totalBudget = software.reduce((s,x)=>s+(x.annualCost||0),0);
-  const paidList    = software.filter(x=>(x.annualCost||0)>0);
-  const freeList    = software.filter(x=>!(x.annualCost>0));
+  // Budget summary chips at top of page (include service costs in totals)
+  const totalBudget = software.reduce((s,x)=>s+swTotalCost(x),0);
+  const paidList    = software.filter(x=>swTotalCost(x)>0);
+  const freeList    = software.filter(x=>swTotalCost(x)===0);
   const totalLic    = software.reduce((s,x)=>s+(x.purchasedLicenses||0),0);
   const usedLic     = software.reduce((s,x)=>s+(x.usedLicenses||0),0);
 
@@ -1495,10 +1717,11 @@ function renderSoftware(){
 
   // Table head
   const cols = [
-    ['csvId','ID',60],['name','Name',200],['department','Dept',140],
-    ['deploymentType','Type',110],['subscriptionPlan','Plan',120],
-    ['renewalPeriod','Renewal',90],['annualCost','Annual Cost',110],
-    [null,'Licenses',90],[null,'Sites',80],[null,'',60],
+    ['csvId','ID',55],['name','Name',185],['department','Dept',120],
+    ['deploymentType','Type',100],['subscriptionPlan','Plan',110],
+    ['renewalPeriod','Renewal',85],['licensePricePerUserMonth','$/mo',68],
+    ['annualCost','Total Cost',115],
+    [null,'Licenses',85],[null,'Sites',72],[null,'',55],
   ];
   document.getElementById('swTableHead').innerHTML = '<tr>'+cols.map(([col,lbl,w])=>
     col ? `<th class="${sortClass(col,swSort)} sortable" style="width:${w}px" onclick="thSort('${col}',swSort,renderSoftware)">${lbl}${sortArrow(col,swSort)}</th>`
@@ -1506,26 +1729,35 @@ function renderSoftware(){
   ).join('')+'</tr>';
 
   // Table body
+  const NCOLS = cols.length;
   if(!slice.length){
-    document.getElementById('swTableBody').innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--gray-400)">No software found.</td></tr>';
+    document.getElementById('swTableBody').innerHTML=`<tr><td colspan="${NCOLS}" style="text-align:center;padding:32px;color:var(--gray-400)">No software found.</td></tr>`;
   } else {
     document.getElementById('swTableBody').innerHTML = slice.map(s=>{
-      const licPct = s.purchasedLicenses>0 ? Math.min(s.usedLicenses/s.purchasedLicenses,1.5) : 0;
+      const licPct   = s.purchasedLicenses>0 ? Math.min(s.usedLicenses/s.purchasedLicenses,1.5) : 0;
       const licClass = licPct>1.05?'over':licPct>0.85?'warning':'ok';
       const licLabel = s.purchasedLicenses>0 ? `${s.usedLicenses}/${s.purchasedLicenses}` : (s.usedLicenses?`${s.usedLicenses} users`:'—');
-      const sites = [s.siteUSA&&'🇺🇸',s.siteCAN&&'🇨🇦',s.siteIND&&'🇮🇳'].filter(Boolean).join(' ');
-      const typeKey = s.deploymentType?.replace(' ','-') || 'SAAS';
+      const sites    = [s.siteUSA&&'🇺🇸',s.siteCAN&&'🇨🇦',s.siteIND&&'🇮🇳'].filter(Boolean).join(' ');
+      const typeKey  = s.deploymentType?.replace(' ','-') || 'SAAS';
+      const totalCost= swTotalCost(s);
+      const activeSvcs = (s.services||[]).filter(sv=>sv.status!=='Inactive');
+      const licPrice = s.licensePricePerUserMonth;
       return `<tr>
         <td style="font-size:11px;color:var(--gray-400);font-weight:600">${s.csvId}</td>
         <td onclick="editSoftware('${s.id}')" style="cursor:pointer">
           <div style="font-weight:600;font-size:13px;color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${s.name}</div>
           ${s.purpose?`<div style="font-size:11px;color:var(--gray-400)">${s.purpose}</div>`:''}
+          ${activeSvcs.length?`<div style="font-size:10px;color:var(--accent);margin-top:2px">+${activeSvcs.length} add-on${activeSvcs.length>1?'s':''}</div>`:''}
         </td>
         <td style="font-size:12px;color:var(--gray-600)">${s.department||'—'}</td>
         <td><span class="sw-type-badge ${typeKey}">${s.deploymentType}</span></td>
         <td style="font-size:11.5px;color:var(--gray-600)">${s.subscriptionPlan||'—'}</td>
         <td style="font-size:12px">${s.renewalPeriod||'—'}</td>
-        <td style="font-weight:700;font-size:13px">${fmtCost(s.annualCost)}</td>
+        <td style="font-size:12px;color:var(--gray-600)">${licPrice ? '$'+licPrice : '<span style="color:var(--gray-400)">—</span>'}</td>
+        <td style="font-weight:700;font-size:13px">
+          ${fmtCost(totalCost)}
+          ${activeSvcs.length?`<div style="font-size:10px;font-weight:400;color:var(--gray-400)">base ${fmtCost(s.annualCost)}</div>`:''}
+        </td>
         <td>
           <div style="font-size:12px">${licLabel}</div>
           ${s.purchasedLicenses>0?`<div><div class="lic-bar"><div class="lic-bar-fill ${licClass}" style="width:${Math.min(licPct*100,100)}%"></div></div></div>`:''}
@@ -1612,6 +1844,11 @@ function openSoftwareModal(s=null){
   document.getElementById('swCAN').checked    = s?.siteCAN||false;
   document.getElementById('swIND').checked    = s?.siteIND||false;
   document.getElementById('swDeleteBtn').style.display = s ? 'inline-flex' : 'none';
+  // Load services for editing (deep copy)
+  editingServices = JSON.parse(JSON.stringify(s?.services||[]));
+  // Always start on Details tab
+  swSwitchTab('details');
+  renderServicesTab();
   showOverlay('softwareModal');
 }
 
@@ -1640,6 +1877,15 @@ async function saveSoftware(){
     siteUSA:        document.getElementById('swUSA').checked,
     siteCAN:        document.getElementById('swCAN').checked,
     siteIND:        document.getElementById('swIND').checked,
+    services:       editingServices.filter(sv=>sv.name).map(sv=>({
+      name: sv.name.trim(), plan: sv.plan||'',
+      annualCost: sv.annualCost||0,
+      licensePricePerUserMonth: sv.licensePricePerUserMonth||0,
+      purchasedLicenses: sv.purchasedLicenses||0,
+      usedLicenses: sv.usedLicenses||0,
+      renewalPeriod: sv.renewalPeriod||'',
+      status: sv.status||'Active',
+    })),
   };
   try {
     const res = id
@@ -1673,14 +1919,18 @@ function calcSwAnnualCost(){
 }
 
 function exportSwCSV(){
-  const headers = ['ID','Name','Type','Department','Purpose','Subscription Plan','Renewal','License Price/User/Month','Purchased Licenses','Used Licenses','Annual Cost','Owner','Admins','Billed To','Status','USA','CAN','IND'];
-  const rows = software.map(s=>[
-    s.csvId, s.name, s.deploymentType, s.department||'', s.purpose||'',
-    s.subscriptionPlan||'', s.renewalPeriod||'',
-    s.licensePricePerUserMonth||0, s.purchasedLicenses||0, s.usedLicenses||0,
-    s.annualCost||0, s.owner||'', s.admins||'', s.billedTo||'', s.status||'',
-    s.siteUSA?'Yes':'', s.siteCAN?'Yes':'', s.siteIND?'Yes':''
-  ]);
+  const headers = ['ID','Name','Type','Department','Purpose','Subscription Plan','Renewal','License $/mo','Purchased Licenses','Used Licenses','Base Annual Cost','Add-on Services','Total Annual Cost','Owner','Admins','Billed To','Status','USA','CAN','IND'];
+  const rows = software.map(s=>{
+    const svcCount = (s.services||[]).filter(sv=>sv.status!=='Inactive').length;
+    return [
+      s.csvId, s.name, s.deploymentType, s.department||'', s.purpose||'',
+      s.subscriptionPlan||'', s.renewalPeriod||'',
+      s.licensePricePerUserMonth||0, s.purchasedLicenses||0, s.usedLicenses||0,
+      s.annualCost||0, svcCount, swTotalCost(s),
+      s.owner||'', s.admins||'', s.billedTo||'', s.status||'',
+      s.siteUSA?'Yes':'', s.siteCAN?'Yes':'', s.siteIND?'Yes':''
+    ];
+  });
   const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
@@ -1712,25 +1962,30 @@ async function exportSwPDF(){
     doc.setFontSize(18); doc.setTextColor(30,64,175);
     doc.text('TerzoCloud — Software Inventory', 14, 16);
     doc.setFontSize(9); doc.setTextColor(100,116,139);
-    const totalSpend = software.reduce((s,x)=>s+(x.annualCost||0),0);
-    const paidCount  = software.filter(x=>(x.annualCost||0)>0).length;
+    const totalSpend = software.reduce((s,x)=>s+swTotalCost(x),0);
+    const paidCount  = software.filter(x=>swTotalCost(x)>0).length;
     doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Total Apps: ${software.length}   |   Paid: ${paidCount}   |   Annual Spend: $${(totalSpend).toLocaleString()}`, 14, 23);
 
     doc.autoTable({
       startY: 28,
-      head: [['ID','Name','Type','Department','Plan','Renewal','Annual Cost','Lic $/mo','Purchased','Used','Owner','Status']],
-      body: software.map(s=>[
-        s.csvId, s.name, s.deploymentType, s.department||'—',
-        s.subscriptionPlan||'—', s.renewalPeriod||'—',
-        (s.annualCost>0?'$'+s.annualCost.toLocaleString():'Free'),
-        s.licensePricePerUserMonth?'$'+s.licensePricePerUserMonth:'—',
-        s.purchasedLicenses||'—', s.usedLicenses||'—',
-        s.owner||'—', s.status
-      ]),
+      head: [['ID','Name','Type','Department','Plan','Renewal','$/mo','Base Cost','Add-ons','Total Cost','Owner','Status']],
+      body: software.map(s=>{
+        const tc = swTotalCost(s);
+        const svcCnt = (s.services||[]).filter(sv=>sv.status!=='Inactive').length;
+        return [
+          s.csvId, s.name, s.deploymentType, s.department||'—',
+          s.subscriptionPlan||'—', s.renewalPeriod||'—',
+          s.licensePricePerUserMonth?'$'+s.licensePricePerUserMonth:'—',
+          (s.annualCost>0?'$'+s.annualCost.toLocaleString():'Free'),
+          svcCnt||'—',
+          (tc>0?'$'+tc.toLocaleString():'Free'),
+          s.owner||'—', s.status
+        ];
+      }),
       styles: { fontSize: 7.5, cellPadding: 2 },
       headStyles: { fillColor: [30,64,175], textColor: 255, fontStyle:'bold', fontSize:8 },
       alternateRowStyles: { fillColor: [248,250,252] },
-      columnStyles: { 0:{cellWidth:12}, 1:{cellWidth:38}, 2:{cellWidth:20}, 6:{halign:'right'}, 7:{halign:'right'} },
+      columnStyles: { 0:{cellWidth:11}, 1:{cellWidth:35}, 2:{cellWidth:18}, 7:{halign:'right'}, 9:{halign:'right'} },
     });
 
     doc.save(`software-inventory-${new Date().toISOString().slice(0,10)}.pdf`);

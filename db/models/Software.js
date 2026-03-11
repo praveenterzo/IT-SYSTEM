@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+// ── Service sub-document (add-on tiers within an app, e.g. Zoom Phone) ──────
+const serviceSchema = new mongoose.Schema({
+  name:     { type: String, required: true, trim: true },
+  plan:     { type: String, default: '', trim: true },
+  annualCost:               { type: Number, default: 0 },
+  licensePricePerUserMonth: { type: Number, default: 0 },
+  purchasedLicenses:        { type: Number, default: 0 },
+  usedLicenses:             { type: Number, default: 0 },
+  renewalPeriod:            { type: String, default: '' },
+  status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
+}, { _id: true });
+
 const softwareSchema = new mongoose.Schema(
   {
     csvId: {
@@ -38,6 +50,9 @@ const softwareSchema = new mongoose.Schema(
     costIND: { type: Number, default: 0 },
 
     status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
+
+    // Add-on services (e.g. Zoom → Zoom Phone, Zoom Rooms)
+    services: { type: [serviceSchema], default: [] },
   },
   { timestamps: true }
 );

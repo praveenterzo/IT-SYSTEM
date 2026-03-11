@@ -356,16 +356,20 @@ app.get('/api/software', async (req, res) => {
 app.get('/api/software/budget', async (req, res) => {
   try {
     const all = await Software.find().lean();
-    const totalSpend   = all.reduce((s, x) => s + (x.annualCost || 0), 0);
-    const saasSpend    = all.filter(x => x.deploymentType === 'SAAS').reduce((s, x) => s + (x.annualCost || 0), 0);
-    const freeCount    = all.filter(x => x.annualCost === 0).length;
-    const paidCount    = all.filter(x => x.annualCost > 0).length;
+    // Helper: total cost for a software entry including all active add-on services
+    const svcCost = x => ((x.services || []).filter(s => s.status !== 'Inactive').reduce((ss, sv) => ss + (sv.annualCost || 0), 0));
+    const totalCost = x => (x.annualCost || 0) + svcCost(x);
+
+    const totalSpend   = all.reduce((s, x) => s + totalCost(x), 0);
+    const saasSpend    = all.filter(x => x.deploymentType === 'SAAS').reduce((s, x) => s + totalCost(x), 0);
+    const freeCount    = all.filter(x => totalCost(x) === 0).length;
+    const paidCount    = all.filter(x => totalCost(x) > 0).length;
     const totalLic     = all.reduce((s, x) => s + (x.purchasedLicenses || 0), 0);
     const usedLic      = all.reduce((s, x) => s + (x.usedLicenses || 0), 0);
-    const topApps      = [...all].sort((a, b) => (b.annualCost || 0) - (a.annualCost || 0)).slice(0, 5)
-      .map(x => ({ csvId: x.csvId, name: x.name, annualCost: x.annualCost, deploymentType: x.deploymentType, department: x.department }));
+    const topApps      = [...all].sort((a, b) => totalCost(b) - totalCost(a)).slice(0, 5)
+      .map(x => ({ csvId: x.csvId, name: x.name, annualCost: totalCost(x), baseCost: x.annualCost, serviceCount: (x.services||[]).length, deploymentType: x.deploymentType, department: x.department }));
     const byType       = {};
-    all.forEach(x => { const t = x.deploymentType; byType[t] = (byType[t] || 0) + (x.annualCost || 0); });
+    all.forEach(x => { const t = x.deploymentType; byType[t] = (byType[t] || 0) + totalCost(x); });
     res.json({ totalSpend, saasSpend, freeCount, paidCount, totalApps: all.length, totalLic, usedLic, topApps, byType });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
