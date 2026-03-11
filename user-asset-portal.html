@@ -555,6 +555,14 @@
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
+            <button class="btn btn-secondary btn-sm" onclick="exportSwCSV()" title="Export to CSV">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="exportSwPDF()" title="Export to PDF">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF
+            </button>
           </div>
         </div>
         <table>
@@ -747,12 +755,21 @@
         <div class="form-group"><label>Purpose</label><input type="text" id="swPurpose" placeholder="e.g. CI/CD"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Annual Cost ($)</label><input type="number" id="swCost" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>License Price / User / Month ($)</label><input type="number" id="swLicPrice" placeholder="0.00" min="0" step="0.01" oninput="calcSwAnnualCost()"></div>
         <div class="form-group"><label>Subscription Plan</label><input type="text" id="swPlan" placeholder="e.g. Business Pro"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Purchased Licenses</label><input type="number" id="swPurchased" placeholder="0" min="0"></div>
+        <div class="form-group"><label>Purchased Licenses</label><input type="number" id="swPurchased" placeholder="0" min="0" oninput="calcSwAnnualCost()"></div>
         <div class="form-group"><label>Used Licenses</label><input type="number" id="swUsed" placeholder="0" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— auto from: Purchased × Price × 12</span></label>
+          <input type="number" id="swCost" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;padding-top:22px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="calcSwAnnualCost()" style="width:100%">↻ Recalculate</button>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Owner</label><input type="text" id="swOwner" placeholder="Owner name"></div>
@@ -1407,12 +1424,20 @@ function renderLogChips(total, logs){
 let swPage = 1;
 const SW_PAGE_SIZE = 15;
 let swSort = { col: null, dir: 1 };
+let swBudgetFilter = ''; // '' | 'paid' | 'free'
 
 const fmtCost = n => {
   if (!n || n === 0) return '<span style="color:var(--gray-400)">Free</span>';
   if (n >= 1000) return '$' + (n/1000).toFixed(n%1000===0?0:1) + 'K';
   return '$' + n.toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:2});
 };
+const fmtCostPlain = n => (!n||n===0) ? 'Free' : (n>=1000 ? '$'+(n/1000).toFixed(1)+'K' : '$'+n.toLocaleString('en-US'));
+
+function swBudgetChipClick(type){
+  swBudgetFilter = swBudgetFilter === type ? '' : type;
+  swPage = 1;
+  renderSoftware();
+}
 
 function renderSoftware(){
   const typeF    = document.getElementById('swTypeFilter').value;
@@ -1427,6 +1452,10 @@ function renderSoftware(){
     (!q || [s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q))
   );
 
+  // Budget chip filter
+  if(swBudgetFilter === 'paid') list = list.filter(s => (s.annualCost||0) > 0);
+  if(swBudgetFilter === 'free') list = list.filter(s => !(s.annualCost > 0));
+
   if(swSort.col){
     list.sort((a,b)=>{
       const va = a[swSort.col]||''; const vb = b[swSort.col]||'';
@@ -1439,28 +1468,37 @@ function renderSoftware(){
   if(swPage > pages) swPage = 1;
   const slice = list.slice((swPage-1)*SW_PAGE_SIZE, swPage*SW_PAGE_SIZE);
 
-  document.getElementById('swCountLabel').textContent = `${total} app${total!==1?'s':''}`;
+  document.getElementById('swCountLabel').textContent = `${total} app${total!==1?'s':''}${swBudgetFilter?' (filtered)':''}`;
   document.getElementById('navSoftwareCount').textContent = software.length;
 
   // Budget summary chips at top of page
   const totalBudget = software.reduce((s,x)=>s+(x.annualCost||0),0);
-  const paidApps    = software.filter(x=>x.annualCost>0).length;
-  const freeApps    = software.filter(x=>!x.annualCost).length;
+  const paidList    = software.filter(x=>(x.annualCost||0)>0);
+  const freeList    = software.filter(x=>!(x.annualCost>0));
   const totalLic    = software.reduce((s,x)=>s+(x.purchasedLicenses||0),0);
   const usedLic     = software.reduce((s,x)=>s+(x.usedLicenses||0),0);
-  document.getElementById('swBudgetChips').innerHTML = [
-    ['Total Annual Spend', fmtCost(totalBudget).replace('<span style="color:var(--gray-400)">','').replace('</span>',''), '💰'],
-    ['Paid Apps', paidApps, '📦'],
-    ['Free / Open Source', freeApps, '🆓'],
-    ['License Utilization', `${usedLic}/${totalLic}`, '🎫'],
-  ].map(([lbl,val,icon])=>`<div class="sw-budget-chip"><span>${icon}</span><span><span class="chip-val">${val}</span><span class="chip-lbl">${lbl}</span></span></div>`).join('');
+
+  const activeStyle = 'border-color:var(--primary);box-shadow:0 0 0 2px rgba(59,130,246,.2);';
+  document.getElementById('swBudgetChips').innerHTML =
+    `<div class="sw-budget-chip" style="${swBudgetFilter===''?activeStyle:''}">
+       <span>💰</span><span><span class="chip-val">${fmtCostPlain(totalBudget)}</span><span class="chip-lbl">Total Annual Spend</span></span>
+     </div>
+     <div class="sw-budget-chip" style="cursor:pointer;${swBudgetFilter==='paid'?activeStyle+';background:rgba(59,130,246,.08)':''}" onclick="swBudgetChipClick('paid')" title="Click to filter paid apps">
+       <span>📦</span><span><span class="chip-val" style="color:var(--primary)">${paidList.length}</span><span class="chip-lbl">Paid Apps ${swBudgetFilter==='paid'?'✓':''}</span></span>
+     </div>
+     <div class="sw-budget-chip" style="cursor:pointer;${swBudgetFilter==='free'?activeStyle+';background:rgba(22,163,74,.08)':''}" onclick="swBudgetChipClick('free')" title="Click to filter free/open-source apps">
+       <span>🆓</span><span><span class="chip-val" style="color:var(--success)">${freeList.length}</span><span class="chip-lbl">Free / Open Source ${swBudgetFilter==='free'?'✓':''}</span></span>
+     </div>
+     <div class="sw-budget-chip">
+       <span>🎫</span><span><span class="chip-val">${usedLic}/${totalLic}</span><span class="chip-lbl">License Utilization</span></span>
+     </div>`;
 
   // Table head
   const cols = [
-    ['csvId','ID',60],['name','Name',200],['department','Dept',160],
-    ['deploymentType','Type',110],['subscriptionPlan','Plan',130],
-    ['renewalPeriod','Renewal',90],['annualCost','Annual Cost',100],
-    [null,'Licenses',90],[null,'Sites',80],[null,'',70],
+    ['csvId','ID',60],['name','Name',200],['department','Dept',140],
+    ['deploymentType','Type',110],['subscriptionPlan','Plan',120],
+    ['renewalPeriod','Renewal',90],['annualCost','Annual Cost',110],
+    [null,'Licenses',90],[null,'Sites',80],[null,'',60],
   ];
   document.getElementById('swTableHead').innerHTML = '<tr>'+cols.map(([col,lbl,w])=>
     col ? `<th class="${sortClass(col,swSort)} sortable" style="width:${w}px" onclick="thSort('${col}',swSort,renderSoftware)">${lbl}${sortArrow(col,swSort)}</th>`
@@ -1479,7 +1517,10 @@ function renderSoftware(){
       const typeKey = s.deploymentType?.replace(' ','-') || 'SAAS';
       return `<tr>
         <td style="font-size:11px;color:var(--gray-400);font-weight:600">${s.csvId}</td>
-        <td><div style="font-weight:600;font-size:13px">${s.name}</div>${s.purpose?`<div style="font-size:11px;color:var(--gray-400)">${s.purpose}</div>`:''}</td>
+        <td onclick="editSoftware('${s.id}')" style="cursor:pointer">
+          <div style="font-weight:600;font-size:13px;color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${s.name}</div>
+          ${s.purpose?`<div style="font-size:11px;color:var(--gray-400)">${s.purpose}</div>`:''}
+        </td>
         <td style="font-size:12px;color:var(--gray-600)">${s.department||'—'}</td>
         <td><span class="sw-type-badge ${typeKey}">${s.deploymentType}</span></td>
         <td style="font-size:11.5px;color:var(--gray-600)">${s.subscriptionPlan||'—'}</td>
@@ -1558,6 +1599,7 @@ function openSoftwareModal(s=null){
   document.getElementById('swRenewal').value  = s?.renewalPeriod||'';
   document.getElementById('swDept').value     = s?.department||'';
   document.getElementById('swPurpose').value  = s?.purpose||'';
+  document.getElementById('swLicPrice').value = s?.licensePricePerUserMonth||0;
   document.getElementById('swCost').value     = s?.annualCost||0;
   document.getElementById('swPlan').value     = s?.subscriptionPlan||'';
   document.getElementById('swPurchased').value= s?.purchasedLicenses||0;
@@ -1586,6 +1628,7 @@ async function saveSoftware(){
     renewalPeriod:  document.getElementById('swRenewal').value,
     department:     document.getElementById('swDept').value.trim(),
     purpose:        document.getElementById('swPurpose').value.trim(),
+    licensePricePerUserMonth: parseFloat(document.getElementById('swLicPrice').value)||0,
     annualCost:     parseFloat(document.getElementById('swCost').value)||0,
     subscriptionPlan: document.getElementById('swPlan').value.trim(),
     purchasedLicenses: parseInt(document.getElementById('swPurchased').value)||0,
@@ -1618,6 +1661,81 @@ function deleteCurrentSoftware(){
       showToast('Software deleted'); await loadData(); renderSoftware();
     } catch(e){ showToast('Delete failed','danger'); }
   });
+}
+
+/* ══ SOFTWARE HELPERS ══ */
+function calcSwAnnualCost(){
+  const price = parseFloat(document.getElementById('swLicPrice').value)||0;
+  const qty   = parseInt(document.getElementById('swPurchased').value)||0;
+  if(price > 0 && qty > 0){
+    document.getElementById('swCost').value = (qty * price * 12).toFixed(2);
+  }
+}
+
+function exportSwCSV(){
+  const headers = ['ID','Name','Type','Department','Purpose','Subscription Plan','Renewal','License Price/User/Month','Purchased Licenses','Used Licenses','Annual Cost','Owner','Admins','Billed To','Status','USA','CAN','IND'];
+  const rows = software.map(s=>[
+    s.csvId, s.name, s.deploymentType, s.department||'', s.purpose||'',
+    s.subscriptionPlan||'', s.renewalPeriod||'',
+    s.licensePricePerUserMonth||0, s.purchasedLicenses||0, s.usedLicenses||0,
+    s.annualCost||0, s.owner||'', s.admins||'', s.billedTo||'', s.status||'',
+    s.siteUSA?'Yes':'', s.siteCAN?'Yes':'', s.siteIND?'Yes':''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `software-inventory-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV exported');
+}
+
+async function exportSwPDF(){
+  try {
+    // Load jsPDF lazily
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        s.onload=res; s.onerror=rej; document.head.appendChild(s);
+      });
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+        s.onload=res; s.onerror=rej; document.head.appendChild(s);
+      });
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+
+    // Title
+    doc.setFontSize(18); doc.setTextColor(30,64,175);
+    doc.text('TerzoCloud — Software Inventory', 14, 16);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    const totalSpend = software.reduce((s,x)=>s+(x.annualCost||0),0);
+    const paidCount  = software.filter(x=>(x.annualCost||0)>0).length;
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Total Apps: ${software.length}   |   Paid: ${paidCount}   |   Annual Spend: $${(totalSpend).toLocaleString()}`, 14, 23);
+
+    doc.autoTable({
+      startY: 28,
+      head: [['ID','Name','Type','Department','Plan','Renewal','Annual Cost','Lic $/mo','Purchased','Used','Owner','Status']],
+      body: software.map(s=>[
+        s.csvId, s.name, s.deploymentType, s.department||'—',
+        s.subscriptionPlan||'—', s.renewalPeriod||'—',
+        (s.annualCost>0?'$'+s.annualCost.toLocaleString():'Free'),
+        s.licensePricePerUserMonth?'$'+s.licensePricePerUserMonth:'—',
+        s.purchasedLicenses||'—', s.usedLicenses||'—',
+        s.owner||'—', s.status
+      ]),
+      styles: { fontSize: 7.5, cellPadding: 2 },
+      headStyles: { fillColor: [30,64,175], textColor: 255, fontStyle:'bold', fontSize:8 },
+      alternateRowStyles: { fillColor: [248,250,252] },
+      columnStyles: { 0:{cellWidth:12}, 1:{cellWidth:38}, 2:{cellWidth:20}, 6:{halign:'right'}, 7:{halign:'right'} },
+    });
+
+    doc.save(`software-inventory-${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('PDF exported');
+  } catch(e){ showToast('PDF export failed: '+e.message,'danger'); console.error(e); }
 }
 
 /* ══ THEME ══ */
