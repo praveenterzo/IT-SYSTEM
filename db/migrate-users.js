@@ -18,21 +18,19 @@ const path = require('path');
 const { connect, disconnect, User } = require('./index');
 
 // ── 1. CSV path ────────────────────────────────────────────────────────────────
-const CSV_PATH = path.join(
-  __dirname,
-  '../../../uploads/Terzo Employees List - employees.csv'
-);
+const CSV_PATH = path.join(__dirname, 'employees.csv');
 
 // ── 2. Department mapping ──────────────────────────────────────────────────────
 function mapDept(raw = '') {
   const d = raw.trim();
-  if (/engineering/i.test(d) && !/data science/i.test(d)) return 'Engineering';
   if (/data science.*engineering|engineering.*data science/i.test(d)) return 'Engineering';
+  if (/engineering/i.test(d)) return 'Engineering';
   if (/data science/i.test(d)) return 'Data Science';
   if (/ai service/i.test(d)) return 'AI-Service';
   if (/product/i.test(d))     return 'Product';
   if (/human resource|^hr$/i.test(d)) return 'HR';
-  if (/account|finance/i.test(d)) return 'Accounts';
+  if (/account.*finance|india accounts/i.test(d)) return 'Accounts';
+  if (/accounting.*finance/i.test(d)) return 'Accounts';
   if (/^it$/i.test(d))        return 'IT';
   if (/customer support/i.test(d)) return 'Customer Support';
   if (/customer operation/i.test(d)) return 'Customer Support';
@@ -46,14 +44,22 @@ function mapDept(raw = '') {
   return 'Other';
 }
 
-// ── 3. Portal role mapping (access level, not job title) ──────────────────────
+// ── 3. Portal role mapping: Admin > Manager > Staff (Editor/Viewer removed) ───
 function mapRole(title = '', email = '') {
   const t = title.toLowerCase();
   if (/it.*admin|admin.*it/i.test(title)) return 'Admin';
   if (email === 'praveen.m@terzocloud.com') return 'Admin';
-  if (/chief|president|officer|general counsel|controller|^vp /i.test(t)) return 'Manager';
-  if (/director|manager|head of|general manager|vice president/i.test(t)) return 'Manager';
-  return 'Editor';
+  if (/chief|president|officer|general counsel|controller/i.test(t)) return 'Manager';
+  if (/director|^manager|head of|general manager|vice president|^vp /i.test(t)) return 'Manager';
+  if (/senior manager|lead analyst|engagement director|engagement manager|program manager/i.test(t)) return 'Manager';
+  return 'Staff';
+}
+
+// ── 3b. Extract reporting manager name (strip title after " - ") ──────────────
+function extractManager(raw = '') {
+  if (!raw || !raw.trim()) return '';
+  // Format: "Name - Title" → return "Name"
+  return raw.split(' - ')[0].trim();
 }
 
 // ── 4. Location heuristic ─────────────────────────────────────────────────────
@@ -103,9 +109,10 @@ function parseCSV(filePath) {
       else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
       else cur += ch;
     }
-    const [, empId, name, jobTitle, , dept, email, empType] = cols;
+    // Columns: h, Emp.ID, Name, Role(jobTitle), Manager(reportingMgr), Department, Email, EmploymentType
+    const [, empId, name, jobTitle, manager, dept, email, empType] = cols;
     if (!name || !email) continue;
-    employees.push({ empId: empId||'', name, jobTitle, dept, email, empType });
+    employees.push({ empId: empId||'', name, jobTitle, manager: manager||'', dept, email, empType });
   }
   return employees;
 }
@@ -153,6 +160,7 @@ async function migrate() {
       first, last,
       email: emailLC,
       jobTitle: emp.jobTitle || '',
+      reportingManager: extractManager(emp.manager),
       dept,
       role,
       employmentType,

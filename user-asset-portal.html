@@ -94,8 +94,7 @@
     .badge.idle { background: var(--gray-100); color: var(--gray-400); }
     .badge.role-admin { background: #fdf4ff; color: #9333ea; }
     .badge.role-manager { background: #fff7ed; color: #ea580c; }
-    .badge.role-editor { background: #eff6ff; color: var(--primary); }
-    .badge.role-viewer { background: #f0fdf4; color: var(--success); }
+    .badge.role-staff { background: #eff6ff; color: var(--primary); }
 
     .user-cell { display: flex; align-items: center; gap: 9px; }
     .ava-sm { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
@@ -144,15 +143,102 @@
 
     /* DEPT BREAKDOWN */
     .dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
-    .dept-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .dept-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+    .dept-card:hover { box-shadow: 0 4px 16px rgba(59,130,246,.13); border-color: var(--primary); }
     .dept-name { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
     .dept-count { font-size: 20px; font-weight: 800; color: var(--primary); }
+
+    /* DEPT USERS MODAL */
+    #deptModal { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.35); align-items:center; justify-content:center; }
+    #deptModal.open { display:flex; }
+    #deptModalBox { background:#fff; border-radius:14px; width:min(700px,95vw); max-height:80vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    #deptModalHead { padding:18px 22px; border-bottom:1px solid var(--gray-200); display:flex; justify-content:space-between; align-items:center; }
+    #deptModalTitle { font-size:15px; font-weight:700; color:var(--gray-800); }
+    #deptModalClose { background:none; border:none; cursor:pointer; color:var(--gray-400); font-size:20px; line-height:1; padding:2px 6px; border-radius:6px; }
+    #deptModalClose:hover { background:var(--gray-100); color:var(--gray-700); }
+    #deptModalBody { overflow-y:auto; padding:16px 22px 20px; }
+    #deptModalBody table { width:100%; border-collapse:collapse; font-size:13px; }
+    #deptModalBody th { text-align:left; padding:7px 10px; color:var(--gray-500); font-size:11.5px; font-weight:600; border-bottom:1px solid var(--gray-200); }
+    #deptModalBody td { padding:9px 10px; border-bottom:1px solid var(--gray-100); color:var(--gray-700); vertical-align:middle; }
+    #deptModalBody tr:last-child td { border-bottom:none; }
 
     @media (max-width: 700px) {
       .sidebar { display: none; }
       .form-row { grid-template-columns: 1fr; }
       .stat-grid { grid-template-columns: repeat(2,1fr); }
     }
+
+    /* ══════════════════════════════════════════
+       TERZO.AI DARK BACKGROUND THEME
+       Colors extracted from terzo.ai
+    ══════════════════════════════════════════ */
+    :root {
+      --gray-50:        #0e0a0f;
+      --gray-100:       #16101a;
+      --gray-200:       rgba(153,102,255,0.18);
+      --gray-300:       #2a1f35;
+      --gray-400:       #83758a;
+      --gray-600:       #b5acb9;
+      --gray-700:       #cdc8d0;
+      --gray-800:       #faf9fa;
+      --primary-lighter: rgba(153,102,255,0.12);
+      --success-bg:     rgba(22,163,74,0.12);
+      --warning-bg:     rgba(217,119,6,0.12);
+      --danger-bg:      rgba(220,38,38,0.12);
+    }
+
+    /* Base */
+    body { background: #0e0a0f; color: #faf9fa; }
+
+    /* Surfaces */
+    .sidebar, .topbar, .modal, .confirm-box, #deptModalBox { background: #16101a !important; }
+    .stat-card, .card, .dept-card { background: #16101a !important; }
+
+    /* Logo */
+    .logo-text { color: #faf9fa !important; }
+
+    /* Inputs & controls */
+    .search-wrap input           { background: #1e1525 !important; color: #faf9fa !important; }
+    .search-wrap input:focus     { background: #231930 !important; }
+    .filter-select               { background: #1e1525 !important; color: #cdc8d0 !important; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea         { background: #1e1525 !important; color: #faf9fa !important; }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus   { background: #231930 !important; }
+    .page-btn                    { background: #1e1525 !important; color: #cdc8d0 !important; }
+
+    /* Stat icon tinted backgrounds */
+    .stat-icon.blue   { background: rgba(30,  64, 175, 0.18) !important; }
+    .stat-icon.green  { background: rgba(22, 163,  74, 0.15) !important; }
+    .stat-icon.yellow { background: rgba(217,119,   6, 0.15) !important; }
+    .stat-icon.red    { background: rgba(220, 38,  38, 0.15) !important; }
+    .stat-icon.sky    { background: rgba( 14,165, 233, 0.15) !important; }
+    .stat-icon.purple { background: rgba(147, 51, 234, 0.15) !important; }
+
+    /* Badge backgrounds */
+    .badge.in-use       { background: rgba( 30, 64,175,0.15) !important; }
+    .badge.available    { background: rgba( 22,163, 74,0.12) !important; }
+    .badge.under-repair { background: rgba(217,119,  6,0.12) !important; }
+    .badge.retired      { background: rgba(220, 38, 38,0.12) !important; }
+    .badge.idle         { background: rgba(131,117,138,0.15) !important; }
+    .badge.role-admin   { background: rgba(147, 51,234,0.15) !important; }
+    .badge.role-manager { background: rgba(234, 88, 12,0.15) !important; }
+    .badge.role-staff   { background: rgba( 30, 64,175,0.15) !important; }
+
+    /* Tags & misc */
+    .tag                   { background: #231930 !important; color: #b5acb9 !important; }
+    #deptModalClose:hover  { background: #231930 !important; }
+    .dept-card:hover       { box-shadow: 0 4px 16px rgba(153,102,255,0.2) !important; }
+
+    /* Horizontal scroll for Users table */
+    #page-users .card { overflow: visible !important; }
+    .user-table-scroll { overflow-x: auto; }
+    .user-table-scroll::-webkit-scrollbar { height: 7px; }
+    .user-table-scroll::-webkit-scrollbar-track { background: #0e0a0f; }
+    .user-table-scroll::-webkit-scrollbar-thumb { background: rgba(153,102,255,0.55); border-radius: 10px; }
+    .user-table-scroll::-webkit-scrollbar-thumb:hover { background: #9966ff; }
   </style>
 </head>
 <body>
@@ -250,7 +336,7 @@
             </select>
             <select class="filter-select" id="userRoleFilter" onchange="renderUsers()">
               <option value="">All Roles</option>
-              <option>Admin</option><option>Manager</option><option>Editor</option><option>Viewer</option>
+              <option>Admin</option><option>Manager</option><option>Staff</option>
             </select>
             <select class="filter-select" id="userLocFilter" onchange="renderUsers()">
               <option value="">All Locations</option><option>Chennai</option><option>Coimbatore</option>
@@ -260,10 +346,12 @@
             </select>
           </div>
         </div>
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Location</th><th>Status</th><th>Assets</th><th>Actions</th></tr></thead>
-          <tbody id="userTableBody"></tbody>
-        </table>
+        <div class="user-table-scroll">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Job Title</th><th>Reporting Manager</th><th>Role</th><th>Location</th><th>Status</th><th>Assets</th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
         <div class="pagination" id="userPagination"></div>
       </div>
     </div>
@@ -335,25 +423,36 @@
             <option>Engineering</option><option>AI-Service</option><option>QA</option>
             <option>IT</option><option>HR</option><option>Product</option>
             <option>Customer Support</option><option>Accounts</option>
+            <option>Data Science</option><option>Executive</option><option>Legal</option>
+            <option>Marketing</option><option>Operations</option><option>Other</option>
+            <option>Sales</option>
           </select>
         </div>
         <div class="form-group"><label>Role *</label>
-          <select id="userRole"><option>Admin</option><option>Manager</option><option>Editor</option><option>Viewer</option></select>
+          <select id="userRole"><option>Admin</option><option>Manager</option><option>Staff</option></select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Location</label>
-          <select id="userLocation"><option>Chennai</option><option>Coimbatore</option></select>
+          <select id="userLocation"><option>Chennai</option><option>Coimbatore</option><option>Remote</option></select>
         </div>
         <div class="form-group"><label>Status</label>
           <select id="userStatus"><option>Active</option><option>Inactive</option></select>
         </div>
       </div>
+      <div class="form-group"><label>Job Title</label><input type="text" id="userJobTitle" placeholder="e.g. Software Engineer III"></div>
+      <div class="form-group"><label>Reporting Manager</label><input type="text" id="userReportingManager" placeholder="e.g. Vasanth Pandian"></div>
       <div class="form-group"><label>Phone</label><input type="text" id="userPhone" placeholder="+91 …"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-danger" id="userDeleteBtn" style="display:none" onclick="deleteCurrentUser()">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Delete User
+      </button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+      </div>
     </div>
   </div>
 
@@ -484,7 +583,7 @@ function renderDashboard(){
   users.forEach(u=>{ deptCounts[u.dept]=(deptCounts[u.dept]||0)+1; });
   const deptColors={'Engineering':'var(--primary)','AI-Service':'#9333ea','QA':'#ea580c','IT':'#0891b2','HR':'#16a34a','Product':'#d97706','Customer Support':'#dc2626','Accounts':'#be185d'};
   document.getElementById('deptGrid').innerHTML=Object.entries(deptCounts).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`
-    <div class="dept-card">
+    <div class="dept-card" onclick="showDeptUsers('${d.replace(/'/g,"\\'")}')">
       <div>
         <div class="dept-name">${d}</div>
         <div style="font-size:11px;color:var(--gray-400)">${c} member${c>1?'s':''}</div>
@@ -532,7 +631,7 @@ function filteredUsers(){
   const lf=document.getElementById('userLocFilter')?.value||'';
   const sf=document.getElementById('userStatusFilter')?.value||'';
   return users.filter(u=>{
-    if(searchQ && !`${u.first} ${u.last} ${u.email} ${u.dept} ${u.role} ${u.location}`.toLowerCase().includes(searchQ)) return false;
+    if(searchQ && !`${u.first} ${u.last} ${u.email} ${u.dept} ${u.role} ${u.location} ${u.jobTitle||''} ${u.reportingManager||''}`.toLowerCase().includes(searchQ)) return false;
     if(df && u.dept!==df) return false;
     if(rf && u.role!==rf) return false;
     if(lf && u.location!==lf) return false;
@@ -550,27 +649,21 @@ function renderUsers(){
   if(lbl) lbl.textContent=`(${list.length} of ${users.length})`;
   const body=document.getElementById('userTableBody');
   if(!body) return;
-  if(!slice.length){ body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray-400)">No users found</td></tr>`; }
+  if(!slice.length){ body.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray-400)">No users found</td></tr>`; }
   else {
     body.innerHTML=slice.map(u=>{
       const uAssets=assets.filter(a=>a.assignTo===u.id);
       return `<tr>
-        <td><div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>
-          <strong>${u.first} ${u.last}</strong></div></td>
+        <td><div class="user-cell" onclick="editUser('${u.id}')" style="cursor:pointer"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>
+          <strong style="color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${u.first} ${u.last}</strong></div></td>
         <td style="color:var(--gray-600);font-size:12px">${u.email}</td>
         <td><span class="tag">${u.dept}</span></td>
-        <td><span class="badge role-${u.role.toLowerCase()}">${u.role}</span></td>
+        <td style="color:var(--gray-600);font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.jobTitle||''}">${u.jobTitle||'<span style="color:var(--gray-300)">—</span>'}</td>
+        <td style="color:var(--gray-600);font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.reportingManager||''}">${u.reportingManager||'<span style="color:var(--gray-300)">—</span>'}</td>
+        <td><span class="badge role-${(u.role||'staff').toLowerCase()}">${u.role}</span></td>
         <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
         <td><span class="badge ${u.status.toLowerCase()}">${u.status}</span></td>
         <td style="color:var(--gray-600)">${uAssets.length?`<span class="tag">${uAssets.length} asset${uAssets.length>1?'s':''}</span>`:'<span style="color:var(--gray-400)">—</span>'}</td>
-        <td><div class="actions">
-          <button class="btn btn-secondary btn-sm btn-icon" title="Edit" onclick="editUser('${u.id}')">
-            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-          </button>
-          <button class="btn btn-danger btn-sm btn-icon" title="Delete" onclick="deleteUser('${u.id}')">
-            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-        </div></td>
       </tr>`;
     }).join('');
   }
@@ -687,11 +780,19 @@ function openUserModal(u=null){
   document.getElementById('userLast').value=u?.last||'';
   document.getElementById('userEmail').value=u?.email||'';
   document.getElementById('userDept').value=u?.dept||'Engineering';
-  document.getElementById('userRole').value=u?.role||'Editor';
+  document.getElementById('userRole').value=u?.role||'Staff';
   document.getElementById('userLocation').value=u?.location||'Chennai';
   document.getElementById('userStatus').value=u?.status||'Active';
+  document.getElementById('userJobTitle').value=u?.jobTitle||'';
+  document.getElementById('userReportingManager').value=u?.reportingManager||'';
   document.getElementById('userPhone').value=u?.phone||'';
+  document.getElementById('userDeleteBtn').style.display=u?'inline-flex':'none';
   showOverlay('userModal');
+}
+
+function deleteCurrentUser(){
+  const id=document.getElementById('userId').value;
+  if(id) { closeModal(); deleteUser(id); }
 }
 
 function editUser(id){ openUserModal(users.find(u=>u.id===id)); }
@@ -704,6 +805,8 @@ async function saveUser(){
   const data={ first,last:document.getElementById('userLast').value.trim(),email,
     dept:document.getElementById('userDept').value,role:document.getElementById('userRole').value,
     location:document.getElementById('userLocation').value,status:document.getElementById('userStatus').value,
+    jobTitle:document.getElementById('userJobTitle').value.trim(),
+    reportingManager:document.getElementById('userReportingManager').value.trim(),
     phone:document.getElementById('userPhone').value.trim() };
   try {
     const res = id
@@ -809,6 +912,51 @@ function showToast(msg,type='success'){
 
 /* ══ INIT ══ */
 loadData();
+
+/* ══ DEPT USERS MODAL ══ */
+function showDeptUsers(dept) {
+  const deptUsers = users.filter(u => u.dept === dept);
+  const deptColors = {'Engineering':'var(--primary)','AI-Service':'#9333ea','QA':'#ea580c','IT':'#0891b2','HR':'#16a34a','Product':'#d97706','Customer Support':'#dc2626','Accounts':'#be185d','Data Science':'#2563eb','Sales':'#16a34a','Marketing':'#db2777','Legal':'#7c3aed','Executive':'#0f172a','Operations':'#0891b2','Finance':'#059669','Other':'#64748b'};
+  const color = deptColors[dept] || 'var(--primary)';
+  document.getElementById('deptModalTitle').innerHTML =
+    `<span style="color:${color}">${dept}</span> &mdash; ${deptUsers.length} Member${deptUsers.length !== 1 ? 's' : ''}`;
+  document.getElementById('deptModalBody').innerHTML = deptUsers.length === 0
+    ? '<p style="color:var(--gray-400);text-align:center;padding:24px 0">No users in this department.</p>'
+    : `<table>
+        <thead><tr><th>Name</th><th>Job Title</th><th>Reporting Manager</th><th>Location</th><th>Role</th><th>Status</th></tr></thead>
+        <tbody>${deptUsers.map(u => {
+          const statusColor = u.status === 'Active' ? '#16a34a' : '#dc2626';
+          const roleColor = u.role === 'Admin' ? '#7c3aed' : u.role === 'Manager' ? '#d97706' : '#3b82f6';
+          return `<tr>
+            <td><div class="user-cell" style="gap:8px">
+              <div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>
+              <div><strong>${u.first} ${u.last}</strong><div style="font-size:11px;color:var(--gray-400)">${u.email}</div></div>
+            </div></td>
+            <td style="color:var(--gray-500);font-size:12px">${u.jobTitle || '—'}</td>
+            <td style="color:var(--gray-500);font-size:12px">${u.reportingManager || '—'}</td>
+            <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
+            <td><span style="font-size:11.5px;font-weight:600;color:${roleColor}">${u.role}</span></td>
+            <td><span style="font-size:11.5px;font-weight:600;color:${statusColor}">${u.status}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+  document.getElementById('deptModal').classList.add('open');
+}
+function closeDeptModal() {
+  document.getElementById('deptModal').classList.remove('open');
+}
 </script>
+
+<!-- DEPT USERS MODAL -->
+<div id="deptModal" onclick="if(event.target===this)closeDeptModal()">
+  <div id="deptModalBox">
+    <div id="deptModalHead">
+      <div id="deptModalTitle"></div>
+      <button id="deptModalClose" onclick="closeDeptModal()" title="Close">&times;</button>
+    </div>
+    <div id="deptModalBody"></div>
+  </div>
+</div>
+
 </body>
 </html>
