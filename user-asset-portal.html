@@ -106,7 +106,7 @@
     .mono { font-family: 'Courier New', monospace; font-size: 11.5px; }
 
     /* MODAL */
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
     .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.18); max-height: 90vh; overflow-y: auto; }
     .modal-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
     .modal-header h2 { font-size: 15px; font-weight: 700; }
@@ -313,11 +313,13 @@
     .sw-dm-overlay { position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:300;display:none;align-items:center;justify-content:center;padding:20px; }
     .sw-dm-overlay.open { display:flex; }
     .sw-dm-box { background:#fff;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.28);width:100%;max-width:1100px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden; }
+    /* swDmViewMode must be a flex column so the body can grow and scroll */
+    #swDmViewMode { display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden; }
     .sw-dm-head { padding:18px 24px 14px;border-bottom:1px solid var(--gray-200);flex-shrink:0; }
     .sw-dm-tabs { display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--gray-200);flex-shrink:0;background:#fff; }
     .sw-dm-tab { padding:10px 18px;border:none;background:none;font-size:13px;font-weight:600;color:var(--gray-400);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:all .15s;border-radius:0; }
     .sw-dm-tab.active { color:var(--primary);border-bottom-color:var(--primary); }
-    .sw-dm-body { flex:1;overflow-y:auto;padding:22px 28px; }
+    .sw-dm-body { flex:1;overflow-y:auto;padding:22px 28px;min-height:0; }
     .sw-dm-panel { display:none; }
     .sw-dm-panel.active { display:block; }
     /* Edit panel inside detail modal */
@@ -2127,7 +2129,7 @@ async function saveSoftware(){
     showToast(id?'Software updated':'Software added','success');
     const _reopenId = id || null;
     closeModal(); await loadData(); renderSoftware();
-    if(_reopenId) openSwDm(_reopenId);
+    if(_reopenId){ openSwDm(_reopenId); swDmTab('services'); }
   } catch(e){ showToast(e.message,'danger'); }
 }
 

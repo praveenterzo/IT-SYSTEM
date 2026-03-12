@@ -542,8 +542,16 @@ app.post('/api/software', requireAuth, canWriteSoftware, async (req, res) => {
 // PUT /api/software/:id
 app.put('/api/software/:id', requireAuth, canWriteSoftware, async (req, res) => {
   try {
-    const sw = await Software.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    /* Use findById + Object.assign + save() so that Mongoose properly
+       validates and replaces nested arrays (services sub-documents).
+       findByIdAndUpdate with runValidators can silently fail on arrays. */
+    const sw = await Software.findById(req.params.id);
     if (!sw) return res.status(404).json({ error: 'Software not found' });
+    const allowed = ['csvId','name','deploymentType','renewalPeriod','department','purpose',
+      'licensePricePerUserMonth','annualCost','subscriptionPlan','purchasedLicenses',
+      'usedLicenses','owner','admins','billedTo','status','siteUSA','siteCAN','siteIND','services'];
+    allowed.forEach(k => { if (req.body[k] !== undefined) sw[k] = req.body[k]; });
+    await sw.save();
     const o = sw.toObject(); o.id = o._id.toString(); delete o._id; delete o.__v;
     res.json(o);
   } catch (e) { res.status(400).json({ error: e.message }); }
