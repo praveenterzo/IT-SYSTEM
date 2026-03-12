@@ -337,6 +337,23 @@
     body.theme-purple .sw-cost-card { background:#2d1260 !important; }
     body.theme-purple .sw-drawer-section { border-bottom-color:rgba(168,85,247,0.15) !important; }
 
+    /* ── Export Dropdown ── */
+    .export-wrap { position: relative; display: inline-flex; }
+    .export-menu { display:none; position:absolute; top:calc(100% + 5px); right:0; background:#fff; border:1px solid var(--gray-200); border-radius:9px; box-shadow:0 6px 20px rgba(0,0,0,.13); z-index:200; min-width:162px; padding:5px; }
+    .export-wrap.open .export-menu { display:block; }
+    .export-menu-item { display:flex; align-items:center; gap:9px; padding:8px 13px; border-radius:6px; font-size:12.5px; font-weight:500; color:var(--gray-700); cursor:pointer; white-space:nowrap; transition:background .12s; }
+    .export-menu-item:hover { background:var(--gray-100); }
+    .export-menu-item svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; flex-shrink:0; }
+    .export-menu-sep { height:1px; background:var(--gray-100); margin:3px 6px; }
+    body.theme-dark .export-menu { background:#1e1525 !important; border-color:rgba(153,102,255,0.22) !important; }
+    body.theme-dark .export-menu-item { color:#cdc8d0 !important; }
+    body.theme-dark .export-menu-item:hover { background:#231930 !important; }
+    body.theme-dark .export-menu-sep { background:rgba(153,102,255,0.15) !important; }
+    body.theme-purple .export-menu { background:#2d1260 !important; border-color:rgba(168,85,247,0.22) !important; }
+    body.theme-purple .export-menu-item { color:#d8b4fe !important; }
+    body.theme-purple .export-menu-item:hover { background:#3b1f7a !important; }
+    body.theme-purple .export-menu-sep { background:rgba(168,85,247,0.15) !important; }
+
     /* ── Advanced Search Panel ── */
     .adv-search-panel { padding:12px 18px 14px; border-bottom:1px solid var(--gray-100); background:var(--gray-50); display:none; flex-wrap:wrap; gap:8px; align-items:flex-end; }
     .adv-search-panel.open { display:flex; }
@@ -534,6 +551,23 @@
               <option value="">All Status</option><option>Active</option><option>Inactive</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="usersAdvBtn" onclick="toggleAdvSearch('users')">🔍 Advanced ▼</button>
+            <div class="export-wrap" id="exportWrap-users">
+              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu('users')">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export ▾
+              </button>
+              <div class="export-menu">
+                <div class="export-menu-item" onclick="exportUserCSV();toggleExportMenu('users')">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Export as CSV
+                </div>
+                <div class="export-menu-sep"></div>
+                <div class="export-menu-item" onclick="exportUserPDF();toggleExportMenu('users')">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Export as PDF
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="adv-search-panel" id="usersAdvPanel">
@@ -575,6 +609,23 @@
               <option value="">All Status</option><option>In-Use</option><option>Available</option><option>Under Repair</option><option>Retired</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="assetsAdvBtn" onclick="toggleAdvSearch('assets')">🔍 Advanced ▼</button>
+            <div class="export-wrap" id="exportWrap-assets">
+              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu('assets')">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export ▾
+              </button>
+              <div class="export-menu">
+                <div class="export-menu-item" onclick="exportAssetCSV();toggleExportMenu('assets')">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Export as CSV
+                </div>
+                <div class="export-menu-sep"></div>
+                <div class="export-menu-item" onclick="exportAssetPDF();toggleExportMenu('assets')">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Export as PDF
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="adv-search-panel" id="assetsAdvPanel">
@@ -631,15 +682,24 @@
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
-            <button class="btn btn-secondary btn-sm" onclick="exportSwCSV()" title="Export to CSV">
-              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              CSV
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="exportSwPDF()" title="Export to PDF">
-              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              PDF
-            </button>
             <button class="btn btn-secondary btn-sm" id="softwareAdvBtn" onclick="toggleAdvSearch('software')">🔍 Advanced ▼</button>
+            <div class="export-wrap" id="exportWrap-software">
+              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu('software')">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export ▾
+              </button>
+              <div class="export-menu">
+                <div class="export-menu-item" onclick="exportSwCSV();toggleExportMenu('software')">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Export as CSV
+                </div>
+                <div class="export-menu-sep"></div>
+                <div class="export-menu-item" onclick="exportSwPDF();toggleExportMenu('software')">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Export as PDF
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="adv-search-panel" id="softwareAdvPanel">
@@ -1942,9 +2002,52 @@ function calcSwAnnualCost(){
   }
 }
 
+/* ══ EXPORT DROPDOWN TOGGLE ══ */
+function toggleExportMenu(page){
+  const wrap = document.getElementById('exportWrap-'+page);
+  if(!wrap) return;
+  const isOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.export-wrap.open').forEach(w=>w.classList.remove('open'));
+  if(!isOpen) wrap.classList.add('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.export-wrap'))
+    document.querySelectorAll('.export-wrap.open').forEach(w=>w.classList.remove('open'));
+});
+
+/* ── filteredSoftware: mirrors renderSoftware() filter logic ── */
+function filteredSoftware(){
+  const typeF   = document.getElementById('swTypeFilter')?.value||'';
+  const renewF  = document.getElementById('swRenewalFilter')?.value||'';
+  const statusF = document.getElementById('swStatusFilter')?.value||'';
+  const q       = searchQ;
+  const advSwName  = (document.getElementById('advSwName')?.value||'').toLowerCase();
+  const advSwDept  = (document.getElementById('advSwDept')?.value||'').toLowerCase();
+  const advSwOwner = (document.getElementById('advSwOwner')?.value||'').toLowerCase();
+  const advSwMin   = parseFloat(document.getElementById('advSwCostMin')?.value)||0;
+  const advSwMax   = parseFloat(document.getElementById('advSwCostMax')?.value)||Infinity;
+  let list = software.filter(s=>{
+    if(typeF   && s.deploymentType !== typeF)  return false;
+    if(renewF  && s.renewalPeriod  !== renewF) return false;
+    if(statusF && s.status         !== statusF)return false;
+    if(q && ![s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q)) return false;
+    if(advSwName  && !(s.name||'').toLowerCase().includes(advSwName))       return false;
+    if(advSwDept  && !(s.department||'').toLowerCase().includes(advSwDept)) return false;
+    if(advSwOwner && !(s.owner||'').toLowerCase().includes(advSwOwner))     return false;
+    const tc = swTotalCost(s);
+    if(tc < advSwMin) return false;
+    if(advSwMax < Infinity && tc > advSwMax) return false;
+    return true;
+  });
+  if(swBudgetFilter === 'paid') list = list.filter(s=>swTotalCost(s)>0);
+  if(swBudgetFilter === 'free') list = list.filter(s=>swTotalCost(s)===0);
+  return list;
+}
+
 function exportSwCSV(){
+  const list = filteredSoftware();
   const headers = ['ID','Name','Type','Department','Purpose','Subscription Plan','Renewal','License $/mo','Purchased Licenses','Used Licenses','Base Annual Cost','Add-on Services','Total Annual Cost','Owner','Admins','Billed To','Status','USA','CAN','IND'];
-  const rows = software.map(s=>{
+  const rows = list.map(s=>{
     const svcCount = (s.services||[]).filter(sv=>sv.status!=='Inactive').length;
     return [
       s.csvId, s.name, s.deploymentType, s.department||'', s.purpose||'',
@@ -1961,39 +2064,28 @@ function exportSwCSV(){
   a.href = URL.createObjectURL(blob);
   a.download = `software-inventory-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  showToast('CSV exported');
+  showToast(`CSV exported (${list.length} app${list.length!==1?'s':''})`);
 }
 
 async function exportSwPDF(){
   try {
-    // Load jsPDF lazily
     if(!window.jspdf){
-      await new Promise((res,rej)=>{
-        const s=document.createElement('script');
-        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        s.onload=res; s.onerror=rej; document.head.appendChild(s);
-      });
-      await new Promise((res,rej)=>{
-        const s=document.createElement('script');
-        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
-        s.onload=res; s.onerror=rej; document.head.appendChild(s);
-      });
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
     }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-
-    // Title
+    const list = filteredSoftware();
     doc.setFontSize(18); doc.setTextColor(30,64,175);
     doc.text('TerzoCloud — Software Inventory', 14, 16);
     doc.setFontSize(9); doc.setTextColor(100,116,139);
-    const totalSpend = software.reduce((s,x)=>s+swTotalCost(x),0);
-    const paidCount  = software.filter(x=>swTotalCost(x)>0).length;
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Total Apps: ${software.length}   |   Paid: ${paidCount}   |   Annual Spend: $${(totalSpend).toLocaleString()}`, 14, 23);
-
+    const totalSpend = list.reduce((s,x)=>s+swTotalCost(x),0);
+    const paidCount  = list.filter(x=>swTotalCost(x)>0).length;
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Apps: ${list.length}   |   Paid: ${paidCount}   |   Annual Spend: $${totalSpend.toLocaleString()}`, 14, 23);
     doc.autoTable({
       startY: 28,
       head: [['ID','Name','Type','Department','Plan','Renewal','$/mo','Base Cost','Add-ons','Total Cost','Owner','Status']],
-      body: software.map(s=>{
+      body: list.map(s=>{
         const tc = swTotalCost(s);
         const svcCnt = (s.services||[]).filter(sv=>sv.status!=='Inactive').length;
         return [
@@ -2011,9 +2103,118 @@ async function exportSwPDF(){
       alternateRowStyles: { fillColor: [248,250,252] },
       columnStyles: { 0:{cellWidth:11}, 1:{cellWidth:35}, 2:{cellWidth:18}, 7:{halign:'right'}, 9:{halign:'right'} },
     });
-
     doc.save(`software-inventory-${new Date().toISOString().slice(0,10)}.pdf`);
-    showToast('PDF exported');
+    showToast(`PDF exported (${list.length} app${list.length!==1?'s':''})`);
+  } catch(e){ showToast('PDF export failed: '+e.message,'danger'); console.error(e); }
+}
+
+/* ══ USER EXPORTS ══ */
+function exportUserCSV(){
+  const list = filteredUsers();
+  const headers = ['Name','Email','Department','Job Title','Reporting Manager','Role','Location','Status','Assigned Assets'];
+  const rows = list.map(u=>{
+    const uAssets = assets.filter(a=>a.assignTo===u.id);
+    return [
+      `${u.first} ${u.last}`, u.email||'', u.dept||'', u.jobTitle||'',
+      u.reportingManager||'', u.role||'', u.location||'', u.status||'',
+      uAssets.map(a=>a.name||a.csvId).join('; ')
+    ];
+  });
+  const csv = [headers,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `users-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast(`Users CSV exported (${list.length} record${list.length!==1?'s':''})`);
+}
+
+async function exportUserPDF(){
+  try {
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const list = filteredUsers();
+    doc.setFontSize(18); doc.setTextColor(30,64,175);
+    doc.text('TerzoCloud — User Management', 14, 16);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Users: ${list.length}   |   Active: ${list.filter(u=>u.status==='Active').length}`, 14, 23);
+    doc.autoTable({
+      startY: 28,
+      head: [['Name','Email','Department','Job Title','Reporting Manager','Role','Location','Status','Assets']],
+      body: list.map(u=>{
+        const uAssets = assets.filter(a=>a.assignTo===u.id);
+        return [
+          `${u.first} ${u.last}`, u.email||'—', u.dept||'—', u.jobTitle||'—',
+          u.reportingManager||'—', u.role||'—', u.location||'—', u.status||'—',
+          uAssets.length||'—'
+        ];
+      }),
+      styles:{fontSize:7.5,cellPadding:2},
+      headStyles:{fillColor:[30,64,175],textColor:255,fontStyle:'bold',fontSize:8},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      columnStyles:{0:{cellWidth:30},1:{cellWidth:44},2:{cellWidth:24},3:{cellWidth:28},4:{cellWidth:26},5:{cellWidth:15},6:{cellWidth:20},7:{cellWidth:14},8:{cellWidth:10}},
+    });
+    doc.save(`users-${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast(`Users PDF exported (${list.length} record${list.length!==1?'s':''})`);
+  } catch(e){ showToast('PDF export failed: '+e.message,'danger'); console.error(e); }
+}
+
+/* ══ ASSET EXPORTS ══ */
+function exportAssetCSV(){
+  const list = filteredAssets();
+  const headers = ['Asset ID','Name','Serial No.','Brand','Type','Spec','Department','Location','Assigned To','Purchase Date','Warranty End','Status'];
+  const rows = list.map(a=>{
+    const u = users.find(x=>x.id===a.assignTo);
+    return [
+      a.csvId||'', a.name||'', a.serial||'', a.brand||'', a.type||'', a.desc||'',
+      a.dept||'', a.location||'', u?`${u.first} ${u.last}`:'Unassigned',
+      a.purchaseDate||'', a.warrantyEnd||'', a.status||''
+    ];
+  });
+  const csv = [headers,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `assets-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast(`Assets CSV exported (${list.length} record${list.length!==1?'s':''})`);
+}
+
+async function exportAssetPDF(){
+  try {
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const list = filteredAssets();
+    const inUse = list.filter(a=>a.status==='In-Use').length;
+    doc.setFontSize(18); doc.setTextColor(30,64,175);
+    doc.text('TerzoCloud — Device Inventory', 14, 16);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Assets: ${list.length}   |   In-Use: ${inUse}`, 14, 23);
+    doc.autoTable({
+      startY: 28,
+      head: [['ID','Name','Serial','Brand','Type','Department','Location','Assigned To','Status']],
+      body: list.map(a=>{
+        const u = users.find(x=>x.id===a.assignTo);
+        return [
+          a.csvId||'—', a.name||'—', a.serial||'—', a.brand||'—', a.type||'—',
+          a.dept||'—', a.location||'—', u?`${u.first} ${u.last}`:'Unassigned', a.status||'—'
+        ];
+      }),
+      styles:{fontSize:7.5,cellPadding:2},
+      headStyles:{fillColor:[30,64,175],textColor:255,fontStyle:'bold',fontSize:8},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      columnStyles:{0:{cellWidth:14},1:{cellWidth:38},2:{cellWidth:28},3:{cellWidth:22},4:{cellWidth:16},5:{cellWidth:24},6:{cellWidth:20},7:{cellWidth:34},8:{cellWidth:14}},
+    });
+    doc.save(`assets-${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast(`Assets PDF exported (${list.length} record${list.length!==1?'s':''})`);
   } catch(e){ showToast('PDF export failed: '+e.message,'danger'); console.error(e); }
 }
 
