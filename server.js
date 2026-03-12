@@ -5,27 +5,182 @@
  * Then open: http://localhost:3000
  *
  * Environment variables (optional – set in .env):
- *   PORT      = 3000
- *   MONGO_URI = mongodb://127.0.0.1:27017/terzocloud_assets
+ *   PORT       = 3000
+ *   MONGO_URI  = mongodb://127.0.0.1:27017/terzocloud_assets
+ *   JWT_SECRET = your-secret-key
  */
 
 require('dotenv').config();
-const express  = require('express');
-const cors     = require('cors');
-const path     = require('path');
-const { connect, User, Asset, Log, Software } = require('./db');
+const express   = require('express');
+const cors      = require('cors');
+const path      = require('path');
+const jwt       = require('jsonwebtoken');
+const bcrypt    = require('bcryptjs');
+const { connect, User, Asset, Log, Software, AdminUser } = require('./db');
 
-const app  = express();
-const PORT = process.env.PORT || 3000;
+const app       = express();
+const PORT      = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'terzocloud_jwt_secret_2025';
+const JWT_EXPIRES = '24h';
 
 app.use(cors());
 app.use(express.json());
 
-// ── Serve the portal HTML ──────────────────────────────────────────────────────
+// ── Serve static files (login.html, admin.html, etc.) ─────────────────────────
 app.use(express.static(path.join(__dirname)));
+
+// ── Public routes (no auth required) ──────────────────────────────────────────
+app.get('/login', (req, res) =>
+  res.sendFile(path.join(__dirname, 'login.html'))
+);
+app.get('/admin', (req, res) =>
+  res.sendFile(path.join(__dirname, 'admin.html'))
+);
 app.get('/', (req, res) =>
   res.sendFile(path.join(__dirname, 'user-asset-portal.html'))
 );
+
+// ════════════════════════════════════════════════════════════════════════════
+//  AUTH MIDDLEWARE
+// ════════════════════════════════════════════════════════════════════════════
+
+function requireAuth(req, res, next) {
+  const header = req.headers['authorization'] || '';
+  const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Authentication required' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// Role-based permission helper
+// Returns a middleware that allows the listed roles (or all if no list given)
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (roles.length && !roles.includes(req.user.role))
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    next();
+  };
+}
+
+// Shorthand permission sets
+const canWrite = requireRole('super_admin', 'admin', 'it_manager');   // assets only for it_manager – refined per route below
+const canWriteUsers = requireRole('super_admin', 'admin');
+const canWriteSoftware = requireRole('super_admin', 'admin');
+const canWriteAssets = requireRole('super_admin', 'admin', 'it_manager');
+const onlySuperAdmin = requireRole('super_admin');
+
+// ════════════════════════════════════════════════════════════════════════════
+//  AUTH ROUTES  (public — no requireAuth)
+// ════════════════════════════════════════════════════════════════════════════
+
+// POST /api/auth/login
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ error: 'Email and password are required' });
+
+    const user = await AdminUser.findOne({ email: email.toLowerCase().trim() });
+    if (!user)
+      return res.status(401).json({ error: 'Invalid email or password' });
+    if (user.status === 'Inactive')
+      return res.status(403).json({ error: 'Your account is disabled. Contact a Super Admin.' });
+
+    const match = await user.comparePassword(password);
+    if (!match)
+      return res.status(401).json({ error: 'Invalid email or password' });
+
+    // Update lastLogin
+    user.lastLogin = new Date();
+    await user.save();
+
+    const payload = { id: user._id.toString(), email: user.email, name: user.name, role: user.role };
+    const token   = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+
+    res.json({ token, user: { id: payload.id, name: user.name, email: user.email, role: user.role } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/auth/me — validate token & return current user
+app.get('/api/auth/me', requireAuth, async (req, res) => {
+  try {
+    const user = await AdminUser.findById(req.user.id).select('-password').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ id: user._id.toString(), name: user.name, email: user.email, role: user.role, status: user.status });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  ADMIN CONSOLE — Portal User Management  (super_admin only)
+// ════════════════════════════════════════════════════════════════════════════
+
+// GET /api/admin/users
+app.get('/api/admin/users', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const users = await AdminUser.find().select('-password').sort({ createdAt: 1 }).lean();
+    res.json(users.map(u => ({ id: u._id.toString(), name: u.name, email: u.email, role: u.role, status: u.status, lastLogin: u.lastLogin, createdAt: u.createdAt })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/admin/users
+app.post('/api/admin/users', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'name, email and password are required' });
+    const user = await AdminUser.create({ name, email, password, role: role || 'viewer' });
+    res.status(201).json({ id: user._id.toString(), name: user.name, email: user.email, role: user.role, status: user.status });
+  } catch (e) {
+    if (e.code === 11000) return res.status(409).json({ error: 'Email already exists' });
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// PUT /api/admin/users/:id
+app.put('/api/admin/users/:id', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { name, email, role, status } = req.body;
+    const user = await AdminUser.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role, status },
+      { new: true, runValidators: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ error: 'Portal user not found' });
+    res.json({ id: user._id.toString(), name: user.name, email: user.email, role: user.role, status: user.status });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// PUT /api/admin/users/:id/reset-password  (super_admin only)
+app.put('/api/admin/users/:id/reset-password', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const user = await AdminUser.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Portal user not found' });
+    user.password = password; // pre-save hook hashes it
+    await user.save();
+    res.json({ ok: true });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// DELETE /api/admin/users/:id
+app.delete('/api/admin/users/:id', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    if (req.params.id === req.user.id)
+      return res.status(400).json({ error: 'You cannot delete your own account' });
+    const user = await AdminUser.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Portal user not found' });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SHARED HELPERS
+// ════════════════════════════════════════════════════════════════════════════
 
 // ── Helper: normalise a Mongoose doc to a plain object with `id` ──────────────
 function fmt(doc) {
@@ -64,7 +219,7 @@ function diffObjects(oldObj, newObj, fields) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // GET  /api/users
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', requireAuth, async (req, res) => {
   try {
     const users = await User.find().sort({ first: 1 });
     res.json(users.map(fmt));
@@ -72,7 +227,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // POST /api/users
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', requireAuth, canWriteUsers, async (req, res) => {
   try {
     const user = await User.create(req.body);
     const u = fmt(user);
@@ -88,7 +243,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 // PUT  /api/users/:id
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', requireAuth, canWriteUsers, async (req, res) => {
   try {
     const oldUser = await User.findById(req.params.id).lean();
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -118,7 +273,7 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 // DELETE /api/users/:id
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', requireAuth, canWriteUsers, async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -142,7 +297,7 @@ app.delete('/api/users/:id', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // GET  /api/assets
-app.get('/api/assets', async (req, res) => {
+app.get('/api/assets', requireAuth, async (req, res) => {
   try {
     const assets = await Asset.find().sort({ csvId: 1 });
     res.json(assets.map(fmt));
@@ -150,7 +305,7 @@ app.get('/api/assets', async (req, res) => {
 });
 
 // POST /api/assets
-app.post('/api/assets', async (req, res) => {
+app.post('/api/assets', requireAuth, canWriteAssets, async (req, res) => {
   try {
     const body = { ...req.body };
     if (!body.assignedTo) body.assignedTo = null;
@@ -191,7 +346,7 @@ app.post('/api/assets', async (req, res) => {
 });
 
 // PUT  /api/assets/:id
-app.put('/api/assets/:id', async (req, res) => {
+app.put('/api/assets/:id', requireAuth, canWriteAssets, async (req, res) => {
   try {
     const body = { ...req.body };
     if (!body.assignedTo) body.assignedTo = null;
@@ -268,7 +423,7 @@ app.put('/api/assets/:id', async (req, res) => {
 });
 
 // DELETE /api/assets/:id
-app.delete('/api/assets/:id', async (req, res) => {
+app.delete('/api/assets/:id', requireAuth, canWriteAssets, async (req, res) => {
   try {
     const asset = await Asset.findByIdAndDelete(req.params.id);
     if (!asset) return res.status(404).json({ error: 'Asset not found' });
@@ -292,7 +447,7 @@ app.delete('/api/assets/:id', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // GET /api/logs?type=&entityType=&search=&page=&limit=
-app.get('/api/logs', async (req, res) => {
+app.get('/api/logs', requireAuth, async (req, res) => {
   try {
     const { type, entityType, search, page = 1, limit = 25 } = req.query;
     const filter = {};
@@ -345,7 +500,7 @@ app.get('/api/logs', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // GET /api/software
-app.get('/api/software', async (req, res) => {
+app.get('/api/software', requireAuth, async (req, res) => {
   try {
     const list = await Software.find().sort({ csvId: 1 });
     res.json(list.map(s => { const o = s.toObject(); o.id = o._id.toString(); delete o._id; delete o.__v; return o; }));
@@ -353,7 +508,7 @@ app.get('/api/software', async (req, res) => {
 });
 
 // GET /api/software/budget  — stats for dashboard
-app.get('/api/software/budget', async (req, res) => {
+app.get('/api/software/budget', requireAuth, async (req, res) => {
   try {
     const all = await Software.find().lean();
     // Helper: total cost for a software entry including all active add-on services
@@ -375,7 +530,7 @@ app.get('/api/software/budget', async (req, res) => {
 });
 
 // POST /api/software
-app.post('/api/software', async (req, res) => {
+app.post('/api/software', requireAuth, canWriteSoftware, async (req, res) => {
   try {
     const sw = await Software.create(req.body);
     const o = sw.toObject(); o.id = o._id.toString(); delete o._id; delete o.__v;
@@ -385,7 +540,7 @@ app.post('/api/software', async (req, res) => {
 });
 
 // PUT /api/software/:id
-app.put('/api/software/:id', async (req, res) => {
+app.put('/api/software/:id', requireAuth, canWriteSoftware, async (req, res) => {
   try {
     const sw = await Software.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!sw) return res.status(404).json({ error: 'Software not found' });
@@ -395,7 +550,7 @@ app.put('/api/software/:id', async (req, res) => {
 });
 
 // DELETE /api/software/:id
-app.delete('/api/software/:id', async (req, res) => {
+app.delete('/api/software/:id', requireAuth, canWriteSoftware, async (req, res) => {
   try {
     const sw = await Software.findByIdAndDelete(req.params.id);
     if (!sw) return res.status(404).json({ error: 'Software not found' });
@@ -447,9 +602,24 @@ async function seedSoftware() {
   console.log(`✅  Software seeded: ${SOFTWARE_SEED.length} apps`);
 }
 
+// ── Seed default super admin ───────────────────────────────────────────────────
+async function seedAdminUser() {
+  const count = await AdminUser.countDocuments();
+  if (count > 0) return;
+  await AdminUser.create({
+    name:     'Praveen M.',
+    email:    'admin@terzocloud.com',
+    password: 'Admin@123',   // hashed by pre-save hook
+    role:     'super_admin',
+    status:   'Active',
+  });
+  console.log('✅  Default super admin seeded → admin@terzocloud.com / Admin@123');
+}
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 connect().then(async () => {
   await seedSoftware();
+  await seedAdminUser();
   app.listen(PORT, () =>
     console.log(`🚀  Portal running → http://localhost:${PORT}`)
   );

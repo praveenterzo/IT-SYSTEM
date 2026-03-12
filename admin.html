@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TerzoCloud — Admin Console</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1e40af; --primary-light: #3b82f6; --primary-dark: #1e3a8a;
+      --accent: #9333ea; --accent-light: #a855f7;
+      --success: #16a34a; --danger: #dc2626; --warning: #d97706;
+      --bg: #0e0a0f; --surface: #16101a; --surface2: #1e1525;
+      --border: rgba(153,102,255,0.18);
+      --text: #f0eeff; --text-muted: rgba(180,170,210,0.7);
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR */
+    .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow-y: auto; }
+    .logo { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; }
+    .logo-text { font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .logo-sub  { font-size: 10px; color: rgba(153,102,255,0.6); }
+
+    nav { padding: 14px 8px; flex: 1; }
+    .nav-label { font-size: 9.5px; font-weight: 700; color: rgba(153,102,255,0.55); text-transform: uppercase; letter-spacing: .1em; padding: 8px 8px 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 11px; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: 500; transition: all .14s; margin-bottom: 1px; user-select: none; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-item:hover { background: rgba(153,102,255,0.1); color: var(--text); }
+    .nav-item.active { background: rgba(99,66,255,0.18); color: #a78bfa; }
+    .nav-divider { height: 1px; background: var(--border); margin: 10px 8px; }
+
+    .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+    .user-chip { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: rgba(153,102,255,0.08); border-radius: 9px; }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .user-info strong { display: block; color: var(--text); font-size: 12px; }
+    .user-info span   { color: var(--text-muted); font-size: 10.5px; }
+    .role-chip { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .role-chip.super_admin { background: rgba(147,51,234,0.2); color: #c084fc; border: 1px solid rgba(147,51,234,0.3); }
+    .role-chip.admin       { background: rgba(30,64,175,0.2);  color: #93c5fd; border: 1px solid rgba(30,64,175,0.3); }
+    .role-chip.viewer      { background: rgba(22,163,74,0.15); color: #4ade80; border: 1px solid rgba(22,163,74,0.25); }
+    .role-chip.it_manager  { background: rgba(14,165,233,0.15);color: #38bdf8; border: 1px solid rgba(14,165,233,0.25); }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 58px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar h1 { font-size: 17px; font-weight: 800; color: var(--text); flex: 1; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .14s; white-space: nowrap; }
+    .btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: rgba(153,102,255,0.12); color: #c4b5fd; border: 1px solid var(--border); }
+    .btn-secondary:hover { background: rgba(153,102,255,0.2); }
+    .btn-danger { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(220,38,38,0.25); }
+    .btn-danger:hover { background: rgba(220,38,38,0.2); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-icon { padding: 6px; border-radius: 7px; }
+    .btn-back { background: rgba(153,102,255,0.08); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-back:hover { color: var(--text); background: rgba(153,102,255,0.15); }
+
+    /* CARDS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; overflow: hidden; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+
+    /* STAT GRID */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 13px; }
+    .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .stat-icon.purple { background: rgba(147,51,234,0.15); color: #c084fc; }
+    .stat-icon.blue   { background: rgba(30,64,175,0.15);  color: #93c5fd; }
+    .stat-icon.green  { background: rgba(22,163,74,0.13);  color: #4ade80; }
+    .stat-icon.sky    { background: rgba(14,165,233,0.13); color: #38bdf8; }
+    .stat-num   { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
+    .stat-label { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+
+    /* TABLES */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; color: rgba(153,102,255,0.7); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 12px 14px; border-bottom: 1px solid rgba(153,102,255,0.07); vertical-align: middle; color: var(--text-muted); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(153,102,255,0.04); }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 460px; max-width: 96vw; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+    .modal-head { padding: 18px 22px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-head h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; }
+    .modal-close:hover { color: var(--text); background: rgba(153,102,255,0.1); }
+    .modal-close svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; display: block; }
+    .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .modal-footer { padding: 14px 22px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 9px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .form-group input, .form-group select {
+      padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13.5px; color: var(--text); outline: none; transition: border .14s;
+    }
+    .form-group input::placeholder { color: rgba(153,102,255,0.35); }
+    .form-group input:focus, .form-group select:focus { border-color: rgba(99,66,255,0.6); box-shadow: 0 0 0 2px rgba(99,66,255,0.12); }
+    .form-group select option { background: #1e1525; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* TOAST */
+    .toast-wrap { position: fixed; bottom: 22px; right: 22px; display: flex; flex-direction: column; gap: 8px; z-index: 999; }
+    .toast { padding: 10px 16px; border-radius: 9px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.4); animation: slideIn .25s ease; display: flex; align-items: center; gap: 8px; min-width: 220px; }
+    .toast.success { background: rgba(22,163,74,0.2); border: 1px solid rgba(22,163,74,0.35); color: #4ade80; }
+    .toast.danger  { background: rgba(220,38,38,0.18); border: 1px solid rgba(220,38,38,0.35); color: #f87171; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* PERMISSION TABLE */
+    .perm-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+    .perm-table th, .perm-table td { padding: 10px 14px; border: 1px solid var(--border); text-align: center; }
+    .perm-table th:first-child, .perm-table td:first-child { text-align: left; }
+    .perm-table th { background: var(--surface2); color: rgba(153,102,255,0.85); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
+    .perm-check { color: #4ade80; font-size: 15px; }
+    .perm-cross  { color: rgba(153,102,255,0.35); font-size: 15px; }
+
+    /* PAGE visibility */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Confirm box */
+    .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px 28px 22px; max-width: 380px; width: 94%; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .confirm-icon { width: 44px; height: 44px; border-radius: 50%; background: rgba(220,38,38,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .confirm-icon svg { width: 22px; height: 22px; stroke: #f87171; fill: none; stroke-width: 2; }
+    .confirm-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .confirm-msg   { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5; }
+    .confirm-btns  { display: flex; gap: 9px; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">TerzoCloud</div>
+      <div class="logo-sub">Admin Console</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-label">Console</div>
+    <div class="nav-item active" id="nav-users" onclick="showPage('users',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Portal Users
+    </div>
+    <div class="nav-item" id="nav-permissions" onclick="showPage('permissions',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Roles & Permissions
+    </div>
+    <div class="nav-item" id="nav-system" onclick="showPage('system',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      System Info
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" onclick="location.href='/'">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Back to Portal
+    </div>
+    <div class="nav-item" onclick="signOut()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div class="user-info">
+        <strong id="sidebarName">Loading…</strong>
+        <span id="sidebarRole" class="role-chip super_admin">—</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Portal Users</h1>
+    <button class="btn btn-back" onclick="location.href='/'">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Back to Portal
+    </button>
+  </div>
+
+  <div class="content">
+
+    <!-- ── PORTAL USERS PAGE ── -->
+    <div class="page active" id="page-users">
+      <div class="stat-grid" id="userStatGrid">
+        <div class="stat-card"><div class="stat-icon purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Portal Users</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div><div class="stat-num" id="statAdmins">—</div><div class="stat-label">Admins</div></div></div>
+        <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="stat-num" id="statActive">—</div><div class="stat-label">Active</div></div></div>
+        <div class="stat-card"><div class="stat-icon sky"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><div class="stat-num" id="statRoles">4</div><div class="stat-label">Roles Defined</div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Portal Users <span style="color:rgba(153,102,255,0.5);font-weight:400;font-size:12px" id="userCountLabel"></span></div>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Add User
+          </button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Created</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(153,102,255,0.4)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ROLES & PERMISSIONS PAGE ── -->
+    <div class="page" id="page-permissions">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">Role Definitions</div></div>
+        <div style="padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="role-chip super_admin">Super Admin</span>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);line-height:1.5">Full access to everything — manage portal users, all data, system settings. Cannot be deleted by others.</p>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="role-chip admin">Admin</span>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);line-height:1.5">Can manage users, assets and software inventory. Cannot manage other portal user accounts.</p>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="role-chip it_manager">IT Manager</span>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);line-height:1.5">Full access to device/asset inventory. Read-only access to users and software.</p>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="role-chip viewer">Viewer</span>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);line-height:1.5">Read-only access to all pages. Cannot create, edit or delete any records.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Permission Matrix</div></div>
+        <div style="padding:16px;overflow-x:auto">
+          <table class="perm-table">
+            <thead>
+              <tr>
+                <th>Permission</th>
+                <th><span class="role-chip super_admin">Super Admin</span></th>
+                <th><span class="role-chip admin">Admin</span></th>
+                <th><span class="role-chip it_manager">IT Manager</span></th>
+                <th><span class="role-chip viewer">Viewer</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>View all pages</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td></tr>
+              <tr><td><strong>Add / Edit / Delete Users</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-cross">—</span></td><td><span class="perm-cross">—</span></td></tr>
+              <tr><td><strong>Add / Edit / Delete Assets</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-cross">—</span></td></tr>
+              <tr><td><strong>Add / Edit / Delete Software</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-cross">—</span></td><td><span class="perm-cross">—</span></td></tr>
+              <tr><td><strong>Manage Portal Users (Admin Console)</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-cross">—</span></td><td><span class="perm-cross">—</span></td><td><span class="perm-cross">—</span></td></tr>
+              <tr><td><strong>Export CSV / PDF</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td></tr>
+              <tr><td><strong>View Activity Log</strong></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td><td><span class="perm-check">✓</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SYSTEM INFO PAGE ── -->
+    <div class="page" id="page-system">
+      <div class="stat-grid" id="sysStats">
+        <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div><div><div class="stat-num" id="sysUsers">—</div><div class="stat-label">Employee Users</div></div></div>
+        <div class="stat-card"><div class="stat-icon sky"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div><div><div class="stat-num" id="sysAssets">—</div><div class="stat-label">Assets</div></div></div>
+        <div class="stat-card"><div class="stat-icon purple"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div><div class="stat-num" id="sysSoftware">—</div><div class="stat-label">Software Apps</div></div></div>
+        <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div><div class="stat-num" id="sysPortalUsers">—</div><div class="stat-label">Portal Users</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Your Session</div></div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:12px" id="sessionInfo">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:110px;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Name</div>
+            <div style="font-size:13.5px;color:var(--text)" id="siName">—</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:110px;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Email</div>
+            <div style="font-size:13.5px;color:var(--text)" id="siEmail">—</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:110px;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Role</div>
+            <div id="siRole">—</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:110px;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Portal Version</div>
+            <div style="font-size:13px;color:var(--text-muted)">v2.0.0 · JWT Auth + RBAC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add Portal User</h3>
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="mName" placeholder="Praveen M."/>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="mEmail" placeholder="user@terzocloud.com"/>
+        </div>
+      </div>
+      <div id="mPasswordRow" class="form-group">
+        <label>Password *</label>
+        <input type="password" id="mPassword" placeholder="Min. 6 characters"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role</label>
+          <select id="mRole">
+            <option value="viewer">Viewer</option>
+            <option value="it_manager">IT Manager</option>
+            <option value="admin">Admin</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+        <div class="form-group" id="mStatusRow" style="display:none">
+          <label>Status</label>
+          <select id="mStatus">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:12px;color:rgba(153,102,255,0.5);padding:4px 0" id="modalError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET PASSWORD MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Reset Password</h3>
+      <button class="modal-close" onclick="closeResetModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Set a new password for <strong id="resetUserName" style="color:var(--text)"></strong></div>
+      <div class="form-group">
+        <label>New Password *</label>
+        <input type="password" id="resetPassword" placeholder="Min. 6 characters"/>
+      </div>
+      <div style="font-size:12px;color:rgba(220,38,38,0.8)" id="resetError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doResetPassword()">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
+    <div class="confirm-title">Delete Portal User</div>
+    <div class="confirm-msg" id="confirmMsg">Are you sure you want to delete this user? This action cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" onclick="doDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ── Auth guard ── */
+const token = localStorage.getItem('tcToken');
+let currentUser = null;
+
+(async function init() {
+  if (!token) { location.href = '/login'; return; }
+  try {
+    const r = await authFetch('/api/auth/me');
+    if (!r.ok) { clearAuth(); return; }
+    currentUser = await r.json();
+    if (currentUser.role !== 'super_admin') {
+      // Non-super-admins can view but not manage users
+      document.getElementById('page-users').innerHTML =
+        `<div style="text-align:center;padding:60px;color:rgba(153,102,255,0.5)">
+           <svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:currentColor;fill:none;stroke-width:1.5;margin:0 auto 16px;display:block"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+           <div style="font-size:16px;font-weight:700;color:rgba(153,102,255,0.7);margin-bottom:8px">Access Restricted</div>
+           <div style="font-size:13px">Only Super Admins can manage portal users.</div>
+         </div>`;
+    }
+    updateSidebar(currentUser);
+    loadUsers();
+    loadSystemStats();
+  } catch { clearAuth(); }
+})();
+
+function authFetch(url, opts = {}) {
+  return fetch(url, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+function clearAuth() {
+  localStorage.removeItem('tcToken');
+  localStorage.removeItem('tcUser');
+  location.href = '/login';
+}
+
+function signOut() {
+  localStorage.removeItem('tcToken');
+  localStorage.removeItem('tcUser');
+  location.href = '/login';
+}
+
+function updateSidebar(u) {
+  const ini = u.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('sidebarAvatar').textContent = ini;
+  document.getElementById('sidebarName').textContent   = u.name;
+  const rc = document.getElementById('sidebarRole');
+  rc.textContent  = u.role.replace('_',' ');
+  rc.className    = 'role-chip ' + u.role;
+  document.getElementById('siName').textContent  = u.name;
+  document.getElementById('siEmail').textContent = u.email;
+  document.getElementById('siRole').innerHTML    = `<span class="role-chip ${u.role}">${u.role.replace('_',' ')}</span>`;
+}
+
+/* ── Page navigation ── */
+const PAGE_TITLES = { users: 'Portal Users', permissions: 'Roles & Permissions', system: 'System Info' };
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[name] || name;
+}
+
+/* ── PORTAL USERS ── */
+let adminUsers = [];
+let editingId  = null;
+let deletingId = null;
+let resetId    = null;
+
+const ROLE_LABELS = { super_admin: 'Super Admin', admin: 'Admin', it_manager: 'IT Manager', viewer: 'Viewer' };
+
+async function loadUsers() {
+  try {
+    const r = await authFetch('/api/admin/users');
+    if (r.status === 403) return; // non-super-admin handled above
+    if (!r.ok) throw new Error('Failed to load users');
+    adminUsers = await r.json();
+    renderUsersTable();
+    updateStats();
+  } catch (e) { showToast(e.message, 'danger'); }
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent  = adminUsers.length;
+  document.getElementById('statAdmins').textContent = adminUsers.filter(u => u.role === 'super_admin' || u.role === 'admin').length;
+  document.getElementById('statActive').textContent = adminUsers.filter(u => u.status === 'Active').length;
+  document.getElementById('userCountLabel').textContent = `(${adminUsers.length})`;
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('usersTableBody');
+  if (!adminUsers.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(153,102,255,0.4)">No portal users found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = adminUsers.map(u => {
+    const ini  = u.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const created   = new Date(u.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+    const isSelf = currentUser && u.id === currentUser.id;
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ini}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name}${isSelf?' <span style="font-size:10px;color:rgba(153,102,255,0.6)">(you)</span>':''}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:12.5px">${u.email}</td>
+      <td><span class="role-chip ${u.role}">${ROLE_LABELS[u.role]||u.role}</span></td>
+      <td><span style="display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;background:${u.status==='Active'?'rgba(22,163,74,0.15)':'rgba(220,38,38,0.12)'};color:${u.status==='Active'?'#4ade80':'#f87171'};border:1px solid ${u.status==='Active'?'rgba(22,163,74,0.25)':'rgba(220,38,38,0.25)'}">${u.status}</span></td>
+      <td style="font-size:12px">${lastLogin}</td>
+      <td style="font-size:12px">${created}</td>
+      <td style="text-align:right">
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal('${u.id}')" title="Edit">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openResetModal('${u.id}','${u.name.replace(/'/g,"\\'")}') " title="Reset Password">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </button>
+          ${!isSelf ? `<button class="btn btn-danger btn-sm btn-icon" onclick="confirmDelete('${u.id}','${u.name.replace(/'/g,"\\'")}') " title="Delete">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Add/Edit Modal ── */
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Add Portal User';
+  document.getElementById('modalSaveBtn').textContent = 'Create User';
+  document.getElementById('mName').value    = '';
+  document.getElementById('mEmail').value   = '';
+  document.getElementById('mPassword').value= '';
+  document.getElementById('mRole').value    = 'viewer';
+  document.getElementById('mStatus').value  = 'Active';
+  document.getElementById('mPasswordRow').style.display = '';
+  document.getElementById('mStatusRow').style.display   = 'none';
+  document.getElementById('modalError').textContent     = '';
+  document.getElementById('userModal').classList.add('open');
+  setTimeout(()=>document.getElementById('mName').focus(), 80);
+}
+
+function openEditModal(id) {
+  const u = adminUsers.find(x => x.id === id);
+  if (!u) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Portal User';
+  document.getElementById('modalSaveBtn').textContent = 'Save Changes';
+  document.getElementById('mName').value   = u.name;
+  document.getElementById('mEmail').value  = u.email;
+  document.getElementById('mRole').value   = u.role;
+  document.getElementById('mStatus').value = u.status;
+  document.getElementById('mPasswordRow').style.display = 'none';
+  document.getElementById('mStatusRow').style.display   = '';
+  document.getElementById('modalError').textContent     = '';
+  document.getElementById('userModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('userModal').classList.remove('open'); }
+
+async function saveUser() {
+  const name     = document.getElementById('mName').value.trim();
+  const email    = document.getElementById('mEmail').value.trim();
+  const password = document.getElementById('mPassword').value;
+  const role     = document.getElementById('mRole').value;
+  const status   = document.getElementById('mStatus').value;
+  const errEl    = document.getElementById('modalError');
+
+  if (!name || !email) { errEl.textContent = 'Name and email are required.'; return; }
+  if (!editingId && password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  errEl.textContent = '';
+
+  const btn = document.getElementById('modalSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const url    = editingId ? `/api/admin/users/${editingId}` : '/api/admin/users';
+    const method = editingId ? 'PUT' : 'POST';
+    const body   = editingId ? { name, email, role, status } : { name, email, password, role };
+    const r = await authFetch(url, { method, body: JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.error || 'Save failed'; btn.disabled = false; btn.textContent = editingId ? 'Save Changes' : 'Create User'; return; }
+    closeModal();
+    showToast(editingId ? 'User updated successfully' : 'Portal user created');
+    await loadUsers();
+  } catch (e) { errEl.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = editingId ? 'Save Changes' : 'Create User'; }
+}
+
+/* ── Reset Password ── */
+function openResetModal(id, name) {
+  resetId = id;
+  document.getElementById('resetUserName').textContent = name;
+  document.getElementById('resetPassword').value = '';
+  document.getElementById('resetError').textContent = '';
+  document.getElementById('resetModal').classList.add('open');
+  setTimeout(()=>document.getElementById('resetPassword').focus(), 80);
+}
+function closeResetModal() { document.getElementById('resetModal').classList.remove('open'); }
+
+async function doResetPassword() {
+  const pw    = document.getElementById('resetPassword').value;
+  const errEl = document.getElementById('resetError');
+  if (pw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  errEl.textContent = '';
+  try {
+    const r = await authFetch(`/api/admin/users/${resetId}/reset-password`, {
+      method: 'PUT', body: JSON.stringify({ password: pw })
+    });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.error || 'Reset failed'; return; }
+    closeResetModal();
+    showToast('Password reset successfully');
+  } catch (e) { errEl.textContent = e.message; }
+}
+
+/* ── Delete ── */
+function confirmDelete(id, name) {
+  deletingId = id;
+  document.getElementById('confirmMsg').textContent = `Delete "${name}"? This cannot be undone.`;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); }
+async function doDelete() {
+  try {
+    const r = await authFetch(`/api/admin/users/${deletingId}`, { method: 'DELETE' });
+    const data = await r.json();
+    if (!r.ok) { showToast(data.error || 'Delete failed', 'danger'); closeConfirm(); return; }
+    closeConfirm();
+    showToast('User deleted');
+    await loadUsers();
+  } catch (e) { showToast(e.message, 'danger'); }
+}
+
+/* ── System Stats ── */
+async function loadSystemStats() {
+  try {
+    const [ur, ar, sr] = await Promise.all([
+      authFetch('/api/users'),
+      authFetch('/api/assets'),
+      authFetch('/api/software'),
+    ]);
+    const [users, assets, sw] = await Promise.all([ur.json(), ar.json(), sr.json()]);
+    document.getElementById('sysUsers').textContent     = Array.isArray(users)   ? users.length   : '—';
+    document.getElementById('sysAssets').textContent    = Array.isArray(assets)  ? assets.length  : '—';
+    document.getElementById('sysSoftware').textContent  = Array.isArray(sw)      ? sw.length      : '—';
+    document.getElementById('sysPortalUsers').textContent = adminUsers.length || '—';
+  } catch {}
+}
+
+/* ── Toast ── */
+function showToast(msg, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const div  = document.createElement('div');
+  div.className = 'toast ' + type;
+  div.textContent = msg;
+  wrap.appendChild(div);
+  setTimeout(() => div.remove(), 3200);
+}
+</script>
+</body>
+</html>

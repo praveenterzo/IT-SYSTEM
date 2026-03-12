@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TerzoCloud — Sign In</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1e40af; --primary-light: #3b82f6; --primary-dark: #1e3a8a;
+      --danger: #dc2626; --gray-200: #e2e8f0; --gray-400: #94a3b8;
+      --gray-600: #475569; --gray-700: #334155; --gray-800: #1e293b;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0e0a0f;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(99,66,255,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(30,64,175,0.12) 0%, transparent 55%);
+    }
+
+    .login-card {
+      background: #16101a;
+      border: 1px solid rgba(153,102,255,0.18);
+      border-radius: 18px;
+      padding: 42px 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
+    .logo-text { font-size: 16px; font-weight: 800; color: #f0eeff; line-height: 1.2; }
+    .logo-sub  { font-size: 11px; color: rgba(153,102,255,0.7); }
+
+    h2 {
+      font-size: 22px; font-weight: 800; color: #f0eeff;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 13px; color: rgba(180,170,210,0.75);
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: rgba(180,170,210,0.9); margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .field input {
+      width: 100%;
+      padding: 11px 14px;
+      background: #1e1525;
+      border: 1px solid rgba(153,102,255,0.22);
+      border-radius: 9px;
+      font-size: 14px;
+      color: #f0eeff;
+      outline: none;
+      transition: border .15s, box-shadow .15s;
+    }
+    .field input::placeholder { color: rgba(153,102,255,0.4); }
+    .field input:focus {
+      border-color: rgba(99,66,255,0.7);
+      box-shadow: 0 0 0 3px rgba(99,66,255,0.15);
+    }
+
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 42px; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: rgba(153,102,255,0.6);
+    }
+    .pw-toggle:hover { color: #a78bfa; }
+    .pw-toggle svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; display: block; }
+
+    .error-msg {
+      display: none;
+      background: rgba(220,38,38,0.12);
+      border: 1px solid rgba(220,38,38,0.3);
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-msg.show { display: flex; }
+    .error-msg svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .14s, transform .1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .btn-login:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-login:active:not(:disabled) { transform: scale(.98); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-login .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    .btn-login.loading .spinner { display: block; }
+    .btn-login.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hint {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 11.5px;
+      color: rgba(153,102,255,0.45);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">TerzoCloud</div>
+        <div class="logo-sub">Asset Management Portal</div>
+      </div>
+    </div>
+
+    <h2>Welcome back</h2>
+    <p class="subtitle">Sign in to access the portal</p>
+
+    <div class="error-msg" id="errorMsg">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errorText">Invalid email or password.</span>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="email" placeholder="you@terzocloud.com" required autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password"/>
+          <button type="button" class="pw-toggle" onclick="togglePw()" title="Show/hide password" id="pwToggleBtn">
+            <svg id="eyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login" id="loginBtn">
+        <div class="spinner"></div>
+        <span class="btn-text">Sign In</span>
+      </button>
+    </form>
+
+    <p class="hint">TerzoCloud · Internal Portal · Authorized access only</p>
+  </div>
+
+  <script>
+    // If already logged in, redirect to portal
+    (function(){
+      const t = localStorage.getItem('tcToken');
+      if (t) {
+        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } })
+          .then(r => { if (r.ok) location.href = '/'; })
+          .catch(() => {});
+      }
+    })();
+
+    function togglePw() {
+      const inp = document.getElementById('password');
+      const ico = document.getElementById('eyeIcon');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      } else {
+        inp.type = 'password';
+        ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn     = document.getElementById('loginBtn');
+      const errBox  = document.getElementById('errorMsg');
+      const errText = document.getElementById('errorText');
+      const email   = document.getElementById('email').value.trim();
+      const password= document.getElementById('password').value;
+
+      errBox.classList.remove('show');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errText.textContent = data.error || 'Login failed. Please try again.';
+          errBox.classList.add('show');
+          return;
+        }
+
+        localStorage.setItem('tcToken', data.token);
+        localStorage.setItem('tcUser',  JSON.stringify(data.user));
+
+        // Redirect based on role
+        const role = data.user.role;
+        location.href = '/';
+      } catch (err) {
+        errText.textContent = 'Network error. Is the server running?';
+        errBox.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+  </script>
+</body>
+</html>

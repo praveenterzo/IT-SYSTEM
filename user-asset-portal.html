@@ -459,6 +459,15 @@
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       Activity Log
     </div>
+    <div class="nav-label" style="margin-top:10px">Admin</div>
+    <div class="nav-item" id="adminConsoleNav" style="display:none" onclick="location.href='/admin'">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Admin Console
+    </div>
+    <div class="nav-item" onclick="signOut()" style="color:var(--danger,#dc2626)">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </div>
   </nav>
   <div class="sidebar-footer">
     <div class="theme-switcher" id="themeSwitcher">
@@ -467,10 +476,10 @@
       <button class="theme-btn" id="btn-white"  onclick="setTheme('white')"  title="White">☀️ White</button>
     </div>
     <div class="user-chip">
-      <div class="avatar">PM</div>
+      <div class="avatar" id="portalAvatar">TC</div>
       <div class="user-info">
-        <strong>Praveen M.</strong>
-        <span>IT Admin</span>
+        <strong id="sidebarUserName">Loading…</strong>
+        <span id="sidebarUserRole" style="font-size:10.5px">—</span>
       </div>
     </div>
   </div>
@@ -484,7 +493,7 @@
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="globalSearch" placeholder="Search…" oninput="handleSearch(this.value)">
     </div>
-    <button class="btn btn-primary" id="addBtn" onclick="openAddModal()" style="display:none">
+    <button class="btn btn-primary rbac-write" id="addBtn" onclick="openAddModal()" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
       <span id="addBtnLabel">Add</span>
     </button>
@@ -992,6 +1001,81 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+/* ════════════════════════════════════════════════════
+   JWT AUTH GUARD + authFetch wrapper
+   ════════════════════════════════════════════════════ */
+const _tcToken = () => localStorage.getItem('tcToken');
+
+function authFetch(url, opts = {}) {
+  const t = _tcToken();
+  return fetch(url, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+      ...(t ? { 'Authorization': 'Bearer ' + t } : {}),
+    },
+  });
+}
+
+function signOut() {
+  localStorage.removeItem('tcToken');
+  localStorage.removeItem('tcUser');
+  location.href = '/login';
+}
+
+let portalUser = null; // currently logged-in admin user
+
+// Called on page load — validate token, redirect to /login if invalid
+async function initAuth() {
+  const t = _tcToken();
+  if (!t) { location.href = '/login'; return false; }
+  try {
+    const r = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } });
+    if (!r.ok) { localStorage.removeItem('tcToken'); location.href = '/login'; return false; }
+    portalUser = await r.json();
+    applyRBACUI();
+    updateTopbarUser();
+    return true;
+  } catch {
+    location.href = '/login';
+    return false;
+  }
+}
+
+function applyRBACUI() {
+  if (!portalUser) return;
+  const role = portalUser.role;
+  // viewer: hide all write buttons
+  if (role === 'viewer') {
+    document.querySelectorAll('.rbac-write').forEach(el => el.style.display = 'none');
+  }
+  // it_manager: hide write buttons for users and software, keep assets
+  if (role === 'it_manager') {
+    document.querySelectorAll('.rbac-users-write, .rbac-sw-write').forEach(el => el.style.display = 'none');
+  }
+  // Show Admin Console link only to super_admin
+  if (role === 'super_admin') {
+    document.getElementById('adminConsoleNav')?.style && (document.getElementById('adminConsoleNav').style.display = 'flex');
+  }
+}
+
+function updateTopbarUser() {
+  if (!portalUser) return;
+  const nameEl   = document.getElementById('sidebarUserName');
+  const roleEl   = document.getElementById('sidebarUserRole');
+  const avatarEl = document.getElementById('portalAvatar');
+  if (nameEl) nameEl.textContent = portalUser.name;
+  if (roleEl) {
+    const LABELS = { super_admin:'Super Admin', admin:'Admin', viewer:'Viewer', it_manager:'IT Manager' };
+    roleEl.textContent = LABELS[portalUser.role] || portalUser.role;
+  }
+  if (avatarEl) {
+    const ini = portalUser.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    avatarEl.textContent = ini || 'TC';
+  }
+}
+
 /* ══ HELPERS ══ */
 const COLORS=['#1e40af','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#9333ea','#0ea5e9','#be185d','#0f766e'];
 const aColor = n => COLORS[(n.charCodeAt(0)+(n.charCodeAt(n.length-1)||0))%COLORS.length];
@@ -1007,10 +1091,10 @@ const API = 'http://localhost:3000/api';
 
 async function loadData(){
   try {
-    const safeFetch = url => fetch(url).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).catch(()=>null);
+    const safeFetch = url => authFetch(url).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).catch(()=>null);
     const [us, as, sw] = await Promise.all([
-      fetch(`${API}/users`).then(r=>r.json()),
-      fetch(`${API}/assets`).then(r=>r.json()),
+      authFetch(`${API}/users`).then(r=>r.json()),
+      authFetch(`${API}/assets`).then(r=>r.json()),
       safeFetch(`${API}/software`),
     ]);
     users    = us;
@@ -1056,7 +1140,13 @@ function navigate(page, el){
   const titles={dashboard:'Dashboard',users:'User Management',assets:'Asset Inventory',assignments:'Assignments',software:'Software Inventory',logs:'Activity Log'};
   document.getElementById('pageTitle').textContent=titles[page]||page;
   const showAdd=page==='users'||page==='assets'||page==='software';
-  document.getElementById('addBtn').style.display=showAdd?'inline-flex':'none';
+  // Only show Add button if role allows it
+  const role = portalUser?.role;
+  const canAdd = showAdd && (
+    role === 'super_admin' || role === 'admin' ||
+    (role === 'it_manager' && page === 'assets')
+  );
+  document.getElementById('addBtn').style.display = canAdd ? 'inline-flex' : 'none';
   document.getElementById('addBtnLabel').textContent=page==='users'?'Add User':page==='software'?'Add Software':'Add Asset';
   searchQ=''; document.getElementById('globalSearch').value='';
   userPage=1; assetPage=1;
@@ -1327,7 +1417,7 @@ function renderAssignments(){
 
 async function unassign(id){
   try {
-    await fetch(`${API}/assets/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+    await authFetch(`${API}/assets/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({assignedTo:null,status:'Available'})});
     showToast('Asset unassigned'); await loadData();
   } catch(e){ showToast('Unassign failed','danger'); }
@@ -1393,8 +1483,8 @@ async function saveUser(){
     phone:document.getElementById('userPhone').value.trim() };
   try {
     const res = id
-      ? await fetch(`${API}/users/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
-      : await fetch(`${API}/users`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      ? await authFetch(`${API}/users/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      : await authFetch(`${API}/users`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
     showToast(id?'User updated':'User added','success');
     closeModal(); await loadData();
@@ -1404,7 +1494,7 @@ async function saveUser(){
 function deleteUser(id){
   openConfirm('Delete User','This will permanently remove the user and unassign their assets.',async()=>{
     try {
-      await fetch(`${API}/users/${id}`,{method:'DELETE'});
+      await authFetch(`${API}/users/${id}`,{method:'DELETE'});
       showToast('User deleted'); await loadData();
     } catch(e){ showToast('Delete failed','danger'); }
   });
@@ -1464,8 +1554,8 @@ async function saveAsset(){
   };
   try {
     const res = id
-      ? await fetch(`${API}/assets/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
-      : await fetch(`${API}/assets`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      ? await authFetch(`${API}/assets/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      : await authFetch(`${API}/assets`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
     showToast(id?'Asset updated':'Asset added','success');
     closeModal(); await loadData();
@@ -1475,7 +1565,7 @@ async function saveAsset(){
 function deleteAsset(id){
   openConfirm('Delete Asset','This will permanently remove this asset record.',async()=>{
     try {
-      await fetch(`${API}/assets/${id}`,{method:'DELETE'});
+      await authFetch(`${API}/assets/${id}`,{method:'DELETE'});
       showToast('Asset deleted'); await loadData();
     } catch(e){ showToast('Delete failed','danger'); }
   });
@@ -1544,7 +1634,7 @@ async function renderLogs(page=1){
     if(entityType) params.set('entityType', entityType);
     if(search)     params.set('search', search);
 
-    const data = await fetch(`${API}/logs?${params}`).then(r=>r.json());
+    const data = await authFetch(`${API}/logs?${params}`).then(r=>r.json());
 
     // Summary chips
     renderLogChips(data.total, data.logs);
@@ -1857,7 +1947,7 @@ function renderSoftware(){
 /* software budget dashboard widget */
 async function renderSoftwareBudgetWidget(){
   try {
-    const b = await fetch(`${API}/software/budget`).then(r=>r.json());
+    const b = await authFetch(`${API}/software/budget`).then(r=>r.json());
 
     // Update stat grid software cards
     const el1 = document.getElementById('statSoftwareBudget');
@@ -1973,8 +2063,8 @@ async function saveSoftware(){
   };
   try {
     const res = id
-      ? await fetch(`${API}/software/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
-      : await fetch(`${API}/software`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      ? await authFetch(`${API}/software/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      : await authFetch(`${API}/software`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
     showToast(id?'Software updated':'Software added','success');
     closeModal(); await loadData(); renderSoftware();
@@ -1987,7 +2077,7 @@ function deleteCurrentSoftware(){
   closeModal();
   openConfirm('Delete Software','This will permanently remove this software record.',async()=>{
     try {
-      await fetch(`${API}/software/${id}`,{method:'DELETE'});
+      await authFetch(`${API}/software/${id}`,{method:'DELETE'});
       showToast('Software deleted'); await loadData(); renderSoftware();
     } catch(e){ showToast('Delete failed','danger'); }
   });
@@ -2360,8 +2450,12 @@ function initThemeButtons() {
 }
 
 /* ══ INIT ══ */
-loadData();
-initThemeButtons();
+(async () => {
+  const ok = await initAuth(); // JWT guard — redirects to /login if invalid
+  if (!ok) return;
+  await loadData();
+  initThemeButtons();
+})();
 
 /* ══ DEPT USERS MODAL ══ */
 function showDeptUsers(dept) {
