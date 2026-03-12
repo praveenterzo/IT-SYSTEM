@@ -2413,6 +2413,8 @@ function openSwDm(id){
   document.getElementById('swDrPlanInfo').innerHTML = planParts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
 
   /* ─ Base Plan row (Services tab) ─ */
+  /* Base plan annual cost = purchased × price/mo × 12  (license math only, never includes add-on services) */
+  const licCalcCost = (s.purchasedLicenses||0) * (s.licensePricePerUserMonth||0) * 12;
   const basePlanBody = document.getElementById('swDrBasePlanBody');
   const stBadge = `<span class="badge ${(s.status||'active').toLowerCase()}">${s.status||'Active'}</span>`;
   basePlanBody.innerHTML = `<tr>
@@ -2421,7 +2423,7 @@ function openSwDm(id){
     <td>${s.licensePricePerUserMonth ? '$'+s.licensePricePerUserMonth : '—'}</td>
     <td>${s.purchasedLicenses||'—'}</td>
     <td>${s.usedLicenses||'—'}</td>
-    <td style="font-weight:700">${s.annualCost>0 ? fmtFull(s.annualCost) : '<span style="color:var(--gray-400)">Free</span>'}</td>
+    <td style="font-weight:700">${licCalcCost>0 ? fmtFull(licCalcCost) : '<span style="color:var(--gray-400)">Free</span>'}</td>
     <td style="font-size:11px">${s.renewalPeriod||'—'}</td>
     <td>${stBadge}</td>
   </tr>`;
