@@ -312,12 +312,12 @@
     /* ── SW App Detail Modal ── */
     .sw-dm-overlay { position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:300;display:none;align-items:center;justify-content:center;padding:20px; }
     .sw-dm-overlay.open { display:flex; }
-    .sw-dm-box { background:#fff;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.28);width:100%;max-width:860px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden; }
+    .sw-dm-box { background:#fff;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.28);width:100%;max-width:1100px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden; }
     .sw-dm-head { padding:18px 24px 14px;border-bottom:1px solid var(--gray-200);flex-shrink:0; }
     .sw-dm-tabs { display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--gray-200);flex-shrink:0;background:#fff; }
     .sw-dm-tab { padding:10px 18px;border:none;background:none;font-size:13px;font-weight:600;color:var(--gray-400);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:all .15s;border-radius:0; }
     .sw-dm-tab.active { color:var(--primary);border-bottom-color:var(--primary); }
-    .sw-dm-body { flex:1;overflow-y:auto;padding:20px 24px; }
+    .sw-dm-body { flex:1;overflow-y:auto;padding:22px 28px; }
     .sw-dm-panel { display:none; }
     .sw-dm-panel.active { display:block; }
     /* Edit panel inside detail modal */
@@ -326,16 +326,16 @@
     .sw-drawer-overlay,.sw-drawer { display:none !important; }
     .sw-section-title { font-size:10.5px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.08em; margin-bottom:11px; }
     .sw-cost-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    .sw-cost-card { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:10px; padding:12px 14px; }
-    .sw-cost-card .cv { font-size:19px; font-weight:800; color:var(--gray-800); line-height:1.1; margin-bottom:3px; }
-    .sw-cost-card .cl { font-size:10.5px; color:var(--gray-400); }
+    .sw-cost-card { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:12px; padding:16px 18px; }
+    .sw-cost-card .cv { font-size:22px; font-weight:800; color:var(--gray-800); line-height:1.1; margin-bottom:4px; }
+    .sw-cost-card .cl { font-size:11px; color:var(--gray-400); font-weight:500; }
     .sw-lic-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
     .sw-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; }
     .sw-info-item label { font-size:10.5px; font-weight:700; color:var(--gray-400); display:block; margin-bottom:2px; text-transform:uppercase; letter-spacing:.04em; }
     .sw-info-item span { font-size:12.5px; color:var(--gray-700); }
-    .sw-svc-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .sw-svc-table th { padding:6px 8px; text-align:left; font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; border-bottom:1px solid var(--gray-200); white-space:nowrap; }
-    .sw-svc-table td { padding:7px 8px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    .sw-svc-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    .sw-svc-table th { padding:9px 12px; text-align:left; font-size:10.5px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--gray-200); white-space:nowrap; background:var(--gray-50); }
+    .sw-svc-table td { padding:10px 12px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
     .sw-svc-table tr:last-child td { border-bottom:none; }
     body.theme-dark .sw-dm-box, body.theme-dark .sw-dm-head, body.theme-dark .sw-dm-tabs { background:#16101a !important; border-color:rgba(153,102,255,0.18) !important; }
     body.theme-dark .sw-dm-tab { color:rgba(255,255,255,.45); }
@@ -2412,7 +2412,21 @@ function openSwDm(id){
   if(s.renewalPeriod)    planParts.push(`Renewal: <strong>${s.renewalPeriod}</strong>`);
   document.getElementById('swDrPlanInfo').innerHTML = planParts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
 
-  /* ─ Services table ─ */
+  /* ─ Base Plan row (Services tab) ─ */
+  const basePlanBody = document.getElementById('swDrBasePlanBody');
+  const stBadge = `<span class="badge ${(s.status||'active').toLowerCase()}">${s.status||'Active'}</span>`;
+  basePlanBody.innerHTML = `<tr>
+    <td><strong>${s.subscriptionPlan||'—'}</strong></td>
+    <td><span class="sw-type-badge ${(s.deploymentType||'SAAS').replace(' ','-')}">${s.deploymentType||'—'}</span></td>
+    <td>${s.licensePricePerUserMonth ? '$'+s.licensePricePerUserMonth : '—'}</td>
+    <td>${s.purchasedLicenses||'—'}</td>
+    <td>${s.usedLicenses||'—'}</td>
+    <td style="font-weight:700">${s.annualCost>0 ? fmtFull(s.annualCost) : '<span style="color:var(--gray-400)">Free</span>'}</td>
+    <td style="font-size:11px">${s.renewalPeriod||'—'}</td>
+    <td>${stBadge}</td>
+  </tr>`;
+
+  /* ─ Add-on Services table ─ */
   const svcSection = document.getElementById('swDrSvcSection');
   const svcEmpty   = document.getElementById('swDrSvcEmpty');
   const svcBody    = document.getElementById('swDrSvcBody');
@@ -2423,7 +2437,7 @@ function openSwDm(id){
     svcSection.style.display='block';
     svcEmpty.style.display='none';
     svcBody.innerHTML = `
-      <table class="sw-svc-table">
+      <table class="sw-svc-table" style="margin:0">
         <thead><tr>
           <th>Service Name</th><th>Plan</th><th>$/mo</th>
           <th>Purch.</th><th>Used</th><th>Annual Cost</th><th>Renewal</th><th>Status</th>
@@ -2577,15 +2591,12 @@ function closeDeptModal() {
       </div>
       <!-- Body -->
       <div class="sw-dm-body">
-        <!-- Overview Panel -->
+
+        <!-- ══ OVERVIEW PANEL ══ -->
         <div class="sw-dm-panel active" id="swDmPanelOverview">
-          <div class="sw-section-title" style="margin-bottom:13px">APP INFORMATION</div>
-          <div class="sw-info-grid" id="swDrInfoBody"></div>
-        </div>
-        <!-- Services & Costs Panel -->
-        <div class="sw-dm-panel" id="swDmPanelServices">
+
           <!-- Cost Overview -->
-          <div class="sw-app-modal-section" style="margin-bottom:18px">
+          <div style="margin-bottom:22px">
             <div class="sw-section-title">💰 COST OVERVIEW</div>
             <div class="sw-cost-cards">
               <div class="sw-cost-card">
@@ -2601,10 +2612,11 @@ function closeDeptModal() {
                 <div class="cl">Total Annual Cost</div>
               </div>
             </div>
-            <div id="swDrSiteCosts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+            <div id="swDrSiteCosts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
           </div>
+
           <!-- License Details -->
-          <div class="sw-app-modal-section" style="margin-bottom:18px">
+          <div style="margin-bottom:22px">
             <div class="sw-section-title">🎫 LICENSE DETAILS</div>
             <div class="sw-lic-cards">
               <div class="sw-cost-card">
@@ -2620,24 +2632,52 @@ function closeDeptModal() {
                 <div class="cl">$/User/Month</div>
               </div>
             </div>
-            <div id="swDrUtilWrap" style="display:none;margin-top:8px">
+            <div id="swDrUtilWrap" style="display:none;margin-top:10px">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-                <div style="flex:1;height:9px;background:var(--gray-200);border-radius:5px;overflow:hidden">
+                <div style="flex:1;height:10px;background:var(--gray-200);border-radius:5px;overflow:hidden">
                   <div id="swDrUtilBar" style="height:100%;border-radius:5px;transition:width .4s"></div>
                 </div>
                 <span id="swDrUtilPct" style="font-size:12px;font-weight:700;color:var(--gray-600);white-space:nowrap"></span>
               </div>
             </div>
-            <div id="swDrPlanInfo" style="font-size:12.5px;color:var(--gray-600);margin-top:6px"></div>
+            <div id="swDrPlanInfo" style="font-size:13px;color:var(--gray-600);margin-top:8px"></div>
           </div>
-          <!-- Services Table -->
+
+          <!-- App Information -->
+          <div>
+            <div class="sw-section-title">ℹ️ APP INFORMATION</div>
+            <div class="sw-info-grid" id="swDrInfoBody" style="margin-top:10px"></div>
+          </div>
+
+        </div><!-- /overview panel -->
+
+        <!-- ══ SERVICES & COSTS PANEL ══ -->
+        <div class="sw-dm-panel" id="swDmPanelServices">
+
+          <!-- Base Plan row (main subscription from inventory) -->
+          <div style="margin-bottom:22px">
+            <div class="sw-section-title">📋 BASE PLAN</div>
+            <div id="swDrBasePlanWrap" style="margin-top:8px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden">
+              <table class="sw-svc-table" style="margin:0">
+                <thead><tr>
+                  <th>Plan Name</th><th>Type</th><th>$/User/mo</th>
+                  <th>Purch. Licenses</th><th>Used Licenses</th><th>Annual Cost</th><th>Renewal</th><th>Status</th>
+                </tr></thead>
+                <tbody id="swDrBasePlanBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Add-on Services table -->
           <div id="swDrSvcSection">
-            <div class="sw-section-title">🔧 SERVICES</div>
-            <div id="swDrSvcBody" style="margin-top:4px"></div>
+            <div class="sw-section-title">🔧 ADD-ON SERVICES</div>
+            <div id="swDrSvcBody" style="margin-top:8px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden"></div>
           </div>
           <!-- Empty state if no services -->
-          <div id="swDrSvcEmpty" style="display:none;padding:18px 0;text-align:center;color:var(--gray-400);font-size:13px">No additional services configured.</div>
-        </div>
+          <div id="swDrSvcEmpty" style="display:none;padding:22px 0;text-align:center;color:var(--gray-400);font-size:13px">No add-on services configured for this app.</div>
+
+        </div><!-- /services panel -->
+
       </div>
     </div><!-- /swDmViewMode -->
 
