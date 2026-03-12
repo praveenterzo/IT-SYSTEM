@@ -44,10 +44,10 @@ const adminUserSchema = new mongoose.Schema(
 );
 
 // Hash password before save (only when modified)
-adminUserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+// Mongoose v7+: async pre-hooks must NOT call next() — just return/throw
+adminUserSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 // Instance method: compare plain password with hash
@@ -55,7 +55,7 @@ adminUserSchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);
 };
 
-adminUserSchema.index({ email: 1 }, { unique: true });
+// email index already created by unique:true on the field — only add role index
 adminUserSchema.index({ role: 1 });
 
 module.exports = mongoose.model('AdminUser', adminUserSchema);
