@@ -337,6 +337,44 @@
     .sw-svc-table th { padding:9px 12px; text-align:left; font-size:10.5px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--gray-200); white-space:nowrap; background:var(--gray-50); }
     .sw-svc-table td { padding:10px 12px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
     .sw-svc-table tr:last-child td { border-bottom:none; }
+    /* ── Plan breakdown cards (Services & Costs tab) ── */
+    .sw-plan-card { border:1px solid var(--gray-200); border-radius:14px; overflow:hidden; margin-bottom:18px; }
+    .sw-plan-card-head { display:flex; align-items:center; justify-content:space-between; padding:13px 18px; background:var(--gray-50); border-bottom:1px solid var(--gray-200); gap:10px; flex-wrap:wrap; }
+    .sw-plan-card-head .pname { font-size:14px; font-weight:700; color:var(--gray-800); }
+    .sw-plan-card-head .pmeta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .sw-plan-row { display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-bottom:1px solid var(--gray-100); }
+    .sw-plan-row:last-child { border-bottom:none; }
+    .sw-plan-cell { padding:14px 18px; }
+    .sw-plan-cell + .sw-plan-cell { border-left:1px solid var(--gray-100); }
+    .sw-plan-cell .pc-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--gray-400); margin-bottom:5px; }
+    .sw-plan-cell .pc-val { font-size:15px; font-weight:700; color:var(--gray-800); }
+    .sw-plan-cell .pc-sub { font-size:11px; color:var(--gray-400); margin-top:2px; }
+    .sw-plan-annual { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--primary-lighter); border-top:1px solid rgba(59,130,246,.15); }
+    .sw-plan-annual .pa-label { font-size:12px; font-weight:600; color:var(--primary); }
+    .sw-plan-annual .pa-val { font-size:20px; font-weight:800; color:var(--primary); }
+    .sw-total-spend { border:2px solid var(--primary); border-radius:14px; padding:16px 22px; margin-top:6px; display:flex; align-items:center; justify-content:space-between; background:var(--primary-lighter); }
+    .sw-total-spend .ts-lines { display:flex; flex-direction:column; gap:4px; }
+    .sw-total-spend .ts-line { font-size:12px; color:var(--gray-600); display:flex; gap:8px; }
+    .sw-total-spend .ts-line span:first-child { min-width:160px; }
+    .sw-total-spend .ts-total { font-size:13px; font-weight:700; color:var(--primary); border-top:1px solid rgba(59,130,246,.2); padding-top:4px; margin-top:2px; display:flex; gap:8px; }
+    .sw-total-spend .ts-total span:first-child { min-width:160px; }
+    .sw-total-spend .ts-big { font-size:26px; font-weight:800; color:var(--primary); white-space:nowrap; }
+    /* dark/purple overrides for plan cards */
+    body.theme-dark .sw-plan-card { border-color:rgba(153,102,255,.18) !important; }
+    body.theme-dark .sw-plan-card-head { background:#1e1525 !important; border-color:rgba(153,102,255,.18) !important; }
+    body.theme-dark .sw-plan-card-head .pname { color:#e9d5ff !important; }
+    body.theme-dark .sw-plan-row { border-color:rgba(153,102,255,.1) !important; }
+    body.theme-dark .sw-plan-cell { border-color:rgba(153,102,255,.1) !important; }
+    body.theme-dark .sw-plan-cell .pc-val { color:#e9d5ff !important; }
+    body.theme-dark .sw-plan-cell .pc-label,.sw-plan-cell .pc-sub { color:rgba(255,255,255,.35) !important; }
+    body.theme-dark .sw-plan-annual { background:rgba(99,102,241,.12) !important; border-color:rgba(99,102,241,.2) !important; }
+    body.theme-dark .sw-total-spend { background:rgba(99,102,241,.12) !important; border-color:rgba(99,102,241,.3) !important; }
+    body.theme-purple .sw-plan-card { border-color:rgba(168,85,247,.2) !important; }
+    body.theme-purple .sw-plan-card-head { background:#2d1260 !important; border-color:rgba(168,85,247,.2) !important; }
+    body.theme-purple .sw-plan-card-head .pname { color:#e9d5ff !important; }
+    body.theme-purple .sw-plan-row,.sw-plan-cell { border-color:rgba(168,85,247,.1) !important; }
+    body.theme-purple .sw-plan-cell .pc-val { color:#e9d5ff !important; }
+    body.theme-purple .sw-plan-annual,.sw-total-spend { background:rgba(168,85,247,.1) !important; border-color:rgba(168,85,247,.25) !important; }
     body.theme-dark .sw-dm-box, body.theme-dark .sw-dm-head, body.theme-dark .sw-dm-tabs { background:#16101a !important; border-color:rgba(153,102,255,0.18) !important; }
     body.theme-dark .sw-dm-tab { color:rgba(255,255,255,.45); }
     body.theme-dark .sw-dm-tab.active { color:#a78bfa; border-bottom-color:#a78bfa; }
@@ -2412,61 +2450,103 @@ function openSwDm(id){
   if(s.renewalPeriod)    planParts.push(`Renewal: <strong>${s.renewalPeriod}</strong>`);
   document.getElementById('swDrPlanInfo').innerHTML = planParts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
 
-  /* ─ Base Plan row (Services tab) ─ */
-  /* Base plan annual cost = purchased × price/mo × 12  (license math only, never includes add-on services) */
-  const licCalcCost = (s.purchasedLicenses||0) * (s.licensePricePerUserMonth||0) * 12;
-  const basePlanBody = document.getElementById('swDrBasePlanBody');
-  const stBadge = `<span class="badge ${(s.status||'active').toLowerCase()}">${s.status||'Active'}</span>`;
-  basePlanBody.innerHTML = `<tr>
-    <td><strong>${s.subscriptionPlan||'—'}</strong></td>
-    <td><span class="sw-type-badge ${(s.deploymentType||'SAAS').replace(' ','-')}">${s.deploymentType||'—'}</span></td>
-    <td>${s.licensePricePerUserMonth ? '$'+s.licensePricePerUserMonth : '—'}</td>
-    <td>${s.purchasedLicenses||'—'}</td>
-    <td>${s.usedLicenses||'—'}</td>
-    <td style="font-weight:700">${licCalcCost>0 ? fmtFull(licCalcCost) : '<span style="color:var(--gray-400)">Free</span>'}</td>
-    <td style="font-size:11px">${s.renewalPeriod||'—'}</td>
-    <td>${stBadge}</td>
-  </tr>`;
+  /* ─ Services & Costs tab: structured breakdown ─ */
+  const baseLicCost = (s.purchasedLicenses||0) * (s.licensePricePerUserMonth||0) * 12;
+  const typeKey2    = (s.deploymentType||'SAAS').replace(' ','-');
 
-  /* ─ Add-on Services table ─ */
-  const svcSection = document.getElementById('swDrSvcSection');
-  const svcEmpty   = document.getElementById('swDrSvcEmpty');
-  const svcBody    = document.getElementById('swDrSvcBody');
-  if(!s.services || !s.services.length){
-    svcSection.style.display='none';
-    svcEmpty.style.display='block';
-  } else {
-    svcSection.style.display='block';
-    svcEmpty.style.display='none';
-    svcBody.innerHTML = `
-      <table class="sw-svc-table" style="margin:0">
-        <thead><tr>
-          <th>Service Name</th><th>Plan</th><th>$/mo</th>
-          <th>Purch.</th><th>Used</th><th>Annual Cost</th><th>Renewal</th><th>Status</th>
-        </tr></thead>
-        <tbody>
-          ${s.services.map(sv=>{
-            const sActive = sv.status!=='Inactive';
-            return `<tr style="${!sActive?'opacity:.5':''}">
-              <td><strong>${sv.name}</strong></td>
-              <td style="color:var(--gray-500)">${sv.plan||'—'}</td>
-              <td>${sv.licensePricePerUserMonth?'$'+sv.licensePricePerUserMonth:'—'}</td>
-              <td>${sv.purchasedLicenses||'—'}</td>
-              <td>${sv.usedLicenses||'—'}</td>
-              <td style="font-weight:700">${sv.annualCost>0?fmtFull(sv.annualCost):'Free'}</td>
-              <td style="font-size:11px">${sv.renewalPeriod||'—'}</td>
-              <td><span class="badge ${(sv.status||'active').toLowerCase()}">${sv.status||'Active'}</span></td>
-            </tr>`;
-          }).join('')}
-          ${svcCostSum>0?`
-          <tr style="background:var(--primary-lighter)">
-            <td colspan="5" style="font-weight:700;font-size:12.5px;color:var(--primary)">Services Total</td>
-            <td style="font-weight:800;font-size:14px;color:var(--primary)">${fmtFull(svcCostSum)}</td>
-            <td colspan="2"></td>
-          </tr>`:''}
-        </tbody>
-      </table>`;
+  function planCard(sectionLabel, opts){
+    /* opts: { name, type, typeBadge, renewal, status,
+               priceVal, purchVal, usedVal, annualCost, inactive } */
+    const dim = opts.inactive ? 'opacity:.55;' : '';
+    return `
+    <div class="sw-plan-card" style="${dim}">
+      <div class="sw-plan-card-head">
+        <div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);margin-bottom:4px">${sectionLabel}</div>
+          <div class="pname">${opts.name}</div>
+        </div>
+        <div class="pmeta">
+          ${opts.typeBadge ? `<span class="sw-type-badge ${typeKey2}">${opts.type}</span>` : ''}
+          ${opts.renewal   ? `<span style="font-size:11.5px;color:var(--gray-500);font-weight:500">🔄 ${opts.renewal}</span>` : ''}
+          ${opts.status    ? `<span class="badge ${(opts.status||'active').toLowerCase()}">${opts.status}</span>` : ''}
+        </div>
+      </div>
+      <div class="sw-plan-row">
+        <div class="sw-plan-cell">
+          <div class="pc-label">License Cost</div>
+          <div class="pc-val">${opts.priceVal ? '$'+opts.priceVal : '—'}</div>
+          <div class="pc-sub">per user / month</div>
+        </div>
+        <div class="sw-plan-cell">
+          <div class="pc-label">Purchased Licenses</div>
+          <div class="pc-val">${opts.purchVal || '—'}</div>
+          <div class="pc-sub">seats</div>
+        </div>
+        <div class="sw-plan-cell">
+          <div class="pc-label">Used Licenses</div>
+          <div class="pc-val">${opts.usedVal || '—'}</div>
+          <div class="pc-sub">active users</div>
+        </div>
+      </div>
+      <div class="sw-plan-annual">
+        <span class="pa-label">Annual Cost</span>
+        <span class="pa-val">${opts.annualCost > 0 ? fmtFull(opts.annualCost) : 'Free'}</span>
+      </div>
+    </div>`;
   }
+
+  let scHtml = '';
+
+  /* BASE PLAN card */
+  scHtml += `<div class="sw-section-title" style="margin-bottom:10px">📋 BASE PLAN</div>`;
+  scHtml += planCard('Base Subscription', {
+    name:      s.subscriptionPlan || s.name,
+    type:      s.deploymentType,
+    typeBadge: true,
+    renewal:   s.renewalPeriod,
+    status:    s.status || 'Active',
+    priceVal:  s.licensePricePerUserMonth || 0,
+    purchVal:  s.purchasedLicenses || 0,
+    usedVal:   s.usedLicenses || 0,
+    annualCost: baseLicCost || (s.annualCost || 0),
+    inactive:  false,
+  });
+
+  /* ADD-ON SERVICES cards */
+  if(s.services && s.services.length){
+    scHtml += `<div class="sw-section-title" style="margin:4px 0 10px">🔧 ADD-ON SERVICES</div>`;
+    s.services.forEach(sv => {
+      const svCost = sv.annualCost > 0
+        ? sv.annualCost
+        : (sv.purchasedLicenses||0) * (sv.licensePricePerUserMonth||0) * 12;
+      scHtml += planCard(sv.name, {
+        name:      sv.plan || sv.name,
+        typeBadge: false,
+        renewal:   sv.renewalPeriod,
+        status:    sv.status || 'Active',
+        priceVal:  sv.licensePricePerUserMonth || 0,
+        purchVal:  sv.purchasedLicenses || 0,
+        usedVal:   sv.usedLicenses || 0,
+        annualCost: svCost,
+        inactive:  sv.status === 'Inactive',
+      });
+    });
+  }
+
+  /* TOTAL SPEND footer */
+  const baseFinal  = baseLicCost || (s.annualCost || 0);
+  const grandTotal = baseFinal + svcCostSum;
+  scHtml += `
+  <div class="sw-total-spend">
+    <div class="ts-lines">
+      <div class="ts-line"><span>Base Plan Annual Cost</span><strong>${fmtFull(baseFinal)}</strong></div>
+      ${svcCostSum > 0 ? `<div class="ts-line"><span>Add-on Services</span><strong>${fmtFull(svcCostSum)}</strong></div>` : ''}
+      <div class="ts-total"><span>${s.name} Total Spend</span><strong>${fmtFull(grandTotal)}</strong></div>
+    </div>
+    <div class="ts-big">${fmtFull(grandTotal)}</div>
+  </div>`;
+
+  document.getElementById('swDrServicesCostBody').innerHTML = scHtml;
 
   /* ─ Overview: App info grid ─ */
   const infoFields = [
@@ -2655,29 +2735,7 @@ function closeDeptModal() {
 
         <!-- ══ SERVICES & COSTS PANEL ══ -->
         <div class="sw-dm-panel" id="swDmPanelServices">
-
-          <!-- Base Plan row (main subscription from inventory) -->
-          <div style="margin-bottom:22px">
-            <div class="sw-section-title">📋 BASE PLAN</div>
-            <div id="swDrBasePlanWrap" style="margin-top:8px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden">
-              <table class="sw-svc-table" style="margin:0">
-                <thead><tr>
-                  <th>Plan Name</th><th>Type</th><th>$/User/mo</th>
-                  <th>Purch. Licenses</th><th>Used Licenses</th><th>Annual Cost</th><th>Renewal</th><th>Status</th>
-                </tr></thead>
-                <tbody id="swDrBasePlanBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Add-on Services table -->
-          <div id="swDrSvcSection">
-            <div class="sw-section-title">🔧 ADD-ON SERVICES</div>
-            <div id="swDrSvcBody" style="margin-top:8px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden"></div>
-          </div>
-          <!-- Empty state if no services -->
-          <div id="swDrSvcEmpty" style="display:none;padding:22px 0;text-align:center;color:var(--gray-400);font-size:13px">No add-on services configured for this app.</div>
-
+          <div id="swDrServicesCostBody"></div>
         </div><!-- /services panel -->
 
       </div>
