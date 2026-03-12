@@ -1750,7 +1750,7 @@ function renderSoftware(){
     ['deploymentType','Type',100],['subscriptionPlan','Plan',110],
     ['renewalPeriod','Renewal',85],['licensePricePerUserMonth','$/mo',68],
     ['annualCost','Total Cost',115],
-    [null,'Licenses',85],[null,'Sites',72],[null,'',55],
+    [null,'Licenses',85],[null,'Sites',72],
   ];
   document.getElementById('swTableHead').innerHTML = '<tr>'+cols.map(([col,lbl,w])=>
     col ? `<th class="${sortClass(col,swSort)} sortable" style="width:${w}px" onclick="thSort('${col}',swSort,renderSoftware)">${lbl}${sortArrow(col,swSort)}</th>`
@@ -1788,7 +1788,6 @@ function renderSoftware(){
           ${s.purchasedLicenses>0?`<div><div class="lic-bar"><div class="lic-bar-fill ${licClass}" style="width:${Math.min(licPct*100,100)}%"></div></div></div>`:''}
         </td>
         <td style="font-size:15px">${sites||'—'}</td>
-        <td><button class="btn btn-secondary btn-sm" onclick="editSoftware('${s.id}')">Edit</button></td>
       </tr>`;
     }).join('');
   }
