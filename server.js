@@ -602,18 +602,29 @@ async function seedSoftware() {
   console.log(`✅  Software seeded: ${SOFTWARE_SEED.length} apps`);
 }
 
-// ── Seed default super admin ───────────────────────────────────────────────────
+// ── Seed / migrate default super admin ────────────────────────────────────────
 async function seedAdminUser() {
+  // Migrate old placeholder email to the real one if it still exists
+  const old = await AdminUser.findOne({ email: 'admin@terzocloud.com' });
+  if (old) {
+    old.email = 'praveen.m@terzocloud.com';
+    old.name  = 'Praveen M.';
+    old.role  = 'super_admin';
+    await old.save();
+    console.log('✅  Super admin migrated → praveen.m@terzocloud.com');
+    return;
+  }
+  // Fresh install — create only if no admin users exist yet
   const count = await AdminUser.countDocuments();
   if (count > 0) return;
   await AdminUser.create({
     name:     'Praveen M.',
-    email:    'admin@terzocloud.com',
-    password: 'Admin@123',   // hashed by pre-save hook
+    email:    'praveen.m@terzocloud.com',
+    password: 'Admin@123',
     role:     'super_admin',
     status:   'Active',
   });
-  console.log('✅  Default super admin seeded → admin@terzocloud.com / Admin@123');
+  console.log('✅  Default super admin seeded → praveen.m@terzocloud.com / Admin@123');
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
