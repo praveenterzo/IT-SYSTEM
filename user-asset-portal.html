@@ -309,14 +309,21 @@
     .sw-budget-chip .chip-lbl { font-size:11px;color:var(--gray-400);font-weight:400; }
 
     /* ── Software Detail Drawer ── */
-    .sw-drawer-overlay { position:fixed; inset:0; background:rgba(0,0,0,.38); z-index:300; opacity:0; pointer-events:none; transition:opacity .2s; }
-    .sw-drawer-overlay.open { opacity:1; pointer-events:auto; }
-    .sw-drawer { position:fixed; right:0; top:0; height:100vh; width:540px; max-width:96vw; background:#fff; box-shadow:-6px 0 40px rgba(0,0,0,.18); z-index:301; transform:translateX(100%); transition:transform .24s cubic-bezier(.25,.8,.25,1); overflow:hidden; display:flex; flex-direction:column; }
-    .sw-drawer.open { transform:translateX(0); }
-    .sw-drawer-head { padding:18px 22px 16px; border-bottom:1px solid var(--gray-200); flex-shrink:0; }
-    .sw-drawer-body { flex:1; overflow-y:auto; }
-    .sw-drawer-section { padding:16px 22px; border-bottom:1px solid var(--gray-100); }
-    .sw-drawer-section:last-child { border-bottom:none; }
+    /* ── SW App Detail Modal ── */
+    .sw-dm-overlay { position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:300;display:none;align-items:center;justify-content:center;padding:20px; }
+    .sw-dm-overlay.open { display:flex; }
+    .sw-dm-box { background:#fff;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.28);width:100%;max-width:860px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden; }
+    .sw-dm-head { padding:18px 24px 14px;border-bottom:1px solid var(--gray-200);flex-shrink:0; }
+    .sw-dm-tabs { display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--gray-200);flex-shrink:0;background:#fff; }
+    .sw-dm-tab { padding:10px 18px;border:none;background:none;font-size:13px;font-weight:600;color:var(--gray-400);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:all .15s;border-radius:0; }
+    .sw-dm-tab.active { color:var(--primary);border-bottom-color:var(--primary); }
+    .sw-dm-body { flex:1;overflow-y:auto;padding:20px 24px; }
+    .sw-dm-panel { display:none; }
+    .sw-dm-panel.active { display:block; }
+    /* Edit panel inside detail modal */
+    .sw-dm-edit-wrap { padding:4px 0 10px; }
+    /* Drawer backward compat (kept for theme overrides below) */
+    .sw-drawer-overlay,.sw-drawer { display:none !important; }
     .sw-section-title { font-size:10.5px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.08em; margin-bottom:11px; }
     .sw-cost-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
     .sw-cost-card { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:10px; padding:12px 14px; }
@@ -330,12 +337,28 @@
     .sw-svc-table th { padding:6px 8px; text-align:left; font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; border-bottom:1px solid var(--gray-200); white-space:nowrap; }
     .sw-svc-table td { padding:7px 8px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
     .sw-svc-table tr:last-child td { border-bottom:none; }
-    body.theme-dark .sw-drawer, body.theme-dark .sw-drawer-head { background:#16101a !important; }
-    body.theme-dark .sw-cost-card, body.theme-dark .sw-lic-cards .sw-cost-card { background:#1e1525 !important; }
-    body.theme-dark .sw-drawer-section { border-bottom-color:rgba(153,102,255,0.12) !important; }
-    body.theme-purple .sw-drawer, body.theme-purple .sw-drawer-head { background:#1e0e40 !important; }
-    body.theme-purple .sw-cost-card { background:#2d1260 !important; }
-    body.theme-purple .sw-drawer-section { border-bottom-color:rgba(168,85,247,0.15) !important; }
+    body.theme-dark .sw-dm-box, body.theme-dark .sw-dm-head, body.theme-dark .sw-dm-tabs { background:#16101a !important; border-color:rgba(153,102,255,0.18) !important; }
+    body.theme-dark .sw-dm-tab { color:rgba(255,255,255,.45); }
+    body.theme-dark .sw-dm-tab.active { color:#a78bfa; border-bottom-color:#a78bfa; }
+    body.theme-dark .sw-cost-card, body.theme-dark .sw-lic-cards .sw-cost-card { background:#1e1525 !important; border-color:rgba(153,102,255,0.18) !important; }
+    body.theme-dark .sw-cost-card .cv { color:#e9d5ff !important; }
+    body.theme-dark .sw-cost-card .cl { color:rgba(255,255,255,.4) !important; }
+    body.theme-dark .sw-section-title { color:rgba(255,255,255,.4) !important; }
+    body.theme-dark .sw-svc-table th { color:rgba(255,255,255,.35) !important; border-color:rgba(153,102,255,.14) !important; }
+    body.theme-dark .sw-svc-table td { border-color:rgba(153,102,255,.1) !important; color:rgba(255,255,255,.75); }
+    body.theme-dark .sw-info-item label { color:rgba(255,255,255,.35) !important; }
+    body.theme-dark .sw-info-item span { color:rgba(255,255,255,.8) !important; }
+    body.theme-purple .sw-dm-box, body.theme-purple .sw-dm-head, body.theme-purple .sw-dm-tabs { background:#1e0e40 !important; border-color:rgba(168,85,247,0.2) !important; }
+    body.theme-purple .sw-dm-tab { color:rgba(255,255,255,.4); }
+    body.theme-purple .sw-dm-tab.active { color:#c084fc; border-bottom-color:#c084fc; }
+    body.theme-purple .sw-cost-card { background:#2d1260 !important; border-color:rgba(168,85,247,.2) !important; }
+    body.theme-purple .sw-cost-card .cv { color:#e9d5ff !important; }
+    body.theme-purple .sw-cost-card .cl { color:rgba(255,255,255,.4) !important; }
+    body.theme-purple .sw-section-title { color:rgba(255,255,255,.4) !important; }
+    body.theme-purple .sw-svc-table th { color:rgba(255,255,255,.35) !important; border-color:rgba(168,85,247,.15) !important; }
+    body.theme-purple .sw-svc-table td { border-color:rgba(168,85,247,.1) !important; color:rgba(255,255,255,.75); }
+    body.theme-purple .sw-info-item label { color:rgba(255,255,255,.35) !important; }
+    body.theme-purple .sw-info-item span { color:rgba(255,255,255,.8) !important; }
 
     /* ── Export Dropdown ── */
     .export-wrap { position: relative; display: inline-flex; }
@@ -894,7 +917,7 @@
     <div class="modal-tabs">
       <button class="modal-tab-btn active" id="swTabDetailsBtn" onclick="swSwitchTab('details')">Details</button>
       <button class="modal-tab-btn" id="swTabServicesBtn" onclick="swSwitchTab('services')">
-        Additional Services <span id="swSvcCount" style="font-size:10px;background:var(--primary);color:#fff;padding:1px 6px;border-radius:9999px;margin-left:4px;vertical-align:middle">0</span>
+        Services <span id="swSvcCount" style="font-size:10px;background:var(--primary);color:#fff;padding:1px 6px;border-radius:9999px;margin-left:4px;vertical-align:middle">0</span>
       </button>
     </div>
     <!-- Tab: Details -->
@@ -951,7 +974,7 @@
         </div>
       </div>
     </div>
-    <!-- Tab: Additional Services -->
+    <!-- Tab: Services -->
     <div class="modal-tab-panel" id="swTabServices">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="font-size:12px;color:var(--gray-400)">Add-on tiers / services within this app (e.g. Zoom → Zoom Phone, Zoom Rooms…)</div>
@@ -1896,11 +1919,10 @@ function renderSoftware(){
 
   // Table head
   const cols = [
-    ['csvId','ID',55],['name','Name',185],['department','Dept',120],
-    ['deploymentType','Type',100],['subscriptionPlan','Plan',110],
-    ['renewalPeriod','Renewal',85],['licensePricePerUserMonth','$/mo',68],
-    ['annualCost','Total Cost',115],
-    [null,'Licenses',85],[null,'Sites',72],
+    ['csvId','ID',55],['name','Name',210],['department','Dept',130],
+    ['deploymentType','Type',100],['subscriptionPlan','Plan',130],
+    ['renewalPeriod','Renewal',90],
+    [null,'Licenses',90],[null,'Sites',72],
   ];
   document.getElementById('swTableHead').innerHTML = '<tr>'+cols.map(([col,lbl,w])=>
     col ? `<th class="${sortClass(col,swSort)} sortable" style="width:${w}px" onclick="thSort('${col}',swSort,renderSoftware)">${lbl}${sortArrow(col,swSort)}</th>`
@@ -1931,8 +1953,6 @@ function renderSoftware(){
         <td><span class="sw-type-badge ${typeKey}">${s.deploymentType}</span></td>
         <td style="font-size:11.5px;color:var(--gray-600)">${s.subscriptionPlan||'—'}</td>
         <td style="font-size:12px">${s.renewalPeriod||'—'}</td>
-        <td style="font-size:12px;color:var(--gray-600)">${licPrice ? '$'+licPrice : '<span style="color:var(--gray-400)">—</span>'}</td>
-        <td style="font-weight:700;font-size:13px">${fmtCost(totalCost)}</td>
         <td>
           <div style="font-size:12px">${licLabel}</div>
           ${s.purchasedLicenses>0?`<div><div class="lic-bar"><div class="lic-bar-fill ${licClass}" style="width:${Math.min(licPct*100,100)}%"></div></div></div>`:''}
@@ -2067,7 +2087,9 @@ async function saveSoftware(){
       : await authFetch(`${API}/software`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
     showToast(id?'Software updated':'Software added','success');
+    const _reopenId = id || null;
     closeModal(); await loadData(); renderSoftware();
+    if(_reopenId) openSwDm(_reopenId);
   } catch(e){ showToast(e.message,'danger'); }
 }
 
@@ -2308,37 +2330,56 @@ async function exportAssetPDF(){
   } catch(e){ showToast('PDF export failed: '+e.message,'danger'); console.error(e); }
 }
 
-/* ══ SOFTWARE DETAIL DRAWER ══ */
-function openSwDrawer(id){
+/* ══ SOFTWARE APP DETAIL MODAL ══ */
+let _swDmCurrentId = null;
+
+function swDmTab(tab){
+  const panels = { overview:'swDmPanelOverview', services:'swDmPanelServices' };
+  const btns   = { overview:'swDmTabOvBtn',      services:'swDmTabSvcBtn' };
+  Object.keys(panels).forEach(t=>{
+    document.getElementById(panels[t])?.classList.toggle('active', t===tab);
+    document.getElementById(btns[t])?.classList.toggle('active', t===tab);
+  });
+}
+
+function openSwDm(id){
   const s = software.find(x=>x.id===id);
   if(!s) return;
+  _swDmCurrentId = id;
 
   const typeKey    = (s.deploymentType||'').replace(' ','-') || 'SAAS';
   const totalCost  = swTotalCost(s);
   const activeSvcs = (s.services||[]).filter(sv=>sv.status!=='Inactive');
   const svcCostSum = activeSvcs.reduce((sum,sv)=>sum+(sv.annualCost||0),0);
   const licPct     = s.purchasedLicenses>0 ? Math.min(s.usedLicenses/s.purchasedLicenses,1.2) : 0;
-  const fmtN = n => (n===0||!n) ? 'Free' : (n>=1000 ? '$'+(n/1000).toFixed(n%1000===0?0:1)+'K' : '$'+n.toLocaleString('en-US'));
+  const fmtN    = n => (n===0||!n) ? 'Free' : (n>=1000 ? '$'+(n/1000).toFixed(n%1000===0?0:1)+'K' : '$'+n.toLocaleString('en-US'));
   const fmtFull = n => (n===0||!n) ? 'Free' : '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 
+  /* ─ Ensure view mode is shown ─ */
+  document.getElementById('swDmViewMode').style.display = '';
+  document.getElementById('swDmEditMode').style.display = 'none';
+
+  /* ─ Reset to Overview tab ─ */
+  swDmTab('overview');
+
   /* ─ Header ─ */
-  document.getElementById('swDrCsvId').textContent  = s.csvId;
-  document.getElementById('swDrName').textContent   = s.name;
-  document.getElementById('swDrType').className     = `sw-type-badge ${typeKey}`;
-  document.getElementById('swDrType').textContent   = s.deploymentType;
+  document.getElementById('swDrCsvId').textContent   = s.csvId;
+  document.getElementById('swDrName').textContent    = s.name;
+  document.getElementById('swDrType').className      = `sw-type-badge ${typeKey}`;
+  document.getElementById('swDrType').textContent    = s.deploymentType;
   const stEl = document.getElementById('swDrStatus');
   stEl.className   = `badge ${(s.status||'active').toLowerCase()}`;
   stEl.textContent = s.status||'Active';
   document.getElementById('swDrPurpose').textContent = s.purpose||'';
   document.getElementById('swDrSites').textContent   = [s.siteUSA&&'🇺🇸',s.siteCAN&&'🇨🇦',s.siteIND&&'🇮🇳'].filter(Boolean).join('  ');
-  document.getElementById('swDrEditBtn').onclick     = ()=>{ closeSwDrawer(); editSoftware(id); };
+  document.getElementById('swDrEditBtn').onclick     = ()=>{ closeSwDm(); editSoftware(id); };
 
   /* ─ Cost overview ─ */
   document.getElementById('swDrBaseCost').textContent  = fmtN(s.annualCost||0);
   document.getElementById('swDrSvcCost').textContent   = svcCostSum>0 ? fmtN(svcCostSum) : '—';
   document.getElementById('swDrTotalCost').textContent = fmtN(totalCost);
 
-  // Per-site cost chips
+  /* Site cost chips */
   const siteParts = [];
   if(s.siteUSA && s.costUSA) siteParts.push(`<span class="tag" style="font-size:12px">🇺🇸 USA: <strong>${fmtFull(s.costUSA)}</strong></span>`);
   if(s.siteCAN && s.costCAN) siteParts.push(`<span class="tag" style="font-size:12px">🇨🇦 CAN: <strong>${fmtFull(s.costCAN)}</strong></span>`);
@@ -2352,35 +2393,35 @@ function openSwDrawer(id){
   usedEl.style.color = licPct>1.05 ? '#f87171' : '';
   document.getElementById('swDrLicPrice').textContent  = s.licensePricePerUserMonth ? '$'+s.licensePricePerUserMonth : '—';
 
-  // Utilization bar
+  /* Utilization bar */
   const utilWrap = document.getElementById('swDrUtilWrap');
   if(s.purchasedLicenses>0){
     utilWrap.style.display='block';
-    const barEl  = document.getElementById('swDrUtilBar');
-    const pctEl  = document.getElementById('swDrUtilPct');
-    const pct    = Math.min(licPct*100,100);
+    const barEl = document.getElementById('swDrUtilBar');
+    const pctEl = document.getElementById('swDrUtilPct');
+    const pct   = Math.min(licPct*100,100);
     barEl.style.width      = pct+'%';
     barEl.style.background = licPct>1.05?'#f87171':licPct>0.85?'#fbbf24':'#4ade80';
     pctEl.textContent      = (licPct*100).toFixed(0)+'% utilized';
     pctEl.style.color      = licPct>1.05?'#f87171':licPct>0.85?'#d97706':'var(--success)';
-  } else {
-    utilWrap.style.display='none';
-  }
+  } else { utilWrap.style.display='none'; }
 
-  // Plan & renewal
+  /* Plan & renewal */
   const planParts=[];
   if(s.subscriptionPlan) planParts.push(`Plan: <strong>${s.subscriptionPlan}</strong>`);
   if(s.renewalPeriod)    planParts.push(`Renewal: <strong>${s.renewalPeriod}</strong>`);
   document.getElementById('swDrPlanInfo').innerHTML = planParts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
 
-  /* ─ Additional services ─ */
+  /* ─ Services table ─ */
   const svcSection = document.getElementById('swDrSvcSection');
+  const svcEmpty   = document.getElementById('swDrSvcEmpty');
   const svcBody    = document.getElementById('swDrSvcBody');
   if(!s.services || !s.services.length){
     svcSection.style.display='none';
+    svcEmpty.style.display='block';
   } else {
     svcSection.style.display='block';
-    const allSvcs = s.services;
+    svcEmpty.style.display='none';
     svcBody.innerHTML = `
       <table class="sw-svc-table">
         <thead><tr>
@@ -2388,7 +2429,7 @@ function openSwDrawer(id){
           <th>Purch.</th><th>Used</th><th>Annual Cost</th><th>Renewal</th><th>Status</th>
         </tr></thead>
         <tbody>
-          ${allSvcs.map(sv=>{
+          ${s.services.map(sv=>{
             const sActive = sv.status!=='Inactive';
             return `<tr style="${!sActive?'opacity:.5':''}">
               <td><strong>${sv.name}</strong></td>
@@ -2411,27 +2452,37 @@ function openSwDrawer(id){
       </table>`;
   }
 
-  /* ─ App info grid ─ */
+  /* ─ Overview: App info grid ─ */
   const infoFields = [
-    ['App ID',      s.csvId],
-    ['Owner',       s.owner||'—'],
-    ['Admin(s)',     s.admins||'—'],
-    ['Billed To',   s.billedTo||'—'],
-    ['Department',  s.department||'—'],
-    ['Type',        s.deploymentType],
+    ['App ID',     s.csvId],
+    ['Owner',      s.owner||'—'],
+    ['Admin(s)',   s.admins||'—'],
+    ['Billed To',  s.billedTo||'—'],
+    ['Department', s.department||'—'],
+    ['Type',       s.deploymentType||'—'],
+    ['Status',     s.status||'Active'],
+    ['Sites',      [s.siteUSA&&'🇺🇸 USA',s.siteCAN&&'🇨🇦 CAN',s.siteIND&&'🇮🇳 IND'].filter(Boolean).join('  ')||'—'],
   ];
   document.getElementById('swDrInfoBody').innerHTML = infoFields.map(([l,v])=>
     `<div class="sw-info-item"><label>${l}</label><span>${v}</span></div>`
   ).join('');
 
-  /* ─ Open ─ */
-  document.getElementById('swDrawerOverlay').classList.add('open');
-  document.getElementById('swDrawer').classList.add('open');
+  /* ─ Open overlay ─ */
+  document.getElementById('swDmOverlay').classList.add('open');
 }
 
-function closeSwDrawer(){
-  document.getElementById('swDrawerOverlay').classList.remove('open');
-  document.getElementById('swDrawer').classList.remove('open');
+/* backward-compat alias used by the table row onclick */
+function openSwDrawer(id){ openSwDm(id); }
+
+function closeSwDm(){
+  document.getElementById('swDmOverlay').classList.remove('open');
+  _swDmCurrentId = null;
+}
+/* backward-compat */
+function closeSwDrawer(){ closeSwDm(); }
+
+function swDmBackToView(){
+  if(_swDmCurrentId) openSwDm(_swDmCurrentId);
 }
 
 /* ══ THEME ══ */
@@ -2491,91 +2542,115 @@ function closeDeptModal() {
 }
 </script>
 
-<!-- SOFTWARE DETAIL DRAWER -->
-<div class="sw-drawer-overlay" id="swDrawerOverlay" onclick="closeSwDrawer()"></div>
-<div class="sw-drawer" id="swDrawer">
-  <!-- Header -->
-  <div class="sw-drawer-head">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-          <span id="swDrName" style="font-size:19px;font-weight:800;color:var(--gray-800)"></span>
-          <span id="swDrType" class="sw-type-badge"></span>
-          <span id="swDrStatus" class="badge"></span>
-        </div>
-        <div id="swDrPurpose" style="font-size:12.5px;color:var(--gray-400);margin-bottom:10px"></div>
-        <div style="display:flex;gap:7px;align-items:center">
-          <button class="btn btn-primary btn-sm" id="swDrEditBtn">✏️ Edit</button>
-          <button class="btn btn-secondary btn-sm" onclick="closeSwDrawer()">✕ Close</button>
-          <span id="swDrSites" style="font-size:18px;margin-left:6px"></span>
-        </div>
-      </div>
-      <div id="swDrCsvId" style="font-size:11px;font-weight:700;color:var(--gray-400);white-space:nowrap;padding-top:3px"></div>
-    </div>
-  </div>
-  <!-- Body -->
-  <div class="sw-drawer-body">
+<!-- SOFTWARE APP DETAIL MODAL -->
+<div class="sw-dm-overlay" id="swDmOverlay" onclick="if(event.target===this)closeSwDm()">
+  <div class="sw-dm-box" id="swDmBox">
 
-    <!-- Cost Overview -->
-    <div class="sw-drawer-section">
-      <div class="sw-section-title">💰 Cost Overview</div>
-      <div class="sw-cost-cards">
-        <div class="sw-cost-card">
-          <div class="cv" id="swDrBaseCost">—</div>
-          <div class="cl">Base Annual Cost</div>
-        </div>
-        <div class="sw-cost-card">
-          <div class="cv" id="swDrSvcCost">—</div>
-          <div class="cl">Add-on Services</div>
-        </div>
-        <div class="sw-cost-card" id="swDrTotalCard" style="border-color:var(--primary);background:var(--primary-lighter)">
-          <div class="cv" id="swDrTotalCost" style="color:var(--primary)">—</div>
-          <div class="cl">Total Annual Cost</div>
-        </div>
-      </div>
-      <!-- Site breakdown -->
-      <div id="swDrSiteCosts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
-    </div>
-
-    <!-- License Details -->
-    <div class="sw-drawer-section">
-      <div class="sw-section-title">🎫 License Details</div>
-      <div class="sw-lic-cards">
-        <div class="sw-cost-card">
-          <div class="cv" id="swDrPurchased">—</div>
-          <div class="cl">Purchased Licenses</div>
-        </div>
-        <div class="sw-cost-card">
-          <div class="cv" id="swDrUsed">—</div>
-          <div class="cl">Used Licenses</div>
-        </div>
-        <div class="sw-cost-card">
-          <div class="cv" id="swDrLicPrice">—</div>
-          <div class="cl">$/User/Month</div>
-        </div>
-      </div>
-      <!-- Utilization bar -->
-      <div id="swDrUtilWrap" style="display:none">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <div style="flex:1;height:9px;background:var(--gray-200);border-radius:5px;overflow:hidden">
-            <div id="swDrUtilBar" style="height:100%;border-radius:5px;transition:width .4s"></div>
+    <!-- ── VIEW MODE ── -->
+    <div id="swDmViewMode">
+      <!-- Header -->
+      <div class="sw-dm-head">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <span id="swDrName" style="font-size:20px;font-weight:800;color:var(--gray-800)"></span>
+              <span id="swDrType" class="sw-type-badge"></span>
+              <span id="swDrStatus" class="badge"></span>
+              <span id="swDrSites" style="font-size:17px;margin-left:2px"></span>
+            </div>
+            <div id="swDrPurpose" style="font-size:12.5px;color:var(--gray-400);margin-bottom:10px"></div>
+            <div style="display:flex;gap:7px;align-items:center" class="rbac-write">
+              <button class="btn btn-primary btn-sm" id="swDrEditBtn">✏️ Edit</button>
+              <button class="btn btn-secondary btn-sm" onclick="closeSwDm()">✕ Close</button>
+            </div>
+            <div style="display:flex;gap:7px;align-items:center;display:none" id="swDmCloseOnlyWrap">
+              <button class="btn btn-secondary btn-sm" onclick="closeSwDm()">✕ Close</button>
+            </div>
           </div>
-          <span id="swDrUtilPct" style="font-size:12px;font-weight:700;color:var(--gray-600);white-space:nowrap"></span>
+          <div id="swDrCsvId" style="font-size:11px;font-weight:700;color:var(--gray-400);white-space:nowrap;padding-top:3px"></div>
         </div>
       </div>
-      <div id="swDrPlanInfo" style="font-size:12.5px;color:var(--gray-600);margin-top:4px"></div>
-    </div>
+      <!-- Tabs -->
+      <div class="sw-dm-tabs">
+        <button class="sw-dm-tab active" id="swDmTabOvBtn"  onclick="swDmTab('overview')">ℹ️ Overview</button>
+        <button class="sw-dm-tab"        id="swDmTabSvcBtn" onclick="swDmTab('services')">🔧 Services &amp; Costs</button>
+      </div>
+      <!-- Body -->
+      <div class="sw-dm-body">
+        <!-- Overview Panel -->
+        <div class="sw-dm-panel active" id="swDmPanelOverview">
+          <div class="sw-section-title" style="margin-bottom:13px">APP INFORMATION</div>
+          <div class="sw-info-grid" id="swDrInfoBody"></div>
+        </div>
+        <!-- Services & Costs Panel -->
+        <div class="sw-dm-panel" id="swDmPanelServices">
+          <!-- Cost Overview -->
+          <div class="sw-app-modal-section" style="margin-bottom:18px">
+            <div class="sw-section-title">💰 COST OVERVIEW</div>
+            <div class="sw-cost-cards">
+              <div class="sw-cost-card">
+                <div class="cv" id="swDrBaseCost">—</div>
+                <div class="cl">Base Annual Cost</div>
+              </div>
+              <div class="sw-cost-card">
+                <div class="cv" id="swDrSvcCost">—</div>
+                <div class="cl">Add-on Services</div>
+              </div>
+              <div class="sw-cost-card" id="swDrTotalCard" style="border-color:var(--primary);background:var(--primary-lighter)">
+                <div class="cv" id="swDrTotalCost" style="color:var(--primary)">—</div>
+                <div class="cl">Total Annual Cost</div>
+              </div>
+            </div>
+            <div id="swDrSiteCosts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+          </div>
+          <!-- License Details -->
+          <div class="sw-app-modal-section" style="margin-bottom:18px">
+            <div class="sw-section-title">🎫 LICENSE DETAILS</div>
+            <div class="sw-lic-cards">
+              <div class="sw-cost-card">
+                <div class="cv" id="swDrPurchased">—</div>
+                <div class="cl">Purchased Licenses</div>
+              </div>
+              <div class="sw-cost-card">
+                <div class="cv" id="swDrUsed">—</div>
+                <div class="cl">Used Licenses</div>
+              </div>
+              <div class="sw-cost-card">
+                <div class="cv" id="swDrLicPrice">—</div>
+                <div class="cl">$/User/Month</div>
+              </div>
+            </div>
+            <div id="swDrUtilWrap" style="display:none;margin-top:8px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <div style="flex:1;height:9px;background:var(--gray-200);border-radius:5px;overflow:hidden">
+                  <div id="swDrUtilBar" style="height:100%;border-radius:5px;transition:width .4s"></div>
+                </div>
+                <span id="swDrUtilPct" style="font-size:12px;font-weight:700;color:var(--gray-600);white-space:nowrap"></span>
+              </div>
+            </div>
+            <div id="swDrPlanInfo" style="font-size:12.5px;color:var(--gray-600);margin-top:6px"></div>
+          </div>
+          <!-- Services Table -->
+          <div id="swDrSvcSection">
+            <div class="sw-section-title">🔧 SERVICES</div>
+            <div id="swDrSvcBody" style="margin-top:4px"></div>
+          </div>
+          <!-- Empty state if no services -->
+          <div id="swDrSvcEmpty" style="display:none;padding:18px 0;text-align:center;color:var(--gray-400);font-size:13px">No additional services configured.</div>
+        </div>
+      </div>
+    </div><!-- /swDmViewMode -->
 
-    <!-- Additional Services -->
-    <div class="sw-drawer-section" id="swDrSvcSection" style="display:none">
-      <div class="sw-section-title">🔧 Additional Services</div>
-      <div id="swDrSvcBody"></div>
-    </div>
-
-    <!-- App Information -->
-    <div class="sw-drawer-section">
-      <div class="sw-section-title">ℹ️ App Information</div>
-      <div class="sw-info-grid" id="swDrInfoBody"></div>
+    <!-- ── EDIT MODE (inline, same overlay) ── -->
+    <div id="swDmEditMode" style="display:none;flex-direction:column;max-height:90vh">
+      <div class="sw-dm-head" style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn btn-secondary btn-sm" onclick="swDmBackToView()">← Back</button>
+          <h2 style="font-size:16px;font-weight:800;color:var(--gray-800);margin:0" id="swDmEditTitle">Edit App</h2>
+        </div>
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="closeSwDm()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <!-- Re-use the existing software modal form inside here by proxy — clicking Edit opens softwareModal -->
     </div>
 
   </div>
