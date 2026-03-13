@@ -174,7 +174,7 @@
     }
     .btn-google:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.18); background: #f8f9fa; }
     .btn-google svg { width: 18px; height: 18px; flex-shrink: 0; }
-    #googleSsoWrap { display: none; }
+    #googleSsoWrap { display: block; }
 
     .sso-error {
       display: none;
@@ -280,7 +280,7 @@
       const ssoError = params.get('sso_error');
       if (ssoError) {
         const msgs = {
-          disabled: 'Google SSO is not currently enabled.',
+          disabled: 'Google SSO is not configured yet. Enable it in Admin → Integrations.',
           denied:   'Sign-in was cancelled or access denied.',
           nocode:   'Google did not return an authorization code.',
           token:    'Failed to exchange authorization code. Check your Client Secret.',
@@ -308,13 +308,7 @@
           .catch(() => {});
       }
 
-      // 4) Check if Google SSO is enabled and show button
-      fetch('/api/auth/google/status')
-        .then(r => r.json())
-        .then(d => {
-          if (d.enabled) document.getElementById('googleSsoWrap').style.display = 'block';
-        })
-        .catch(() => {});
+      // Google SSO button is always visible — server handles disabled/unconfigured state
     })();
 
     function togglePw() {
