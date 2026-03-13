@@ -129,6 +129,48 @@
     .page { display: none; }
     .page.active { display: block; }
 
+    /* TOGGLE SWITCH */
+    .toggle-wrap { display: flex; align-items: center; gap: 12px; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: rgba(153,102,255,0.18); border-radius: 99px;
+      transition: background .2s;
+      border: 1px solid rgba(153,102,255,0.3);
+    }
+    .toggle-slider:before {
+      content: ''; position: absolute;
+      height: 18px; width: 18px; left: 2px; bottom: 2px;
+      background: #fff; border-radius: 50%; transition: transform .2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--primary); border-color: var(--primary); }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .toggle-label { font-size: 13.5px; color: var(--text); font-weight: 600; }
+
+    /* INTEGRATION CARD */
+    .integration-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; max-width: 680px;
+    }
+    .integration-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+    }
+    .integration-logo {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: #fff; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .integration-logo svg { width: 26px; height: 26px; }
+    .integration-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .integration-desc  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .integration-body  { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .integration-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 9px; align-items: center; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+    .status-dot.active { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.5); }
+    .status-dot.inactive { background: rgba(153,102,255,0.3); }
+
     /* Confirm box */
     .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
     .confirm-overlay.open { display: flex; }
@@ -167,14 +209,14 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       System Info
     </div>
+    <div class="nav-item" id="nav-integrations" onclick="showPage('integrations',this)">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Integrations
+    </div>
     <div class="nav-divider"></div>
     <div class="nav-item" onclick="location.href='/'">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Back to Portal
-    </div>
-    <div class="nav-item" onclick="signOut()">
-      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Sign Out
     </div>
   </nav>
   <div class="sidebar-footer">
@@ -184,6 +226,9 @@
         <strong id="sidebarName">Loading…</strong>
         <span id="sidebarRole" class="role-chip super_admin">—</span>
       </div>
+      <button onclick="signOut()" title="Sign Out" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:5px;border-radius:6px;color:var(--text-muted);display:flex;align-items:center;transition:color .15s,background .15s" onmouseover="this.style.color='#f87171';this.style.background='rgba(248,113,113,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='none'">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
   </div>
 </aside>
@@ -324,6 +369,352 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ── INTEGRATIONS PAGE ── -->
+    <div class="page" id="page-integrations">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Connect external services to enhance your portal. Changes take effect immediately.</p>
+
+      <div class="integration-card">
+        <!-- Header -->
+        <div class="integration-header">
+          <div class="integration-logo">
+            <!-- Google "G" logo -->
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+          </div>
+          <div style="flex:1">
+            <div class="integration-title">Google Workspace SSO</div>
+            <div class="integration-desc">Allow portal users to sign in with their Google Workspace accounts using OAuth 2.0</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="status-dot" id="gStatusDot"></span>
+            <span style="font-size:12px;color:var(--text-muted)" id="gStatusLabel">Loading…</span>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="integration-body">
+          <!-- Enable toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(153,102,255,0.06);border-radius:9px;border:1px solid var(--border)">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Enable Google SSO</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Show "Sign in with Google" button on the login page</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="gEnabled" onchange="updateGoogleStatus()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- SSO credentials — only visible when enabled -->
+          <div id="ssoCredentialsSection" style="display:none">
+
+          <!-- Client ID -->
+          <div class="form-group">
+            <label>Google OAuth Client ID</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="gClientId" placeholder="Auto-generate or paste from Google Cloud Console"
+                style="flex:1" pattern="[A-Za-z0-9]+" oninput="this.value=this.value.replace(/[^A-Za-z0-9]/g,'')"/>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="genClientId()" title="Auto-generate alphanumeric ID"
+                style="flex-shrink:0;gap:5px;white-space:nowrap">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2">
+                  <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Generate
+              </button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)">Alphanumeric only. Auto-generate or paste from Google Cloud Console → Credentials → OAuth 2.0 Client IDs.</span>
+          </div>
+
+          <!-- Client Secret -->
+          <div class="form-group">
+            <label>Google OAuth Client Secret</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="position:relative;flex:1">
+                <input type="password" id="gClientSecret" placeholder="Auto-generate or paste from Google Cloud Console"
+                  style="width:100%;padding-right:38px" pattern="[A-Za-z0-9]+" oninput="filterSecretInput(this)"/>
+                <button type="button" onclick="toggleSecretVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(153,102,255,0.6);padding:4px">
+                  <svg id="secretEyeIcon" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="genClientSecret()" title="Auto-generate alphanumeric secret"
+                style="flex-shrink:0;gap:5px;white-space:nowrap">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2">
+                  <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Generate
+              </button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)">Alphanumeric only. Existing secret is stored securely — enter a new value or re-generate only to change it.</span>
+          </div>
+
+          <!-- Allowed Domain -->
+          <div class="form-group">
+            <label>Allowed Google Workspace Domain <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+            <input type="text" id="gDomain" placeholder="terzocloud.com"/>
+            <span style="font-size:11px;color:var(--text-muted)">Leave empty to allow any Google account. Restrict to your org domain for security.</span>
+          </div>
+
+          <!-- Redirect URI info -->
+          <div style="background:rgba(99,66,255,0.08);border:1px solid rgba(99,66,255,0.2);border-radius:9px;padding:12px 14px">
+            <div style="font-size:11.5px;font-weight:700;color:#a78bfa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Authorized Redirect URI</div>
+            <div style="font-size:12.5px;color:var(--text);font-family:monospace;word-break:break-all" id="redirectUriDisplay">—</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Add this URI to your Google Cloud Console OAuth client's "Authorized redirect URIs" list.</div>
+          </div>
+
+          </div><!-- /ssoCredentialsSection -->
+        </div>
+
+        <!-- Footer -->
+        <div class="integration-footer">
+          <span style="font-size:12px;color:rgba(220,38,38,0.8);flex:1" id="gIntError"></span>
+          <button class="btn btn-secondary btn-sm" onclick="loadIntegrations()">Reset</button>
+          <button class="btn btn-primary btn-sm" onclick="saveIntegrations()" id="gSaveBtn">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- ── SECTION: SCIM PROVISIONING SERVER ── -->
+      <div style="margin-top:32px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.08em">SCIM Provisioning Server</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Expose a SCIM 2.0 endpoint so your Identity Provider (Google Workspace) can automatically provision and deprovision users in TerzoCloud.</p>
+
+      <div class="integration-card">
+        <div class="integration-header">
+          <div class="integration-logo" style="background:#1a1a2e;font-size:17px;font-weight:900;color:#a78bfa;letter-spacing:-.5px">SCIM</div>
+          <div style="flex:1">
+            <div class="integration-title">SCIM 2.0 Provisioning Server</div>
+            <div class="integration-desc">Receive automated user create / update / deprovision events from Google Workspace or any SCIM 2.0 Identity Provider</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="status-dot" id="scimStatusDot"></span>
+            <span style="font-size:12px;color:var(--text-muted)" id="scimStatusLabel">Loading…</span>
+          </div>
+        </div>
+
+        <div class="integration-body">
+          <!-- Enable toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(153,102,255,0.06);border-radius:9px;border:1px solid var(--border)">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Enable SCIM Server</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Accept provisioning requests at <span style="font-family:monospace;color:#c4b5fd">/scim/v2/</span></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="scimEnabled" onchange="updateSCIMStatus()"><span class="toggle-slider"></span></label>
+          </div>
+
+          <!-- SCIM details — only visible when enabled -->
+          <div id="scimDetailsSection" style="display:none">
+
+          <!-- Bearer Token -->
+          <div class="form-group">
+            <label>Bearer Token</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="scimTokenDisplay" readonly placeholder="No token generated yet" style="font-family:monospace;font-size:12px;background:rgba(0,0,0,0.2);cursor:default" />
+              <button class="btn btn-secondary btn-sm" onclick="copySCIMToken()" id="scimCopyBtn" title="Copy token" style="flex-shrink:0">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="regenerateSCIMToken()" id="scimRegenBtn" title="Generate a new bearer token" style="flex-shrink:0;color:#fbbf24;border-color:rgba(251,191,36,0.3)">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Regenerate
+              </button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)">The full token is shown once after generation. Store it securely — it cannot be retrieved again. A hint of the last 6 characters is shown above.</span>
+          </div>
+
+          <!-- SCIM Base URL -->
+          <div class="form-group">
+            <label>SCIM Base URL</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="scimBaseUrl" readonly style="font-family:monospace;font-size:12px;background:rgba(0,0,0,0.2);cursor:default" />
+              <button class="btn btn-secondary btn-sm" onclick="copyScimUrl()" style="flex-shrink:0">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <!-- How to connect callout -->
+          <div style="background:rgba(99,66,255,0.08);border:1px solid rgba(99,66,255,0.2);border-radius:9px;padding:14px 16px">
+            <div style="font-size:11.5px;font-weight:700;color:#a78bfa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">How to connect Google Workspace</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.7">
+              <div style="margin-bottom:4px"><span style="color:#a78bfa;font-weight:700">1.</span> Google Admin Console → Apps → Web and mobile apps → Add custom SAML app</div>
+              <div style="margin-bottom:4px"><span style="color:#a78bfa;font-weight:700">2.</span> In the <strong style="color:var(--text)">Auto-provisioning</strong> section paste the <strong style="color:var(--text)">SCIM Base URL</strong> and <strong style="color:var(--text)">Bearer Token</strong> above</div>
+              <div style="margin-bottom:4px"><span style="color:#a78bfa;font-weight:700">3.</span> Map attributes: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px">userName → Primary Email</code>, <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px">name.givenName → First name</code>, <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px">active → Suspended</code></div>
+              <div><span style="color:#a78bfa;font-weight:700">4.</span> Enable provisioning — TerzoCloud will automatically create / deactivate users on joiner / leaver events</div>
+            </div>
+          </div>
+
+          </div><!-- /scimDetailsSection -->
+        </div>
+
+        <div class="integration-footer">
+          <span style="font-size:12px;color:rgba(220,38,38,0.8);flex:1" id="scimErr"></span>
+          <button class="btn btn-primary btn-sm" onclick="saveSCIMConfig()" id="scimSaveBtn">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- ── SECTION: APP CONNECTORS ── -->
+      <div id="appConnectorsSection" style="display:none">
+      <div style="margin-top:32px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.08em">App Connectors</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Connect third-party apps to pull live seat counts and billing data directly into the Software Inventory.</p>
+
+      <!-- GitHub Connector -->
+      <div class="integration-card" style="margin-bottom:16px">
+        <div class="integration-header">
+          <div class="integration-logo" style="background:#0d1117">
+            <svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:#f0f6fc"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="integration-title">GitHub</div>
+            <div class="integration-desc">Sync active member count and plan details from your GitHub organisation</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="status-dot" id="githubStatusDot"></span>
+            <span style="font-size:11px;color:var(--text-muted)" id="githubSyncLabel">Never synced</span>
+          </div>
+        </div>
+        <div class="integration-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(153,102,255,0.06);border-radius:9px;border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Enable GitHub Connector</div>
+            <label class="toggle"><input type="checkbox" id="githubEnabled"><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label>GitHub Organisation</label>
+              <input type="text" id="githubOrg" placeholder="e.g. terzocloud" />
+            </div>
+            <div class="form-group">
+              <label>Software Record</label>
+              <select id="githubSoftware"><option value="">— select record —</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Personal Access Token (classic or fine-grained)</label>
+            <div style="position:relative">
+              <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;padding-right:38px" />
+              <button type="button" onclick="toggleVisibility('githubToken','githubTokenEye')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(153,102,255,0.6)">
+                <svg id="githubTokenEye" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)">Requires <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">read:org</code> scope. <a href="https://github.com/settings/tokens" target="_blank" style="color:#a78bfa">Generate at github.com/settings/tokens →</a></span>
+          </div>
+          <div id="githubSyncResult" style="display:none;padding:10px 14px;border-radius:9px;font-size:12px;border:1px solid"></div>
+        </div>
+        <div class="integration-footer">
+          <span style="font-size:12px;color:rgba(220,38,38,0.8);flex:1" id="githubErr"></span>
+          <button class="btn btn-secondary btn-sm" onclick="testConnector('github')" id="githubTestBtn">Test Connection</button>
+          <button class="btn btn-secondary btn-sm" onclick="syncConnector('github')" id="githubSyncBtn">Sync Now</button>
+          <button class="btn btn-primary btn-sm" onclick="saveConnector('github')" id="githubSaveBtn">Save</button>
+        </div>
+      </div>
+
+      <!-- Slack Connector -->
+      <div class="integration-card" style="margin-bottom:16px">
+        <div class="integration-header">
+          <div class="integration-logo">
+            <svg viewBox="0 0 24 24" style="width:26px;height:26px"><path fill="#E01E5A" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="integration-title">Slack</div>
+            <div class="integration-desc">Sync active workspace members and plan details from your Slack workspace</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="status-dot" id="slackStatusDot"></span>
+            <span style="font-size:11px;color:var(--text-muted)" id="slackSyncLabel">Never synced</span>
+          </div>
+        </div>
+        <div class="integration-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(153,102,255,0.06);border-radius:9px;border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Enable Slack Connector</div>
+            <label class="toggle"><input type="checkbox" id="slackEnabled"><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label>Workspace (for reference)</label>
+              <input type="text" id="slackOrg" placeholder="e.g. terzocloud" />
+            </div>
+            <div class="form-group">
+              <label>Software Record</label>
+              <select id="slackSoftware"><option value="">— select record —</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bot Token (xoxb-…)</label>
+            <div style="position:relative">
+              <input type="password" id="slackToken" placeholder="xoxb-xxxx-xxxx-xxxx" style="width:100%;padding-right:38px" />
+              <button type="button" onclick="toggleVisibility('slackToken','slackTokenEye')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(153,102,255,0.6)">
+                <svg id="slackTokenEye" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)">Required scopes: <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">users:read</code> <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">team:info</code>. <a href="https://api.slack.com/apps" target="_blank" style="color:#a78bfa">Create Bot Token at api.slack.com →</a></span>
+          </div>
+          <div id="slackSyncResult" style="display:none;padding:10px 14px;border-radius:9px;font-size:12px;border:1px solid"></div>
+        </div>
+        <div class="integration-footer">
+          <span style="font-size:12px;color:rgba(220,38,38,0.8);flex:1" id="slackErr"></span>
+          <button class="btn btn-secondary btn-sm" onclick="testConnector('slack')" id="slackTestBtn">Test Connection</button>
+          <button class="btn btn-secondary btn-sm" onclick="syncConnector('slack')" id="slackSyncBtn">Sync Now</button>
+          <button class="btn btn-primary btn-sm" onclick="saveConnector('slack')" id="slackSaveBtn">Save</button>
+        </div>
+      </div>
+
+      <!-- Google Workspace Connector -->
+      <div class="integration-card">
+        <div class="integration-header">
+          <div class="integration-logo">
+            <svg viewBox="0 0 48 48" style="width:26px;height:26px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="integration-title">Google Workspace</div>
+            <div class="integration-desc">Sync active user count from your Google Workspace directory via service account</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="status-dot" id="gwsStatusDot"></span>
+            <span style="font-size:11px;color:var(--text-muted)" id="gwsSyncLabel">Never synced</span>
+          </div>
+        </div>
+        <div class="integration-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(153,102,255,0.06);border-radius:9px;border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Enable Google Workspace Connector</div>
+            <label class="toggle"><input type="checkbox" id="gwsEnabled"><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label>Admin Email (for impersonation)</label>
+              <input type="text" id="gwsAdminEmail" placeholder="admin@terzocloud.com" />
+            </div>
+            <div class="form-group">
+              <label>Software Record</label>
+              <select id="gwsSoftware"><option value="">— select record —</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Service Account Key JSON</label>
+            <textarea id="gwsKeyJson" rows="5" placeholder='Paste the full service account JSON key here ({"type":"service_account","project_id":...})' style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);font-family:monospace;resize:vertical;outline:none"></textarea>
+            <span style="font-size:11px;color:var(--text-muted)">Create a service account with <strong>Domain-wide Delegation</strong> enabled and scope <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">admin.directory.user.readonly</code>. <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" style="color:#a78bfa">Google Cloud Console →</a></span>
+          </div>
+          <div id="gwsSyncResult" style="display:none;padding:10px 14px;border-radius:9px;font-size:12px;border:1px solid"></div>
+        </div>
+        <div class="integration-footer">
+          <span style="font-size:12px;color:rgba(220,38,38,0.8);flex:1" id="gwsErr"></span>
+          <button class="btn btn-secondary btn-sm" onclick="testConnector('google_workspace')" id="gwsTestBtn">Test Connection</button>
+          <button class="btn btn-secondary btn-sm" onclick="syncConnector('google_workspace')" id="gwsSyncBtn">Sync Now</button>
+          <button class="btn btn-primary btn-sm" onclick="saveConnector('google_workspace')" id="gwsSaveBtn">Save</button>
+        </div>
+      </div>
+
+      </div><!-- /appConnectorsSection -->
+
     </div>
 
   </div><!-- /content -->
@@ -478,13 +869,14 @@ function updateSidebar(u) {
 }
 
 /* ── Page navigation ── */
-const PAGE_TITLES = { users: 'Portal Users', permissions: 'Roles & Permissions', system: 'System Info' };
+const PAGE_TITLES = { users: 'Portal Users', permissions: 'Roles & Permissions', system: 'System Info', integrations: 'Integrations' };
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
   document.getElementById('pageTitle').textContent = PAGE_TITLES[name] || name;
+  if (name === 'integrations') loadIntegrations();
 }
 
 /* ── PORTAL USERS ── */
@@ -689,6 +1081,389 @@ function showToast(msg, type = 'success') {
   wrap.appendChild(div);
   setTimeout(() => div.remove(), 3200);
 }
+
+/* ── Integrations ── */
+let _hasExistingSecret = false;
+
+async function loadIntegrations() {
+  // Set redirect URI display
+  document.getElementById('redirectUriDisplay').textContent =
+    `${location.protocol}//${location.host}/api/auth/google/callback`;
+
+  try {
+    const r = await authFetch('/api/admin/integrations');
+    if (!r.ok) return;
+    const data = await r.json();
+    const g = data.google || {};
+
+    document.getElementById('gEnabled').checked     = !!g.enabled;
+    document.getElementById('gClientId').value       = g.clientId || '';
+    document.getElementById('gClientSecret').value   = g.hasClientSecret ? '••••••••' : '';
+    document.getElementById('gDomain').value         = g.allowedDomain || '';
+    document.getElementById('gIntError').textContent = '';
+    _hasExistingSecret = !!g.hasClientSecret;
+    updateGoogleStatus();
+  } catch (e) { showToast('Failed to load integration settings', 'danger'); }
+}
+
+function updateGoogleStatus() {
+  const enabled = document.getElementById('gEnabled').checked;
+  const dot   = document.getElementById('gStatusDot');
+  const label = document.getElementById('gStatusLabel');
+  dot.className   = 'status-dot ' + (enabled ? 'active' : 'inactive');
+  label.textContent = enabled ? 'Enabled' : 'Disabled';
+  const creds = document.getElementById('ssoCredentialsSection');
+  if (creds) creds.style.display = enabled ? '' : 'none';
+}
+
+/* ── Secret field input filter (allow alphanumeric; allow masked placeholder) ── */
+function filterSecretInput(el) {
+  const v = el.value;
+  // If the user is typing (not the ••• placeholder), strip non-alphanumeric
+  if (v && v !== '••••••••') {
+    el.value = v.replace(/[^A-Za-z0-9]/g, '');
+    _hasExistingSecret = false; // user is entering a new value
+  }
+}
+
+/* ── Alphanumeric random string generator ── */
+function genAlphanumeric(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const arr   = new Uint8Array(length);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => chars[b % chars.length]).join('');
+}
+
+function genClientId() {
+  document.getElementById('gClientId').value = genAlphanumeric(32);
+  document.getElementById('gIntError').textContent = '';
+}
+
+function genClientSecret() {
+  const inp = document.getElementById('gClientSecret');
+  inp.type  = 'text'; // show the generated value
+  inp.value = genAlphanumeric(40);
+  _hasExistingSecret = false;
+  // Update eye icon to "open" state
+  document.getElementById('secretEyeIcon').innerHTML =
+    '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  document.getElementById('gIntError').textContent = '';
+}
+
+function toggleSecretVisibility() {
+  const inp = document.getElementById('gClientSecret');
+  const ico = document.getElementById('secretEyeIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+async function saveIntegrations() {
+  const errEl  = document.getElementById('gIntError');
+  const btn    = document.getElementById('gSaveBtn');
+  const secret = document.getElementById('gClientSecret').value;
+
+  // Validate: if no existing secret and enabling, a secret is required
+  if (document.getElementById('gEnabled').checked) {
+    if (!document.getElementById('gClientId').value.trim()) {
+      errEl.textContent = 'Client ID is required to enable SSO.'; return;
+    }
+    if (!secret || (!_hasExistingSecret && !secret.trim())) {
+      errEl.textContent = 'Client Secret is required to enable SSO.'; return;
+    }
+  }
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const r = await authFetch('/api/admin/integrations', {
+      method: 'PUT',
+      body: JSON.stringify({
+        google: {
+          enabled:       document.getElementById('gEnabled').checked,
+          clientId:      document.getElementById('gClientId').value.trim(),
+          clientSecret:  secret,
+          allowedDomain: document.getElementById('gDomain').value.trim(),
+        },
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.error || 'Save failed'; return; }
+    showToast('Integration settings saved');
+    await loadIntegrations(); // refresh to sync state
+  } catch (e) { errEl.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+}
+
+/* ── SCIM Config ── */
+let _scimFullToken = ''; // stored in memory after regeneration (never re-fetched)
+
+async function loadSCIMConfig() {
+  try {
+    const r = await authFetch('/api/admin/scim');
+    if (!r.ok) return;
+    const d = await r.json();
+    document.getElementById('scimEnabled').checked = !!d.enabled;
+    document.getElementById('scimBaseUrl').value   = d.scimBaseUrl || `${location.protocol}//${location.host}/scim/v2`;
+    document.getElementById('scimTokenDisplay').value = d.hasToken
+      ? `…${d.tokenHint} (stored — regenerate to view)`
+      : 'No token yet — click Regenerate';
+    _scimFullToken = '';
+    updateSCIMStatus();
+  } catch (e) { console.warn('SCIM config load failed', e); }
+}
+
+function updateSCIMStatus() {
+  const enabled = document.getElementById('scimEnabled').checked;
+  const dot   = document.getElementById('scimStatusDot');
+  const label = document.getElementById('scimStatusLabel');
+  dot.className    = 'status-dot ' + (enabled ? 'active' : 'inactive');
+  label.textContent = enabled ? 'Enabled' : 'Disabled';
+  // Show Bearer Token / Base URL only when SCIM is enabled
+  const scimDetails = document.getElementById('scimDetailsSection');
+  if (scimDetails) scimDetails.style.display = enabled ? '' : 'none';
+  // Show App Connectors only when SCIM server is enabled
+  const connSec = document.getElementById('appConnectorsSection');
+  if (connSec) connSec.style.display = enabled ? '' : 'none';
+}
+
+async function saveSCIMConfig() {
+  const btn = document.getElementById('scimSaveBtn');
+  const err = document.getElementById('scimErr');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const r = await authFetch('/api/admin/scim', {
+      method: 'PUT', body: JSON.stringify({ enabled: document.getElementById('scimEnabled').checked }),
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Save failed'; return; }
+    showToast('SCIM configuration saved');
+    err.textContent = '';
+    updateSCIMStatus();
+  } catch (e) { err.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+}
+
+async function regenerateSCIMToken() {
+  if (!confirm('This will invalidate the current bearer token. Any connected Identity Provider will need to be updated with the new token. Continue?')) return;
+  const btn = document.getElementById('scimRegenBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  try {
+    const r = await authFetch('/api/admin/scim/regenerate-token', { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) { showToast('Token generation failed: ' + (d.error || ''), 'danger'); return; }
+    _scimFullToken = d.token;
+    document.getElementById('scimTokenDisplay').value = d.token;
+    document.getElementById('scimCopyBtn').style.background = 'rgba(74,222,128,0.15)';
+    showToast('New SCIM bearer token generated — copy it now, it will not be shown again', 'success');
+  } catch (e) { showToast(e.message, 'danger'); }
+  finally { btn.disabled = false; btn.textContent = 'Regenerate'; }
+}
+
+function copySCIMToken() {
+  const val = _scimFullToken || document.getElementById('scimTokenDisplay').value;
+  if (!val || val.includes('stored —')) { showToast('Regenerate the token first to copy the full value', 'danger'); return; }
+  navigator.clipboard.writeText(val).then(() => showToast('Bearer token copied to clipboard'));
+}
+
+function copyScimUrl() {
+  const val = document.getElementById('scimBaseUrl').value;
+  navigator.clipboard.writeText(val).then(() => showToast('SCIM URL copied to clipboard'));
+}
+
+/* ── App Connectors ── */
+let _softwareList = [];
+
+async function loadConnectors() {
+  // Fetch software list for dropdowns
+  try {
+    const r = await authFetch('/api/software');
+    if (r.ok) {
+      const data = await r.json();
+      _softwareList = Array.isArray(data) ? data : (data.software || []);
+      populateSoftwareDropdowns();
+    }
+  } catch(e) {}
+
+  // Fetch connector configs
+  try {
+    const r = await authFetch('/api/admin/connectors');
+    if (!r.ok) return;
+    const connectors = await r.json();
+    for (const c of connectors) {
+      populateConnector(c);
+    }
+  } catch(e) { console.warn('Connectors load failed', e); }
+}
+
+function populateSoftwareDropdowns() {
+  const selectors = ['githubSoftware', 'slackSoftware', 'gwsSoftware'];
+  for (const id of selectors) {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— select record —</option>';
+    for (const s of _softwareList) {
+      if (!s.csvId) continue;
+      const opt = document.createElement('option');
+      opt.value       = s.csvId;
+      opt.textContent = `${s.csvId} — ${s.name}`;
+      sel.appendChild(opt);
+    }
+    if (cur) sel.value = cur;
+  }
+}
+
+function populateConnector(c) {
+  const prefix = c.appName === 'github' ? 'github' : c.appName === 'slack' ? 'slack' : 'gws';
+  const enabledEl  = document.getElementById(`${prefix}Enabled`);
+  const orgEl      = document.getElementById(`${prefix}Org`) || document.getElementById('gwsAdminEmail');
+  const softwareEl = document.getElementById(`${prefix}Software`);
+  const tokenEl    = document.getElementById(`${prefix}Token`) || document.getElementById('gwsKeyJson');
+  const labelEl    = document.getElementById(`${prefix}SyncLabel`);
+  const dotEl      = document.getElementById(`${prefix}StatusDot`);
+
+  if (enabledEl)  enabledEl.checked  = !!c.enabled;
+  if (orgEl)      orgEl.value        = c.orgSlug || '';
+  if (softwareEl) softwareEl.value   = c.softwareCsvId || '';
+  if (tokenEl && c.hasToken) {
+    tokenEl.value       = c.appName === 'google_workspace' ? '[key stored — paste new JSON to replace]' : '••••••••';
+  }
+
+  // Sync status
+  if (dotEl) dotEl.className = 'status-dot ' + (c.lastSyncStatus === 'success' ? 'active' : 'inactive');
+  if (labelEl) {
+    if (c.lastSyncStatus === 'never' || !c.lastSyncAt) {
+      labelEl.textContent = 'Never synced';
+    } else {
+      const ago = timeSince(new Date(c.lastSyncAt));
+      labelEl.textContent = c.lastSyncStatus === 'success'
+        ? `Synced ${ago} · ${c.cachedUserCount} users`
+        : `Error ${ago}`;
+    }
+  }
+}
+
+function timeSince(date) {
+  const s = Math.floor((Date.now() - date) / 1000);
+  if (s < 60)   return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400)return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+function toggleVisibility(inputId, eyeId) {
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(eyeId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+async function saveConnector(appName) {
+  const prefix = appName === 'github' ? 'github' : appName === 'slack' ? 'slack' : 'gws';
+  const btn = document.getElementById(`${prefix}SaveBtn`);
+  const err = document.getElementById(`${prefix}Err`);
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const tokenEl = document.getElementById(`${prefix}Token`) || document.getElementById('gwsKeyJson');
+  const orgEl   = document.getElementById(`${prefix}Org`)   || document.getElementById('gwsAdminEmail');
+  const apiToken = tokenEl ? tokenEl.value : '';
+
+  const body = {
+    enabled:       document.getElementById(`${prefix}Enabled`).checked,
+    orgSlug:       orgEl ? orgEl.value.trim() : '',
+    softwareCsvId: (document.getElementById(`${prefix}Software`) || {}).value || '',
+    apiToken:      (apiToken === '••••••••' || apiToken === '[key stored — paste new JSON to replace]') ? undefined : apiToken,
+  };
+
+  try {
+    const r = await authFetch(`/api/admin/connectors/${appName}`, { method: 'PUT', body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Save failed'; return; }
+    err.textContent = '';
+    showToast(`${appName} connector saved`);
+    if (tokenEl && body.apiToken) tokenEl.value = '••••••••';
+  } catch (e) { err.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = 'Save'; }
+}
+
+async function testConnector(appName) {
+  const prefix = appName === 'github' ? 'github' : appName === 'slack' ? 'slack' : 'gws';
+  const btn    = document.getElementById(`${prefix}TestBtn`);
+  const result = document.getElementById(`${prefix}SyncResult`);
+  btn.disabled = true; btn.textContent = 'Testing…';
+  result.style.display = 'none';
+  try {
+    const r = await authFetch(`/api/admin/connectors/${appName}/test`, { method: 'POST' });
+    const d = await r.json();
+    result.style.display = 'block';
+    if (d.ok) {
+      result.style.background = 'rgba(22,163,74,0.1)';
+      result.style.borderColor = 'rgba(74,222,128,0.3)';
+      result.style.color = '#4ade80';
+      result.textContent = '✓ ' + d.message;
+    } else {
+      result.style.background = 'rgba(220,38,38,0.1)';
+      result.style.borderColor = 'rgba(248,113,113,0.3)';
+      result.style.color = '#f87171';
+      result.textContent = '✗ ' + d.message;
+    }
+  } catch (e) {
+    result.style.display = 'block';
+    result.style.color = '#f87171';
+    result.textContent = '✗ ' + e.message;
+  }
+  finally { btn.disabled = false; btn.textContent = 'Test Connection'; }
+}
+
+async function syncConnector(appName) {
+  const prefix = appName === 'github' ? 'github' : appName === 'slack' ? 'slack' : 'gws';
+  const btn    = document.getElementById(`${prefix}SyncBtn`);
+  const result = document.getElementById(`${prefix}SyncResult`);
+  btn.disabled = true; btn.textContent = 'Syncing…';
+  result.style.display = 'none';
+  try {
+    const r = await authFetch(`/api/admin/connectors/${appName}/sync`, { method: 'POST' });
+    const d = await r.json();
+    result.style.display = 'block';
+    if (d.ok) {
+      result.style.background = 'rgba(22,163,74,0.1)';
+      result.style.borderColor = 'rgba(74,222,128,0.3)';
+      result.style.color = '#4ade80';
+      result.textContent = `✓ ${d.message}${d.softwareUpdated ? ' · Software Inventory updated ✓' : ''}`;
+      // Refresh connector display
+      const connectors = await (await authFetch('/api/admin/connectors')).json();
+      const c = connectors.find(x => x.appName === appName);
+      if (c) populateConnector(c);
+    } else {
+      result.style.background = 'rgba(220,38,38,0.1)';
+      result.style.borderColor = 'rgba(248,113,113,0.3)';
+      result.style.color = '#f87171';
+      result.textContent = '✗ ' + d.message;
+    }
+  } catch (e) {
+    result.style.display = 'block';
+    result.style.color = '#f87171';
+    result.textContent = '✗ ' + e.message;
+  }
+  finally { btn.disabled = false; btn.textContent = 'Sync Now'; }
+}
+
+// Extend loadIntegrations to also load SCIM config and connectors
+const _origLoadIntegrations = loadIntegrations;
+loadIntegrations = async function() {
+  await _origLoadIntegrations();
+  await loadSCIMConfig();
+  await loadConnectors();
+};
 </script>
 </body>
 </html>

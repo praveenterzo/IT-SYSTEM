@@ -14,9 +14,12 @@ require('dotenv').config();
 const express   = require('express');
 const cors      = require('cors');
 const path      = require('path');
+const https     = require('https');
+const qs        = require('querystring');
 const jwt       = require('jsonwebtoken');
 const bcrypt    = require('bcryptjs');
-const { connect, User, Asset, Log, Software, AdminUser } = require('./db');
+const crypto    = require('crypto');
+const { connect, User, Asset, Log, Software, AdminUser, IntegrationSettings, SCIMConfig, AppConnector } = require('./db');
 
 const app       = express();
 const PORT      = process.env.PORT || 3000;
@@ -116,6 +119,119 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+//  GOOGLE WORKSPACE SSO  (public routes)
+// ════════════════════════════════════════════════════════════════════════════
+
+// Lightweight HTTPS helpers (avoids extra npm dependencies)
+function httpsGet(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
+    }).on('error', reject);
+  });
+}
+
+function httpsPost(hostname, path, body) {
+  return new Promise((resolve, reject) => {
+    const postData = qs.stringify(body);
+    const req = https.request(
+      { hostname, path, method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) }
+      },
+      (res) => {
+        let data = '';
+        res.on('data', d => data += d);
+        res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
+      }
+    );
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
+// GET /api/auth/google/status — tells login page whether SSO button should appear
+app.get('/api/auth/google/status', async (req, res) => {
+  try {
+    const s = await IntegrationSettings.findOne({ provider: 'google' });
+    res.json({ enabled: !!(s && s.enabled && s.clientId && s.clientSecret) });
+  } catch { res.json({ enabled: false }); }
+});
+
+// GET /api/auth/google — initiate OAuth2 flow
+app.get('/api/auth/google', async (req, res) => {
+  try {
+    const s = await IntegrationSettings.findOne({ provider: 'google' });
+    if (!s || !s.enabled || !s.clientId) return res.redirect('/login?sso_error=disabled');
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+    const params = new URLSearchParams({
+      client_id:     s.clientId,
+      redirect_uri:  redirectUri,
+      response_type: 'code',
+      scope:         'openid email profile',
+      access_type:   'online',
+      prompt:        'select_account',
+    });
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+  } catch (e) { res.redirect('/login?sso_error=server'); }
+});
+
+// GET /api/auth/google/callback — exchange code, validate, issue JWT
+app.get('/api/auth/google/callback', async (req, res) => {
+  try {
+    const { code, error: oauthErr } = req.query;
+    if (oauthErr) return res.redirect('/login?sso_error=denied');
+    if (!code)    return res.redirect('/login?sso_error=nocode');
+
+    const s = await IntegrationSettings.findOne({ provider: 'google' });
+    if (!s || !s.enabled) return res.redirect('/login?sso_error=disabled');
+
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+
+    // 1) Exchange code for access token
+    const tokenData = await httpsPost('oauth2.googleapis.com', '/token', {
+      code,
+      client_id:     s.clientId,
+      client_secret: s.clientSecret,
+      redirect_uri:  redirectUri,
+      grant_type:    'authorization_code',
+    });
+    if (tokenData.error) return res.redirect('/login?sso_error=token');
+
+    // 2) Get Google user profile
+    const profile = await httpsGet(
+      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${encodeURIComponent(tokenData.access_token)}`
+    );
+    if (!profile.email) return res.redirect('/login?sso_error=noemail');
+
+    // 3) Domain restriction
+    if (s.allowedDomain) {
+      const domain = profile.email.split('@')[1] || '';
+      if (domain.toLowerCase() !== s.allowedDomain.toLowerCase())
+        return res.redirect('/login?sso_error=domain');
+    }
+
+    // 4) Must already exist as a portal user
+    const adminUser = await AdminUser.findOne({ email: profile.email.toLowerCase() });
+    if (!adminUser)              return res.redirect('/login?sso_error=notfound');
+    if (adminUser.status === 'Inactive') return res.redirect('/login?sso_error=inactive');
+
+    adminUser.lastLogin = new Date();
+    await adminUser.save();
+
+    // 5) Issue JWT and hand it to login.html via redirect
+    const payload = { id: adminUser._id.toString(), email: adminUser.email, name: adminUser.name, role: adminUser.role };
+    const token   = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    res.redirect(`/login?sso_token=${encodeURIComponent(token)}`);
+  } catch (e) {
+    console.error('Google OAuth callback error:', e.message);
+    res.redirect('/login?sso_error=server');
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 //  ADMIN CONSOLE — Portal User Management  (super_admin only)
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -176,6 +292,48 @@ app.delete('/api/admin/users/:id', requireAuth, onlySuperAdmin, async (req, res)
     if (!user) return res.status(404).json({ error: 'Portal user not found' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  ADMIN CONSOLE — Integration Settings  (super_admin only)
+// ════════════════════════════════════════════════════════════════════════════
+
+// GET /api/admin/integrations
+app.get('/api/admin/integrations', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    let s = await IntegrationSettings.findOne({ provider: 'google' });
+    res.json({
+      google: {
+        enabled:         s ? s.enabled : false,
+        clientId:        s ? s.clientId : '',
+        clientSecret:    s && s.clientSecret ? '••••••••' : '',
+        hasClientSecret: !!(s && s.clientSecret),
+        allowedDomain:   s ? s.allowedDomain : '',
+      },
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/admin/integrations
+app.put('/api/admin/integrations', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const g = req.body.google || {};
+    const update = {
+      enabled:       !!g.enabled,
+      clientId:      (g.clientId || '').trim(),
+      allowedDomain: (g.allowedDomain || '').trim().toLowerCase(),
+    };
+    // Only overwrite clientSecret if a real value (not our masked placeholder) is supplied
+    if (g.clientSecret && g.clientSecret !== '••••••••') {
+      update.clientSecret = g.clientSecret.trim();
+    }
+    await IntegrationSettings.findOneAndUpdate(
+      { provider: 'google' },
+      { $set: update },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true });
+  } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -633,6 +791,616 @@ async function seedAdminUser() {
     status:   'Active',
   });
   console.log('✅  Default super admin seeded → praveen.m@terzocloud.com / Admin@123');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCIM 2.0 SERVER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── SCIM content-type middleware ──────────────────────────────────────────────
+app.use('/scim', (req, res, next) => {
+  res.setHeader('Content-Type', 'application/scim+json');
+  next();
+});
+
+// ── SCIM Bearer-token auth middleware ─────────────────────────────────────────
+async function requireSCIM(req, res, next) {
+  const header = req.headers['authorization'] || '';
+  const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) {
+    return res.status(401).json({
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+      status: '401', detail: 'Authorization header missing or invalid.',
+    });
+  }
+  const cfg = await SCIMConfig.findOne();
+  if (!cfg || !cfg.enabled || cfg.bearerToken !== token) {
+    return res.status(401).json({
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+      status: '401', detail: 'Invalid or inactive SCIM bearer token.',
+    });
+  }
+  next();
+}
+
+// ── SCIM field mapping helpers ────────────────────────────────────────────────
+const DEPT_MAP = {
+  engineering: 'Engineering', 'ai-service': 'AI-Service', 'ai service': 'AI-Service',
+  qa: 'QA', it: 'IT', hr: 'HR', product: 'Product',
+  'customer support': 'Customer Support', accounts: 'Accounts',
+  'data science': 'Data Science', sales: 'Sales', marketing: 'Marketing',
+  legal: 'Legal', executive: 'Executive', operations: 'Operations',
+  finance: 'Finance', other: 'Other',
+};
+
+function mapDept(raw) {
+  if (!raw) return 'Other';
+  return DEPT_MAP[(raw || '').toLowerCase()] || 'Other';
+}
+
+function userToSCIM(u) {
+  return {
+    schemas: ['urn:ietf:params:scim:schemas:core:2.0:User',
+              'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User'],
+    id:         u._id.toString(),
+    externalId: u.scimExternalId || '',
+    userName:   u.email,
+    name: {
+      formatted:  `${u.first} ${u.last}`.trim(),
+      givenName:  u.first,
+      familyName: u.last,
+    },
+    displayName: `${u.first} ${u.last}`.trim(),
+    title:       u.jobTitle || '',
+    active:      u.status === 'Active',
+    emails: [{ value: u.email, primary: true, type: 'work' }],
+    'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {
+      department: u.dept || '',
+    },
+    meta: {
+      resourceType: 'User',
+      location: `/scim/v2/Users/${u._id}`,
+      created:      u.createdAt,
+      lastModified: u.updatedAt,
+    },
+  };
+}
+
+function parseSCIMFilter(filter) {
+  // Handles: userName eq "x", externalId eq "x", active eq true/false
+  if (!filter) return {};
+  const m = filter.match(/^(\w+)\s+eq\s+"?([^"]+)"?$/i);
+  if (!m) return {};
+  const [, attr, val] = m;
+  if (attr === 'userName')   return { email: val.toLowerCase() };
+  if (attr === 'externalId') return { scimExternalId: val };
+  if (attr === 'active')     return { status: val === 'true' ? 'Active' : 'Inactive' };
+  return {};
+}
+
+function scimBodyToUser(body) {
+  const enterprise = body['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User'] || {};
+  return {
+    email:          (body.userName || '').toLowerCase().trim(),
+    first:          (body.name && body.name.givenName)  || (body.displayName || '').split(' ')[0] || 'Unknown',
+    last:           (body.name && body.name.familyName) || (body.displayName || '').split(' ').slice(1).join(' ') || '',
+    status:         body.active === false ? 'Inactive' : 'Active',
+    jobTitle:       body.title || '',
+    dept:           mapDept(enterprise.department || body.department),
+    scimExternalId: body.externalId || '',
+  };
+}
+
+// ── GET /scim/v2/ServiceProviderConfig ────────────────────────────────────────
+app.get('/scim/v2/ServiceProviderConfig', requireSCIM, (req, res) => {
+  res.json({
+    schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig'],
+    documentationUri: '',
+    patch: { supported: true },
+    bulk:  { supported: false, maxOperations: 0, maxPayloadSize: 0 },
+    filter:{ supported: true, maxResults: 200 },
+    changePassword: { supported: false },
+    sort:  { supported: false },
+    etag:  { supported: false },
+    authenticationSchemes: [{
+      type: 'oauthbearertoken', name: 'OAuth Bearer Token',
+      description: 'Authentication scheme using Bearer token', primary: true,
+    }],
+    meta: { resourceType: 'ServiceProviderConfig', location: '/scim/v2/ServiceProviderConfig' },
+  });
+});
+
+// ── GET /scim/v2/ResourceTypes ────────────────────────────────────────────────
+app.get('/scim/v2/ResourceTypes', requireSCIM, (req, res) => {
+  res.json({
+    schemas: ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+    totalResults: 1, startIndex: 1, itemsPerPage: 1,
+    Resources: [{
+      schemas: ['urn:ietf:params:scim:schemas:core:2.0:ResourceType'],
+      id: 'User', name: 'User', endpoint: '/Users',
+      description: 'User accounts',
+      schema: 'urn:ietf:params:scim:schemas:core:2.0:User',
+      schemaExtensions: [{
+        schema: 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User',
+        required: false,
+      }],
+      meta: { resourceType: 'ResourceType', location: '/scim/v2/ResourceTypes/User' },
+    }],
+  });
+});
+
+// ── GET /scim/v2/Schemas ──────────────────────────────────────────────────────
+app.get('/scim/v2/Schemas', requireSCIM, (req, res) => {
+  res.json({
+    schemas: ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+    totalResults: 1, startIndex: 1, itemsPerPage: 1,
+    Resources: [{
+      id: 'urn:ietf:params:scim:schemas:core:2.0:User',
+      name: 'User', description: 'User Account',
+      attributes: [
+        { name: 'userName',    type: 'string',  required: true,  uniqueness: 'global' },
+        { name: 'displayName', type: 'string',  required: false, uniqueness: 'none' },
+        { name: 'name',        type: 'complex', required: false, subAttributes: [
+          { name: 'givenName', type: 'string' }, { name: 'familyName', type: 'string' },
+          { name: 'formatted', type: 'string' },
+        ]},
+        { name: 'title',  type: 'string',  required: false },
+        { name: 'active', type: 'boolean', required: false },
+        { name: 'emails', type: 'complex', multiValued: true, subAttributes: [
+          { name: 'value', type: 'string' }, { name: 'primary', type: 'boolean' },
+        ]},
+      ],
+    }],
+  });
+});
+
+// ── GET /scim/v2/Users ────────────────────────────────────────────────────────
+app.get('/scim/v2/Users', requireSCIM, async (req, res) => {
+  try {
+    const filterQuery = parseSCIMFilter(req.query.filter || '');
+    const startIndex  = parseInt(req.query.startIndex || '1', 10);
+    const count       = parseInt(req.query.count || '100', 10);
+    const skip        = Math.max(startIndex - 1, 0);
+
+    const [users, total] = await Promise.all([
+      User.find(filterQuery).skip(skip).limit(count).lean(),
+      User.countDocuments(filterQuery),
+    ]);
+
+    res.json({
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+      totalResults: total,
+      startIndex,
+      itemsPerPage: users.length,
+      Resources: users.map(userToSCIM),
+    });
+  } catch (e) {
+    res.status(500).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '500', detail: e.message });
+  }
+});
+
+// ── POST /scim/v2/Users ───────────────────────────────────────────────────────
+app.post('/scim/v2/Users', requireSCIM, async (req, res) => {
+  try {
+    const fields = scimBodyToUser(req.body);
+
+    // Check for duplicate email
+    const existing = await User.findOne({ email: fields.email });
+    if (existing) {
+      // If already exists but was Inactive, reactivate
+      if (existing.status === 'Inactive') {
+        existing.status = 'Active';
+        if (fields.scimExternalId) existing.scimExternalId = fields.scimExternalId;
+        await existing.save();
+        return res.status(200).json(userToSCIM(existing));
+      }
+      return res.status(409).json({
+        schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+        status: '409', detail: `User ${fields.email} already exists.`,
+      });
+    }
+
+    const user = await User.create(fields);
+    res.status(201).set('Location', `/scim/v2/Users/${user._id}`).json(userToSCIM(user));
+  } catch (e) {
+    res.status(400).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '400', detail: e.message });
+  }
+});
+
+// ── GET /scim/v2/Users/:id ────────────────────────────────────────────────────
+app.get('/scim/v2/Users/:id', requireSCIM, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '404', detail: 'User not found.' });
+    res.json(userToSCIM(user));
+  } catch (e) {
+    res.status(404).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '404', detail: 'User not found.' });
+  }
+});
+
+// ── PUT /scim/v2/Users/:id ────────────────────────────────────────────────────
+app.put('/scim/v2/Users/:id', requireSCIM, async (req, res) => {
+  try {
+    const fields = scimBodyToUser(req.body);
+    const user   = await User.findByIdAndUpdate(req.params.id, fields, { new: true, runValidators: true });
+    if (!user) return res.status(404).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '404', detail: 'User not found.' });
+    res.json(userToSCIM(user));
+  } catch (e) {
+    res.status(400).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '400', detail: e.message });
+  }
+});
+
+// ── PATCH /scim/v2/Users/:id ──────────────────────────────────────────────────
+app.patch('/scim/v2/Users/:id', requireSCIM, async (req, res) => {
+  try {
+    const ops  = (req.body.Operations || []);
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '404', detail: 'User not found.' });
+
+    for (const op of ops) {
+      const operation = (op.op || '').toLowerCase();
+      const path      = (op.path || '').toLowerCase();
+      const value     = op.value;
+
+      if (path === 'active' || (typeof value === 'object' && value !== null && 'active' in value)) {
+        const activeVal = path === 'active' ? value : value.active;
+        user.status = (activeVal === true || activeVal === 'true') ? 'Active' : 'Inactive';
+      }
+      if (path === 'username' || path === 'username')  { user.email    = (value || '').toLowerCase().trim(); }
+      if (path === 'title')                            { user.jobTitle = value || ''; }
+      if (path === 'name.givenname')                   { user.first    = value || ''; }
+      if (path === 'name.familyname')                  { user.last     = value || ''; }
+      if (path === 'externalid')                       { user.scimExternalId = value || ''; }
+      // Handle object value (no path specified)
+      if (!path && typeof value === 'object' && value !== null) {
+        if ('active'    in value) user.status    = value.active ? 'Active' : 'Inactive';
+        if ('title'     in value) user.jobTitle  = value.title || '';
+        if ('externalId'in value) user.scimExternalId = value.externalId || '';
+        if (value.name) {
+          if (value.name.givenName)  user.first = value.name.givenName;
+          if (value.name.familyName) user.last  = value.name.familyName;
+        }
+      }
+    }
+
+    await user.save();
+    res.json(userToSCIM(user));
+  } catch (e) {
+    res.status(400).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '400', detail: e.message });
+  }
+});
+
+// ── DELETE /scim/v2/Users/:id — soft deprovision ──────────────────────────────
+app.delete('/scim/v2/Users/:id', requireSCIM, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '404', detail: 'User not found.' });
+    user.status = 'Inactive';
+    await user.save();
+    res.status(204).end();
+  } catch (e) {
+    res.status(500).json({ schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'], status: '500', detail: e.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCIM ADMIN CONFIG ENDPOINTS (super_admin only)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// GET /api/admin/scim — return config (token hint only, never the full token)
+app.get('/api/admin/scim', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const cfg = await SCIMConfig.findOne() || {};
+    res.json({
+      enabled:     cfg.enabled   || false,
+      tokenHint:   cfg.tokenHint || '',
+      hasToken:    !!(cfg.bearerToken),
+      scimBaseUrl: `${req.protocol}://${req.get('host')}/scim/v2`,
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/admin/scim — update enabled flag
+app.put('/api/admin/scim', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const cfg = await SCIMConfig.findOneAndUpdate(
+      {},
+      { enabled: !!enabled },
+      { new: true, upsert: true }
+    );
+    res.json({ enabled: cfg.enabled, tokenHint: cfg.tokenHint, hasToken: !!(cfg.bearerToken) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/admin/scim/regenerate-token — generate new token, return ONCE
+app.post('/api/admin/scim/regenerate-token', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const token    = crypto.randomBytes(32).toString('hex'); // 64-char hex token
+    const tokenHint = token.slice(-6);
+    await SCIMConfig.findOneAndUpdate(
+      {},
+      { bearerToken: token, tokenHint },
+      { upsert: true }
+    );
+    // Return full token ONCE — never retrievable again from admin UI
+    res.json({ token, tokenHint });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// APP CONNECTOR ENDPOINTS (super_admin only)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// GET /api/admin/connectors — list all connectors
+app.get('/api/admin/connectors', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const connectors = await AppConnector.find().lean();
+    // Mask apiToken — return hint only
+    const safe = connectors.map(c => ({
+      ...c, apiToken: undefined,
+      hasToken: !!(c.apiToken),
+    }));
+    res.json(safe);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/admin/connectors/:app — save connector config
+app.put('/api/admin/connectors/:app', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { app: appName } = req.params;
+    const { enabled, orgSlug, softwareCsvId, apiToken } = req.body;
+
+    const update = { enabled: !!enabled, orgSlug: orgSlug || '', softwareCsvId: softwareCsvId || '' };
+
+    // Only update token if a new non-mask value is provided
+    if (apiToken && apiToken !== '••••••••' && apiToken !== '[key stored]') {
+      update.apiToken   = apiToken;
+      update.tokenHint  = apiToken.length > 4 ? apiToken.slice(-4) : '****';
+    }
+
+    const connector = await AppConnector.findOneAndUpdate(
+      { appName },
+      { ...update, displayName: update.displayName || appName },
+      { new: true, upsert: true, runValidators: true }
+    );
+    res.json({ ...connector.toObject(), apiToken: undefined, hasToken: !!(connector.apiToken) });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// ── Connector sync helpers ────────────────────────────────────────────────────
+async function syncGitHub(connector) {
+  const headers = {
+    Authorization: `Bearer ${connector.apiToken}`,
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'TerzoCloud-Portal/1.0',
+    Accept: 'application/vnd.github+json',
+  };
+
+  // Get org info (plan + seats)
+  const orgData = await apiGet(`https://api.github.com/orgs/${encodeURIComponent(connector.orgSlug)}`, headers);
+
+  // Get members (paginated, max 100)
+  let members = [], page = 1;
+  while (true) {
+    const batch = await apiGet(
+      `https://api.github.com/orgs/${encodeURIComponent(connector.orgSlug)}/members?per_page=100&page=${page}`,
+      headers
+    );
+    const arr = JSON.parse(batch);
+    if (!Array.isArray(arr) || arr.length === 0) break;
+    members = members.concat(arr);
+    if (arr.length < 100) break;
+    page++;
+  }
+
+  const org  = JSON.parse(orgData);
+  const plan = org.plan || {};
+
+  return {
+    userCount:        members.length,
+    purchasedLicenses: plan.seats || members.length,
+    plan:             plan.name ? `GitHub ${plan.name.charAt(0).toUpperCase() + plan.name.slice(1)}` : connector.cachedPlan || '',
+    message:          `${members.length} active members · Plan: ${plan.name || 'unknown'}`,
+  };
+}
+
+async function syncSlack(connector) {
+  // Get users list
+  const usersRaw = await apiGet(
+    `https://slack.com/api/users.list?limit=500`,
+    { Authorization: `Bearer ${connector.apiToken}` }
+  );
+  const usersData = JSON.parse(usersRaw);
+  if (!usersData.ok) throw new Error(usersData.error || 'Slack API error');
+
+  const activeMembers = (usersData.members || []).filter(
+    m => !m.is_bot && !m.deleted && m.id !== 'USLACKBOT'
+  );
+
+  // Get team info
+  const teamRaw  = await apiGet(
+    `https://slack.com/api/team.info`,
+    { Authorization: `Bearer ${connector.apiToken}` }
+  );
+  const teamData = JSON.parse(teamRaw);
+  const plan     = teamData.ok ? (teamData.team.plan || 'Business+') : '';
+
+  return {
+    userCount: activeMembers.length,
+    plan:      plan ? `Slack ${plan.charAt(0).toUpperCase() + plan.slice(1)}` : '',
+    message:   `${activeMembers.length} active members · Plan: ${plan || 'unknown'}`,
+  };
+}
+
+async function syncGoogleWorkspace(connector) {
+  // Parse service account JSON
+  let sa;
+  try { sa = JSON.parse(connector.apiToken); } catch (e) { throw new Error('Invalid service account JSON'); }
+
+  // Build JWT for service account authentication
+  const now   = Math.floor(Date.now() / 1000);
+  const claim = {
+    iss:   sa.client_email,
+    scope: 'https://www.googleapis.com/auth/admin.directory.user.readonly',
+    aud:   'https://oauth2.googleapis.com/token',
+    exp:   now + 3600,
+    iat:   now,
+    sub:   connector.orgSlug, // admin email for impersonation
+  };
+
+  // Sign JWT with service account private key using RS256
+  const jwtToken = require('jsonwebtoken').sign(claim, sa.private_key, { algorithm: 'RS256' });
+
+  // Exchange JWT for access token
+  const tokenBody = `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwtToken}`;
+  const tokenRaw  = await apiPost('oauth2.googleapis.com', '/token',
+    tokenBody, { 'Content-Type': 'application/x-www-form-urlencoded' }
+  );
+  const tokenData = JSON.parse(tokenRaw);
+  if (!tokenData.access_token) throw new Error(tokenData.error_description || 'Failed to get access token');
+
+  // Extract domain from admin email
+  const domain = (connector.orgSlug || '').split('@')[1] || connector.orgSlug;
+
+  // List users
+  const usersRaw  = await apiGet(
+    `https://admin.googleapis.com/admin/directory/v1/users?domain=${encodeURIComponent(domain)}&maxResults=500&orderBy=email`,
+    { Authorization: `Bearer ${tokenData.access_token}` }
+  );
+  const usersData = JSON.parse(usersRaw);
+  const users     = (usersData.users || []).filter(u => !u.suspended && !u.archived);
+
+  return {
+    userCount: users.length,
+    plan:      'Google Workspace Enterprise Standard',
+    message:   `${users.length} active users in ${domain}`,
+  };
+}
+
+// POST /api/admin/connectors/:app/test — test connection
+app.post('/api/admin/connectors/:app/test', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { app: appName } = req.params;
+    const connector = await AppConnector.findOne({ appName });
+    if (!connector || !connector.apiToken) {
+      return res.status(400).json({ ok: false, message: 'Connector not configured. Save API token first.' });
+    }
+
+    let result;
+    if (appName === 'github')            result = await syncGitHub(connector);
+    else if (appName === 'slack')        result = await syncSlack(connector);
+    else if (appName === 'google_workspace') result = await syncGoogleWorkspace(connector);
+    else return res.status(400).json({ ok: false, message: 'Unknown connector type.' });
+
+    res.json({ ok: true, message: result.message, userCount: result.userCount, plan: result.plan });
+  } catch (e) {
+    res.json({ ok: false, message: e.message });
+  }
+});
+
+// POST /api/admin/connectors/:app/sync — full sync + update Software record
+app.post('/api/admin/connectors/:app/sync', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { app: appName } = req.params;
+    const connector = await AppConnector.findOne({ appName });
+    if (!connector || !connector.apiToken) {
+      return res.status(400).json({ ok: false, message: 'Connector not configured.' });
+    }
+
+    let result;
+    if (appName === 'github')                result = await syncGitHub(connector);
+    else if (appName === 'slack')            result = await syncSlack(connector);
+    else if (appName === 'google_workspace') result = await syncGoogleWorkspace(connector);
+    else return res.status(400).json({ ok: false, message: 'Unknown connector.' });
+
+    // Update Software Inventory record
+    let softwareUpdated = false;
+    if (connector.softwareCsvId) {
+      const update = { usedLicenses: result.userCount };
+      if (result.plan) update.subscriptionPlan = result.plan;
+      if (result.purchasedLicenses) update.purchasedLicenses = result.purchasedLicenses;
+      const sw = await Software.findOneAndUpdate({ csvId: connector.softwareCsvId }, update, { new: true });
+      softwareUpdated = !!sw;
+    }
+
+    // Save sync status to connector
+    await AppConnector.findOneAndUpdate({ appName }, {
+      lastSyncAt:      new Date(),
+      lastSyncStatus:  'success',
+      lastSyncMessage: result.message,
+      cachedUserCount: result.userCount,
+      cachedPlan:      result.plan || '',
+    });
+
+    res.json({
+      ok: true,
+      message: result.message,
+      userCount: result.userCount,
+      plan: result.plan,
+      softwareUpdated,
+      softwareCsvId: connector.softwareCsvId || null,
+    });
+  } catch (e) {
+    // Save error status
+    await AppConnector.findOneAndUpdate(
+      { appName: req.params.app },
+      { lastSyncAt: new Date(), lastSyncStatus: 'error', lastSyncMessage: e.message }
+    );
+    res.status(500).json({ ok: false, message: e.message });
+  }
+});
+
+// ── apiGet — HTTPS GET returning raw string, with custom headers (used by connectors) ──
+function apiGet(url, extraHeaders = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const opts = {
+      hostname: parsed.hostname,
+      path:     parsed.pathname + (parsed.search || ''),
+      method:   'GET',
+      headers:  { 'User-Agent': 'TerzoCloud/1.0', ...extraHeaders },
+    };
+    const req = require('https').request(opts, r => {
+      let data = '';
+      r.on('data', c => data += c);
+      r.on('end', () => {
+        if (r.statusCode >= 400) reject(new Error(`HTTP ${r.statusCode}: ${data.substring(0, 300)}`));
+        else resolve(data);
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+// ── apiPost — HTTPS POST returning raw string, with custom headers (used by connectors) ──
+function apiPost(hostname, path, body, extraHeaders = {}) {
+  const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
+  return new Promise((resolve, reject) => {
+    const opts = {
+      hostname,
+      path,
+      method:  'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'Content-Length': Buffer.byteLength(bodyStr),
+        'User-Agent':     'TerzoCloud/1.0',
+        ...extraHeaders,
+      },
+    };
+    const req = require('https').request(opts, r => {
+      let data = '';
+      r.on('data', c => data += c);
+      r.on('end', () => {
+        if (r.statusCode >= 400) reject(new Error(`HTTP ${r.statusCode}: ${data.substring(0, 300)}`));
+        else resolve(data);
+      });
+    });
+    req.on('error', reject);
+    req.write(bodyStr);
+    req.end();
+  });
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────

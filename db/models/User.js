@@ -92,6 +92,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    scimExternalId: {
+      type: String,
+      default: '',
+      trim: true,
+      index: true,
+      comment: 'Google Workspace immutable user ID, set by SCIM provisioner',
+    },
   },
   {
     timestamps: true, // adds createdAt & updatedAt

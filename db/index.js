@@ -41,10 +41,13 @@ async function disconnect() {
 
 // Re-export models so callers can do:
 //   const { User, Asset } = require('./db');
-const User      = require('./models/User');
-const Asset     = require('./models/Asset');
-const Log       = require('./models/Log');
-const Software  = require('./models/Software');
-const AdminUser = require('./models/AdminUser');
+const User                = require('./models/User');
+const Asset               = require('./models/Asset');
+const Log                 = require('./models/Log');
+const Software            = require('./models/Software');
+const AdminUser           = require('./models/AdminUser');
+const IntegrationSettings = require('./models/IntegrationSettings');
+const SCIMConfig          = require('./models/SCIMConfig');
+const AppConnector        = require('./models/AppConnector');
 
-module.exports = { connect, disconnect, User, Asset, Log, Software, AdminUser };
+module.exports = { connect, disconnect, User, Asset, Log, Software, AdminUser, IntegrationSettings, SCIMConfig, AppConnector };

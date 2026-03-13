@@ -322,8 +322,16 @@
     .sw-dm-body { flex:1;overflow-y:auto;padding:22px 28px;min-height:0; }
     .sw-dm-panel { display:none; }
     .sw-dm-panel.active { display:block; }
-    /* Edit panel inside detail modal */
+    /* ── Inline Edit Panel inside detail modal ── */
     .sw-dm-edit-wrap { padding:4px 0 10px; }
+    .swde-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; }
+    .swde-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px 20px; }
+    .swde-full { grid-column:1/-1; }
+    .swde-grid .form-group input, .swde-grid .form-group select { width:100%; box-sizing:border-box; }
+    .swde-section-title { font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.08em; margin:18px 0 8px; grid-column:1/-1; padding-bottom:6px; border-bottom:1px solid var(--gray-100); }
+    .swde-footer { display:flex; gap:8px; justify-content:flex-end; padding-top:18px; border-top:1px solid var(--gray-100); margin-top:8px; grid-column:1/-1; }
+    body.theme-dark  .swde-section-title, body.theme-dark  .swde-footer { border-color:rgba(255,255,255,.08) !important; }
+    body.theme-purple .swde-section-title, body.theme-purple .swde-footer { border-color:rgba(255,255,255,.08) !important; }
     /* Drawer backward compat (kept for theme overrides below) */
     .sw-drawer-overlay,.sw-drawer { display:none !important; }
     .sw-section-title { font-size:10.5px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.08em; margin-bottom:11px; }
@@ -417,17 +425,55 @@
     body.theme-purple .export-menu-item:hover { background:#3b1f7a !important; }
     body.theme-purple .export-menu-sep { background:rgba(168,85,247,0.15) !important; }
 
+    /* ── Export Column Picker ── */
+    .exc-overlay { position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:500;display:none;align-items:center;justify-content:center;padding:20px; }
+    .exc-overlay.open { display:flex; }
+    .exc-box { background:#fff;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.28);width:100%;max-width:580px;display:flex;flex-direction:column;max-height:88vh;overflow:hidden; }
+    .exc-head { padding:18px 22px 14px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
+    .exc-head h3 { font-size:15px;font-weight:800;color:var(--gray-800);margin:0; }
+    .exc-body { padding:18px 22px 10px;overflow-y:auto;flex:1;min-height:0; }
+    .exc-toolbar { display:flex;gap:6px;margin-bottom:12px; }
+    .exc-grid { display:flex;flex-wrap:wrap;gap:7px; }
+    .exc-chip { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;border:1.5px solid var(--gray-200);font-size:12px;font-weight:600;cursor:pointer;transition:all .13s;background:#fff;color:var(--gray-500);user-select:none; }
+    .exc-chip.on { background:var(--primary-lighter);border-color:var(--primary-light);color:var(--primary); }
+    .exc-chip .exc-dot { width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;transition:background .13s; }
+    .exc-foot { padding:14px 22px;border-top:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;flex-shrink:0; }
+    .exc-count { font-size:11px;color:var(--gray-400);font-weight:500; }
+    body.theme-dark .exc-box { background:#16101a !important; border-color:rgba(153,102,255,.2) !important; }
+    body.theme-dark .exc-head, body.theme-dark .exc-foot { border-color:rgba(255,255,255,.08) !important; }
+    body.theme-dark .exc-head h3 { color:#faf9fa !important; }
+    body.theme-dark .exc-chip { background:#231930 !important; border-color:#3d2d4a !important; color:#9d8aaf !important; }
+    body.theme-dark .exc-chip.on { background:#3b1f7a !important; border-color:#7c3aed !important; color:#c4b5fd !important; }
+    body.theme-purple .exc-box { background:#1e0e40 !important; }
+    body.theme-purple .exc-head, body.theme-purple .exc-foot { border-color:rgba(255,255,255,.08) !important; }
+    body.theme-purple .exc-chip { background:#2d1260 !important; border-color:#6b21a8 !important; color:#c084fc !important; }
+    body.theme-purple .exc-chip.on { background:#4c1d95 !important; border-color:#a855f7 !important; color:#e9d5ff !important; }
+
     /* ── Advanced Search Panel ── */
     .adv-search-panel { padding:12px 18px 14px; border-bottom:1px solid var(--gray-100); background:var(--gray-50); display:none; flex-wrap:wrap; gap:8px; align-items:flex-end; }
     .adv-search-panel.open { display:flex; }
     .adv-field { display:flex; flex-direction:column; gap:3px; min-width:110px; flex:1; max-width:190px; }
     .adv-field label { font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.06em; }
-    .adv-field input { padding:6px 9px; border:1px solid var(--gray-200); border-radius:6px; font-size:12px; outline:none; background:#fff; color:var(--gray-800); transition:border .13s; }
-    .adv-field input:focus { border-color:var(--primary-light); box-shadow:0 0 0 2px rgba(59,130,246,.1); }
+    .adv-field input, .adv-field select { padding:6px 9px; border:1px solid var(--gray-200); border-radius:6px; font-size:12px; outline:none; background:#fff; color:var(--gray-800); transition:border .13s; width:100%; box-sizing:border-box; }
+    .adv-field input:focus, .adv-field select:focus { border-color:var(--primary-light); box-shadow:0 0 0 2px rgba(59,130,246,.1); }
+    .adv-range-pair { display:flex; gap:5px; align-items:center; }
+    .adv-range-pair input { flex:1; min-width:0; }
+    .adv-range-sep { font-size:11px; color:var(--gray-400); flex-shrink:0; }
+    /* Tag-picker (admin field) */
+    .tag-picker { border:1px solid var(--gray-200); border-radius:6px; background:#fff; padding:4px 6px; min-height:32px; display:flex; flex-wrap:wrap; gap:4px; align-items:center; cursor:text; transition:border .13s; }
+    .tag-picker:focus-within { border-color:var(--primary-light); box-shadow:0 0 0 2px rgba(59,130,246,.1); }
+    .tag-chip { display:inline-flex; align-items:center; gap:3px; background:var(--primary-lighter); color:var(--primary); border-radius:4px; padding:2px 7px; font-size:11px; font-weight:600; }
+    .tag-chip-x { cursor:pointer; font-size:13px; line-height:1; opacity:.7; }
+    .tag-chip-x:hover { opacity:1; }
+    .tag-picker-input { border:none; outline:none; background:transparent; font-size:12px; color:var(--gray-800); min-width:80px; flex:1; }
     body.theme-dark .adv-search-panel  { background:var(--gray-100) !important; }
-    body.theme-dark .adv-field input   { background:#1e1525 !important; color:#faf9fa !important; }
+    body.theme-dark .adv-field input, body.theme-dark .adv-field select { background:#1e1525 !important; color:#faf9fa !important; }
+    body.theme-dark .tag-picker { background:#1e1525 !important; border-color:#3d2d4a !important; }
+    body.theme-dark .tag-picker-input { color:#faf9fa !important; }
     body.theme-purple .adv-search-panel{ background:var(--gray-100) !important; }
-    body.theme-purple .adv-field input { background:#2d1260 !important; color:#f5eeff !important; }
+    body.theme-purple .adv-field input, body.theme-purple .adv-field select { background:#2d1260 !important; color:#f5eeff !important; }
+    body.theme-purple .tag-picker { background:#2d1260 !important; border-color:#6b21a8 !important; }
+    body.theme-purple .tag-picker-input { color:#f5eeff !important; }
 
     /* ── Modal Tabs ── */
     .modal-tabs { display:flex; gap:0; padding:0 22px; border-bottom:1px solid var(--gray-100); flex-shrink:0; background:#fff; }
@@ -623,23 +669,10 @@
               <option value="">All Status</option><option>Active</option><option>Inactive</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="usersAdvBtn" onclick="toggleAdvSearch('users')">🔍 Advanced ▼</button>
-            <div class="export-wrap" id="exportWrap-users">
-              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu('users')">
-                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export ▾
-              </button>
-              <div class="export-menu">
-                <div class="export-menu-item" onclick="exportUserCSV();toggleExportMenu('users')">
-                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                  Export as CSV
-                </div>
-                <div class="export-menu-sep"></div>
-                <div class="export-menu-item" onclick="exportUserPDF();toggleExportMenu('users')">
-                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Export as PDF
-                </div>
-              </div>
-            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openExportConfig('users')">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
           </div>
         </div>
         <div class="adv-search-panel" id="usersAdvPanel">
@@ -681,23 +714,10 @@
               <option value="">All Status</option><option>In-Use</option><option>Available</option><option>Under Repair</option><option>Retired</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="assetsAdvBtn" onclick="toggleAdvSearch('assets')">🔍 Advanced ▼</button>
-            <div class="export-wrap" id="exportWrap-assets">
-              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu('assets')">
-                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export ▾
-              </button>
-              <div class="export-menu">
-                <div class="export-menu-item" onclick="exportAssetCSV();toggleExportMenu('assets')">
-                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                  Export as CSV
-                </div>
-                <div class="export-menu-sep"></div>
-                <div class="export-menu-item" onclick="exportAssetPDF();toggleExportMenu('assets')">
-                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Export as PDF
-                </div>
-              </div>
-            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openExportConfig('assets')">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
           </div>
         </div>
         <div class="adv-search-panel" id="assetsAdvPanel">
@@ -755,31 +775,18 @@
               <option value="Inactive">Inactive</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="softwareAdvBtn" onclick="toggleAdvSearch('software')">🔍 Advanced ▼</button>
-            <div class="export-wrap" id="exportWrap-software">
-              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu('software')">
-                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export ▾
-              </button>
-              <div class="export-menu">
-                <div class="export-menu-item" onclick="exportSwCSV();toggleExportMenu('software')">
-                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                  Export as CSV
-                </div>
-                <div class="export-menu-sep"></div>
-                <div class="export-menu-item" onclick="exportSwPDF();toggleExportMenu('software')">
-                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Export as PDF
-                </div>
-              </div>
-            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openExportConfig('software')">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
           </div>
         </div>
         <div class="adv-search-panel" id="softwareAdvPanel">
-          <div class="adv-field"><label>App Name</label><input type="text" id="advSwName" placeholder="App name…" oninput="renderSoftware()"></div>
-          <div class="adv-field"><label>Department</label><input type="text" id="advSwDept" placeholder="Dept…" oninput="renderSoftware()"></div>
-          <div class="adv-field"><label>Owner</label><input type="text" id="advSwOwner" placeholder="Owner…" oninput="renderSoftware()"></div>
-          <div class="adv-field"><label>Min Cost ($)</label><input type="number" id="advSwCostMin" placeholder="0" min="0" oninput="renderSoftware()"></div>
-          <div class="adv-field"><label>Max Cost ($)</label><input type="number" id="advSwCostMax" placeholder="∞" min="0" oninput="renderSoftware()"></div>
+          <div class="adv-field"><label>App Name</label><input type="text" id="advSwName" placeholder="App name…" list="dlSwName" oninput="renderSoftware()"><datalist id="dlSwName"></datalist></div>
+          <div class="adv-field"><label>Department</label><input type="text" id="advSwDept" placeholder="Dept…" list="dlSwDept" oninput="renderSoftware()"><datalist id="dlSwDept"></datalist></div>
+          <div class="adv-field"><label>Owner</label><input type="text" id="advSwOwner" placeholder="Owner…" list="dlSwOwner" oninput="renderSoftware()"><datalist id="dlSwOwner"></datalist></div>
+          <div class="adv-field"><label>Admin</label><input type="text" id="advSwAdmin" placeholder="Admin name…" list="dlSwAdmin" oninput="renderSoftware()"><datalist id="dlSwAdmin"></datalist></div>
+          <div class="adv-field" style="max-width:260px"><label>Annual Cost Range ($)</label><div class="adv-range-pair"><input type="number" id="advSwCostFrom" placeholder="From" min="0" oninput="renderSoftware()"><span class="adv-range-sep">–</span><input type="number" id="advSwCostTo" placeholder="To" min="0" oninput="renderSoftware()"></div></div>
           <button class="btn btn-secondary btn-sm" onclick="clearAdvSearch('software')" style="align-self:flex-end">✕ Clear</button>
         </div>
         <table>
@@ -846,19 +853,17 @@
 <div class="overlay" id="overlay" style="display:none" onclick="closeModalOnOverlay(event)">
 
   <!-- User Modal -->
-  <div class="modal" id="userModal" style="display:none">
+  <div class="modal" id="userModal" style="display:none;max-width:760px">
     <div class="modal-header">
       <h2 id="userModalTitle">Add User</h2>
       <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="userId">
-      <div class="form-row">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px">
         <div class="form-group"><label>First Name *</label><input type="text" id="userFirst"></div>
         <div class="form-group"><label>Last Name</label><input type="text" id="userLast"></div>
-      </div>
-      <div class="form-group"><label>Email *</label><input type="email" id="userEmail"></div>
-      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1"><label>Email *</label><input type="email" id="userEmail"></div>
         <div class="form-group"><label>Department *</label>
           <select id="userDept">
             <option>Engineering</option><option>AI-Service</option><option>QA</option>
@@ -872,18 +877,21 @@
         <div class="form-group"><label>Role *</label>
           <select id="userRole"><option>Admin</option><option>Manager</option><option>Staff</option></select>
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group"><label>Location</label>
           <select id="userLocation"><option>Chennai</option><option>Coimbatore</option><option>Remote</option></select>
         </div>
         <div class="form-group"><label>Status</label>
           <select id="userStatus"><option>Active</option><option>Inactive</option></select>
         </div>
+        <div class="form-group"><label>Job Title</label><input type="text" id="userJobTitle" placeholder="e.g. Software Engineer III"></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="userPhone" placeholder="+91 …"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Reporting Manager</label><input type="text" id="userReportingManager" placeholder="e.g. Vasanth Pandian"></div>
+        <!-- Software Admin Insight (only visible when editing existing user) -->
+        <div id="userSwAdminSection" style="display:none;grid-column:1/-1">
+          <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding-top:4px;border-top:1px solid var(--gray-100)">🛡️ Software Admin Access</div>
+          <div id="userSwAdminList"></div>
+        </div>
       </div>
-      <div class="form-group"><label>Job Title</label><input type="text" id="userJobTitle" placeholder="e.g. Software Engineer III"></div>
-      <div class="form-group"><label>Reporting Manager</label><input type="text" id="userReportingManager" placeholder="e.g. Vasanth Pandian"></div>
-      <div class="form-group"><label>Phone</label><input type="text" id="userPhone" placeholder="+91 …"></div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;">
       <button class="btn btn-danger" id="userDeleteBtn" style="display:none" onclick="deleteCurrentUser()">
@@ -898,41 +906,37 @@
   </div>
 
   <!-- Asset Modal -->
-  <div class="modal" id="assetModal" style="display:none">
+  <div class="modal" id="assetModal" style="display:none;max-width:760px">
     <div class="modal-header">
       <h2 id="assetModalTitle">Add Asset</h2>
       <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="assetId">
-      <div class="form-row">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px">
         <div class="form-group"><label>Asset ID</label><input type="text" id="assetCsvId" placeholder="A-43"></div>
         <div class="form-group"><label>Asset Name *</label><input type="text" id="assetName"></div>
-      </div>
-      <div class="form-row">
         <div class="form-group"><label>Type</label>
           <select id="assetType"><option>Laptop</option><option>Monitor</option><option>Phone</option><option>Tablet</option><option>Keyboard</option><option>Mouse</option><option>Headset</option><option>Other</option></select>
         </div>
         <div class="form-group"><label>Status</label>
           <select id="assetStatus"><option>Available</option><option>In-Use</option><option>Under Repair</option><option>Retired</option></select>
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group"><label>Serial Number</label><input type="text" id="assetSerial"></div>
         <div class="form-group"><label>Brand / Chip</label><input type="text" id="assetBrand" placeholder="Apple / M2 Pro"></div>
-      </div>
-      <div class="form-group"><label>Specification</label><input type="text" id="assetDesc" placeholder="16GB RAM - 512GB SSD M2-PRO CHIP"></div>
-      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1"><label>Specification</label><input type="text" id="assetDesc" placeholder="16GB RAM - 512GB SSD M2-PRO CHIP"></div>
         <div class="form-group"><label>Location</label>
           <select id="assetLocation"><option>Chennai</option><option>Coimbatore</option></select>
         </div>
         <div class="form-group"><label>Vendor</label><input type="text" id="assetVendor" placeholder="Sniper Systems"></div>
-      </div>
-      <div class="form-group"><label>Assign To User</label>
-        <select id="assetAssignTo"><option value="">— Unassigned —</option></select>
-      </div>
-      <div class="form-group"><label>Service History / Notes</label>
-        <textarea id="assetNotes" rows="2"></textarea>
+        <div class="form-group"><label>Purchase Date</label><input type="date" id="assetPurchaseDate"></div>
+        <div class="form-group"><label>Warranty End Date</label><input type="date" id="assetWarrantyEnd"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Assign To User</label>
+          <select id="assetAssignTo"><option value="">— Unassigned —</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>Service History / Notes</label>
+          <textarea id="assetNotes" rows="2" style="width:100%;box-sizing:border-box"></textarea>
+        </div>
       </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;">
@@ -948,7 +952,7 @@
   </div>
 
   <!-- Software Modal -->
-  <div class="modal" id="softwareModal" style="display:none;max-width:600px">
+  <div class="modal" id="softwareModal" style="display:none;max-width:900px">
     <div class="modal-header">
       <h2 id="swModalTitle">Add Software</h2>
       <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -972,14 +976,14 @@
           <select id="swType"><option>SAAS</option><option>On-premises</option><option>Freeware</option><option>Open Source</option></select>
         </div>
         <div class="form-group"><label>Renewal Period</label>
-          <select id="swRenewal"><option value="">—</option><option>Annual</option><option>Monthly</option><option>Quarterly</option><option>Freeware</option><option>Pay-as-you-go</option></select>
+          <select id="swRenewal" onchange="swTogglePaygHint('swCostLabel','swRecalcBtn','swLicPriceRow',this.value)"><option value="">—</option><option>Annual</option><option>Monthly</option><option>Quarterly</option><option>Freeware</option><option>Pay-as-you-go</option></select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Department</label><input type="text" id="swDept" placeholder="Engineering"></div>
         <div class="form-group"><label>Purpose</label><input type="text" id="swPurpose" placeholder="e.g. CI/CD"></div>
       </div>
-      <div class="form-row">
+      <div class="form-row" id="swLicPriceRow">
         <div class="form-group"><label>License Price / User / Month ($)</label><input type="number" id="swLicPrice" placeholder="0.00" min="0" step="0.01" oninput="calcSwAnnualCost()"></div>
         <div class="form-group"><label>Subscription Plan</label><input type="text" id="swPlan" placeholder="e.g. Business Pro"></div>
       </div>
@@ -989,16 +993,24 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Base Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— Purchased × Price × 12</span></label>
+          <label id="swCostLabel">Base Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— Purchased × Price × 12</span></label>
           <input type="number" id="swCost" placeholder="0" min="0" step="0.01">
         </div>
-        <div class="form-group" style="justify-content:flex-end;padding-top:22px">
+        <div class="form-group" id="swRecalcBtn" style="justify-content:flex-end;padding-top:22px">
           <button type="button" class="btn btn-secondary btn-sm" onclick="calcSwAnnualCost()" style="width:100%">↻ Recalculate</button>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Owner</label><input type="text" id="swOwner" placeholder="Owner name"></div>
-        <div class="form-group"><label>Admin(s)</label><input type="text" id="swAdmins" placeholder="Admin names"></div>
+        <div class="form-group"><label>Admin(s)</label>
+          <div class="tag-picker" id="swAdminPicker" onclick="document.getElementById('swAdminInput').focus()">
+            <span id="swAdminChips"></span>
+            <input type="text" id="swAdminInput" class="tag-picker-input" placeholder="Type to add admin…"
+              list="dlSwAdminPicker" autocomplete="off"
+              onkeydown="swAdminKeydown(event)" oninput="swAdminInput(event)">
+            <datalist id="dlSwAdminPicker"></datalist>
+          </div>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Billed To</label><input type="text" id="swBilledTo" placeholder="e.g. Eric Pritchett"></div>
@@ -1221,7 +1233,20 @@ function navigate(page, el){
 function handleSearch(v){ searchQ=v.toLowerCase(); userPage=1; assetPage=1; renderAll(); }
 
 /* ══ RENDER ALL ══ */
-function renderAll(){ updateBadges(); renderDashboard(); renderUsers(); renderAssets(); renderAssignments(); }
+function renderAll(){ updateBadges(); renderDashboard(); renderUsers(); renderAssets(); renderAssignments(); populateSwAdvDropdowns(); }
+
+/* ── Populate Software Adv-Search Datalists ── */
+function populateSwAdvDropdowns(){
+  const fill = (id, values) => {
+    const dl = document.getElementById(id); if(!dl) return;
+    dl.innerHTML = [...new Set(values.filter(Boolean))].sort()
+      .map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('');
+  };
+  fill('dlSwName',   software.map(s=>s.name));
+  fill('dlSwDept',   software.map(s=>s.department));
+  fill('dlSwOwner',  software.map(s=>s.owner));
+  fill('dlSwAdmin',  software.flatMap(s=>(s.admins||'').split(',').map(a=>a.trim()).filter(Boolean)));
+}
 
 function updateBadges(){
   document.getElementById('navUsersCount').textContent=users.length;
@@ -1523,6 +1548,31 @@ function openUserModal(u=null){
   document.getElementById('userReportingManager').value=u?.reportingManager||'';
   document.getElementById('userPhone').value=u?.phone||'';
   document.getElementById('userDeleteBtn').style.display=u?'inline-flex':'none';
+  // Software Admin Insight
+  const swAdminSection = document.getElementById('userSwAdminSection');
+  const swAdminList    = document.getElementById('userSwAdminList');
+  if(u && swAdminSection && swAdminList){
+    const fullName = ((u.first||'')+' '+(u.last||'')).trim().toLowerCase();
+    const adminApps = software.filter(s=>(s.admins||'').toLowerCase().split(',').map(a=>a.trim()).includes(fullName));
+    if(adminApps.length){
+      swAdminSection.style.display='block';
+      swAdminList.innerHTML = adminApps.map(s=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--gray-100);border-radius:8px;margin-bottom:5px;cursor:pointer;background:var(--gray-50)"
+             onclick="closeModal();setTimeout(()=>openSwDm('${s.id}'),100)">
+          <div style="width:30px;height:30px;border-radius:7px;background:var(--primary-lighter);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--primary)">${(s.name||'?')[0].toUpperCase()}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--gray-800)">${s.name}</div>
+            <div style="font-size:11px;color:var(--gray-400)">${s.department||''} · ${s.subscriptionPlan||s.deploymentType||''}</div>
+          </div>
+          <div style="margin-left:auto;font-size:10px;font-weight:700;color:var(--primary);background:var(--primary-lighter);padding:2px 8px;border-radius:99px">Admin</div>
+        </div>`).join('');
+    } else {
+      swAdminSection.style.display='block';
+      swAdminList.innerHTML = `<div style="font-size:12px;color:var(--gray-400);padding:6px 0">No software admin access assigned.</div>`;
+    }
+  } else if(swAdminSection){
+    swAdminSection.style.display='none';
+  }
   showOverlay('userModal');
 }
 
@@ -1583,6 +1633,8 @@ function openAssetModal(a=null){
   document.getElementById('assetDesc').value=a?.desc||'';
   document.getElementById('assetLocation').value=a?.location||'Chennai';
   document.getElementById('assetVendor').value=a?.vendor||'';
+  document.getElementById('assetPurchaseDate').value=a?.purchaseDate||'';
+  document.getElementById('assetWarrantyEnd').value=a?.warrantyEnd||'';
   document.getElementById('assetNotes').value=a?.notes||'';
   document.getElementById('assetDeleteBtn').style.display=a?'inline-flex':'none';
   showOverlay('assetModal');
@@ -1613,6 +1665,8 @@ async function saveAsset(){
     location:document.getElementById('assetLocation').value,
     dept:u?.dept||'',
     vendor:document.getElementById('assetVendor').value.trim(),
+    purchaseDate:document.getElementById('assetPurchaseDate').value||null,
+    warrantyEnd:document.getElementById('assetWarrantyEnd').value||null,
     notes:document.getElementById('assetNotes').value.trim(),
   };
   try {
@@ -1792,7 +1846,7 @@ function clearAdvSearch(page){
   const ids = {
     users:    ['advUserName','advUserEmail','advUserJobTitle','advUserManager'],
     assets:   ['advAssetName','advAssetSerial','advAssetBrand','advAssetUser'],
-    software: ['advSwName','advSwDept','advSwOwner','advSwCostMin','advSwCostMax'],
+    software: ['advSwName','advSwDept','advSwOwner','advSwAdmin','advSwCostFrom','advSwCostTo'],
   };
   (ids[page]||[]).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   if(page==='users') renderUsers();
@@ -1878,12 +1932,23 @@ function _updateSvcSummary(){
   if(cnt) cnt.textContent = editingServices.length||'0';
 }
 
-const fmtCost = n => {
-  if (!n || n === 0) return '<span style="color:var(--gray-400)">Free</span>';
+const fmtCost = (n, renewal) => {
+  if (!n || n === 0){
+    if(renewal === 'Pay-as-you-go') return '<span style="color:var(--warning,#f59e0b);font-weight:600">Variable</span>';
+    if(renewal === 'Freeware')       return '<span style="color:var(--gray-400)">Free</span>';
+    return '<span style="color:var(--gray-400)">—</span>';
+  }
   if (n >= 1000) return '$' + (n/1000).toFixed(n%1000===0?0:1) + 'K';
   return '$' + n.toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:2});
 };
-const fmtCostPlain = n => (!n||n===0) ? 'Free' : (n>=1000 ? '$'+(n/1000).toFixed(1)+'K' : '$'+n.toLocaleString('en-US'));
+const fmtCostPlain = (n, renewal) => {
+  if(!n||n===0){
+    if(renewal === 'Pay-as-you-go') return 'Variable';
+    if(renewal === 'Freeware')       return 'Free';
+    return '—';
+  }
+  return n>=1000 ? '$'+(n/1000).toFixed(1)+'K' : '$'+n.toLocaleString('en-US');
+};
 
 function swBudgetChipClick(type){
   swBudgetFilter = swBudgetFilter === type ? '' : type;
@@ -1896,23 +1961,28 @@ function renderSoftware(){
   const renewF   = document.getElementById('swRenewalFilter').value;
   const statusF  = document.getElementById('swStatusFilter').value;
   const q        = searchQ;
-  const advSwName  = (document.getElementById('advSwName')?.value||'').toLowerCase();
-  const advSwDept  = (document.getElementById('advSwDept')?.value||'').toLowerCase();
-  const advSwOwner = (document.getElementById('advSwOwner')?.value||'').toLowerCase();
-  const advSwMin   = parseFloat(document.getElementById('advSwCostMin')?.value)||0;
-  const advSwMax   = parseFloat(document.getElementById('advSwCostMax')?.value)||Infinity;
+  const advSwName    = (document.getElementById('advSwName')?.value||'').toLowerCase();
+  const advSwDept    = (document.getElementById('advSwDept')?.value||'').toLowerCase();
+  const advSwOwner   = (document.getElementById('advSwOwner')?.value||'').toLowerCase();
+  const advSwAdmin   = (document.getElementById('advSwAdmin')?.value||'').toLowerCase();
+  const advSwCostFrom= parseFloat(document.getElementById('advSwCostFrom')?.value)||0;
+  const advSwCostTo  = parseFloat(document.getElementById('advSwCostTo')?.value)||Infinity;
 
   let list = software.filter(s => {
     if(typeF   && s.deploymentType !== typeF)  return false;
     if(renewF  && s.renewalPeriod  !== renewF) return false;
     if(statusF && s.status         !== statusF)return false;
     if(q && ![s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q)) return false;
-    if(advSwName  && !(s.name||'').toLowerCase().includes(advSwName))       return false;
-    if(advSwDept  && !(s.department||'').toLowerCase().includes(advSwDept)) return false;
-    if(advSwOwner && !(s.owner||'').toLowerCase().includes(advSwOwner))     return false;
-    const tc = swTotalCost(s);
-    if(tc < advSwMin) return false;
-    if(advSwMax < Infinity && tc > advSwMax) return false;
+    if(advSwName  && !(s.name||'').toLowerCase().includes(advSwName))         return false;
+    if(advSwDept  && !(s.department||'').toLowerCase().includes(advSwDept))   return false;
+    if(advSwOwner && !(s.owner||'').toLowerCase().includes(advSwOwner))       return false;
+    if(advSwAdmin && !(s.admins||'').toLowerCase().includes(advSwAdmin))      return false;
+    const annualCost = (s.purchasedLicenses||0) * (s.licensePricePerUserMonth||0) * 12
+      + (s.services||[]).filter(sv=>sv.status==='Active').reduce((a,sv)=>{
+          return a + (sv.purchasedLicenses||0)*(sv.licensePricePerUserMonth||0)*12;
+        }, 0);
+    if(annualCost < advSwCostFrom) return false;
+    if(advSwCostTo < Infinity && annualCost > advSwCostTo) return false;
     return true;
   });
 
@@ -2026,7 +2096,7 @@ async function renderSoftwareBudgetWidget(){
         return `<div class="budget-bar-row">
           <div class="budget-bar-label">${i+1}. ${a.name}</div>
           <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${pct}%;background:${['#3b82f6','#8b5cf6','#06b6d4','#10b981','#f59e0b'][i]}"></div></div>
-          <div class="budget-bar-cost">${fmtCost(a.annualCost).replace(/<[^>]+>/g,'')}</div>
+          <div class="budget-bar-cost">${fmtCost(a.annualCost, a.renewalPeriod).replace(/<[^>]+>/g,'')}</div>
         </div>`;
       }).join('');
     }
@@ -2056,6 +2126,64 @@ async function renderSoftwareBudgetWidget(){
 }
 
 /* Software CRUD */
+/* ── Admin Tag-Picker for Software Edit Modal ── */
+let _swAdminTags = [];
+
+function swRenderAdminChips(){
+  const chips = document.getElementById('swAdminChips');
+  if(!chips) return;
+  chips.innerHTML = _swAdminTags.map((name,i)=>
+    `<span class="tag-chip">${name}<span class="tag-chip-x" onclick="swRemoveAdmin(${i})">×</span></span>`
+  ).join('');
+}
+
+function swRemoveAdmin(i){
+  _swAdminTags.splice(i,1);
+  swRenderAdminChips();
+  swRefreshAdminPickerDl();
+}
+
+function swRefreshAdminPickerDl(){
+  const dl = document.getElementById('dlSwAdminPicker'); if(!dl) return;
+  const existing = new Set(_swAdminTags);
+  const opts = users.filter(u=>u.first||u.last)
+    .map(u=>((u.first||'')+' '+(u.last||'')).trim())
+    .filter(n=>n && !existing.has(n));
+  dl.innerHTML = [...new Set(opts)].sort().map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+}
+
+function swAdminInput(e){
+  const val = e.target.value.trim();
+  // If user typed a name that exactly matches an option from datalist, add it
+  const dl = document.getElementById('dlSwAdminPicker');
+  const opts = dl ? [...dl.options].map(o=>o.value) : [];
+  if(opts.includes(val)){
+    swAddAdminTag(val);
+    e.target.value='';
+  }
+}
+
+function swAdminKeydown(e){
+  const inp = e.target;
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const val = inp.value.trim().replace(/,$/,'').trim();
+    if(val) swAddAdminTag(val);
+    inp.value='';
+  } else if(e.key==='Backspace' && inp.value==='' && _swAdminTags.length){
+    _swAdminTags.pop();
+    swRenderAdminChips();
+    swRefreshAdminPickerDl();
+  }
+}
+
+function swAddAdminTag(name){
+  if(!name || _swAdminTags.includes(name)) return;
+  _swAdminTags.push(name);
+  swRenderAdminChips();
+  swRefreshAdminPickerDl();
+}
+
 function openSoftwareModal(s=null){
   document.getElementById('swModalTitle').textContent = s ? 'Edit Software' : 'Add Software';
   document.getElementById('swId').value       = s?.id||'';
@@ -2071,22 +2199,27 @@ function openSoftwareModal(s=null){
   document.getElementById('swPurchased').value= s?.purchasedLicenses||0;
   document.getElementById('swUsed').value     = s?.usedLicenses||0;
   document.getElementById('swOwner').value    = s?.owner||'';
-  document.getElementById('swAdmins').value   = s?.admins||'';
   document.getElementById('swBilledTo').value = s?.billedTo||'';
   document.getElementById('swStatus').value   = s?.status||'Active';
+  // Populate admin tag-picker
+  _swAdminTags = (s?.admins||'').split(',').map(a=>a.trim()).filter(Boolean);
+  swRenderAdminChips();
+  swRefreshAdminPickerDl();
   document.getElementById('swUSA').checked    = s?.siteUSA||false;
   document.getElementById('swCAN').checked    = s?.siteCAN||false;
   document.getElementById('swIND').checked    = s?.siteIND||false;
   document.getElementById('swDeleteBtn').style.display = s ? 'inline-flex' : 'none';
   // Load services for editing (deep copy)
   editingServices = JSON.parse(JSON.stringify(s?.services||[]));
+  // Apply PAYG hint
+  swTogglePaygHint('swCostLabel','swRecalcBtn','swLicPriceRow', s?.renewalPeriod||'');
   // Always start on Details tab
   swSwitchTab('details');
   renderServicesTab();
   showOverlay('softwareModal');
 }
 
-function editSoftware(id){ openSoftwareModal(software.find(s=>s.id===id)); }
+function editSoftware(id){ openSwDm(id); swDmTab('edit'); }
 
 async function saveSoftware(){
   const name = document.getElementById('swName').value.trim();
@@ -2105,7 +2238,7 @@ async function saveSoftware(){
     purchasedLicenses: parseInt(document.getElementById('swPurchased').value)||0,
     usedLicenses:   parseInt(document.getElementById('swUsed').value)||0,
     owner:          document.getElementById('swOwner').value.trim(),
-    admins:         document.getElementById('swAdmins').value.trim(),
+    admins:         _swAdminTags.join(', '),
     billedTo:       document.getElementById('swBilledTo').value.trim(),
     status:         document.getElementById('swStatus').value,
     siteUSA:        document.getElementById('swUSA').checked,
@@ -2146,7 +2279,25 @@ function deleteCurrentSoftware(){
 }
 
 /* ══ SOFTWARE HELPERS ══ */
+/* Toggle PAYG hint on cost fields */
+function swTogglePaygHint(labelId, recalcId, licRowId, renewal){
+  const isPayg = renewal === 'Pay-as-you-go';
+  const labelEl  = document.getElementById(labelId);
+  const recalcEl = document.getElementById(recalcId);
+  const licRowEl = document.getElementById(licRowId);
+  if(labelEl){
+    if(isPayg){
+      labelEl.innerHTML = 'Actual Annual Spend ($) <span style="font-size:10px;font-weight:600;color:#f59e0b">⚡ Pay-as-you-go — enter this year\'s actual cost</span>';
+    } else {
+      labelEl.innerHTML = 'Base Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— Purchased × Price × 12</span>';
+    }
+  }
+  if(recalcEl) recalcEl.style.display = isPayg ? 'none' : '';
+  if(licRowEl) licRowEl.style.opacity = isPayg ? '0.45' : '1';
+}
+
 function calcSwAnnualCost(){
+  if((document.getElementById('swRenewal')?.value||'') === 'Pay-as-you-go') return; // PAYG: manual entry only
   const price = parseFloat(document.getElementById('swLicPrice').value)||0;
   const qty   = parseInt(document.getElementById('swPurchased').value)||0;
   if(price > 0 && qty > 0){
@@ -2173,22 +2324,27 @@ function filteredSoftware(){
   const renewF  = document.getElementById('swRenewalFilter')?.value||'';
   const statusF = document.getElementById('swStatusFilter')?.value||'';
   const q       = searchQ;
-  const advSwName  = (document.getElementById('advSwName')?.value||'').toLowerCase();
-  const advSwDept  = (document.getElementById('advSwDept')?.value||'').toLowerCase();
-  const advSwOwner = (document.getElementById('advSwOwner')?.value||'').toLowerCase();
-  const advSwMin   = parseFloat(document.getElementById('advSwCostMin')?.value)||0;
-  const advSwMax   = parseFloat(document.getElementById('advSwCostMax')?.value)||Infinity;
+  const advSwName    = (document.getElementById('advSwName')?.value||'').toLowerCase();
+  const advSwDept    = (document.getElementById('advSwDept')?.value||'').toLowerCase();
+  const advSwOwner   = (document.getElementById('advSwOwner')?.value||'').toLowerCase();
+  const advSwAdmin   = (document.getElementById('advSwAdmin')?.value||'').toLowerCase();
+  const advSwCostFrom= parseFloat(document.getElementById('advSwCostFrom')?.value)||0;
+  const advSwCostTo  = parseFloat(document.getElementById('advSwCostTo')?.value)||Infinity;
   let list = software.filter(s=>{
     if(typeF   && s.deploymentType !== typeF)  return false;
     if(renewF  && s.renewalPeriod  !== renewF) return false;
     if(statusF && s.status         !== statusF)return false;
     if(q && ![s.name, s.department, s.owner, s.csvId, s.purpose].join(' ').toLowerCase().includes(q)) return false;
-    if(advSwName  && !(s.name||'').toLowerCase().includes(advSwName))       return false;
-    if(advSwDept  && !(s.department||'').toLowerCase().includes(advSwDept)) return false;
-    if(advSwOwner && !(s.owner||'').toLowerCase().includes(advSwOwner))     return false;
-    const tc = swTotalCost(s);
-    if(tc < advSwMin) return false;
-    if(advSwMax < Infinity && tc > advSwMax) return false;
+    if(advSwName  && !(s.name||'').toLowerCase().includes(advSwName))         return false;
+    if(advSwDept  && !(s.department||'').toLowerCase().includes(advSwDept))   return false;
+    if(advSwOwner && !(s.owner||'').toLowerCase().includes(advSwOwner))       return false;
+    if(advSwAdmin && !(s.admins||'').toLowerCase().includes(advSwAdmin))      return false;
+    const annualCost = (s.purchasedLicenses||0) * (s.licensePricePerUserMonth||0) * 12
+      + (s.services||[]).filter(sv=>sv.status==='Active').reduce((a,sv)=>{
+          return a + (sv.purchasedLicenses||0)*(sv.licensePricePerUserMonth||0)*12;
+        }, 0);
+    if(annualCost < advSwCostFrom) return false;
+    if(advSwCostTo < Infinity && annualCost > advSwCostTo) return false;
     return true;
   });
   if(swBudgetFilter === 'paid') list = list.filter(s=>swTotalCost(s)>0);
@@ -2205,7 +2361,9 @@ function exportSwCSV(){
       s.csvId, s.name, s.deploymentType, s.department||'', s.purpose||'',
       s.subscriptionPlan||'', s.renewalPeriod||'',
       s.licensePricePerUserMonth||0, s.purchasedLicenses||0, s.usedLicenses||0,
-      s.annualCost||0, svcCount, swTotalCost(s),
+      (s.annualCost||0) > 0 ? s.annualCost : (s.renewalPeriod==='Pay-as-you-go' ? 'Variable' : 0),
+      svcCount,
+      swTotalCost(s) > 0 ? swTotalCost(s) : (s.renewalPeriod==='Pay-as-you-go' ? 'Variable' : 0),
       s.owner||'', s.admins||'', s.billedTo||'', s.status||'',
       s.siteUSA?'Yes':'', s.siteCAN?'Yes':'', s.siteIND?'Yes':''
     ];
@@ -2215,7 +2373,7 @@ function exportSwCSV(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `software-inventory-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast(`CSV exported (${list.length} app${list.length!==1?'s':''})`);
 }
 
@@ -2244,9 +2402,9 @@ async function exportSwPDF(){
           s.csvId, s.name, s.deploymentType, s.department||'—',
           s.subscriptionPlan||'—', s.renewalPeriod||'—',
           s.licensePricePerUserMonth?'$'+s.licensePricePerUserMonth:'—',
-          (s.annualCost>0?'$'+s.annualCost.toLocaleString():'Free'),
+          (s.annualCost>0?'$'+s.annualCost.toLocaleString() : s.renewalPeriod==='Pay-as-you-go'?'Variable':'Free'),
           svcCnt||'—',
-          (tc>0?'$'+tc.toLocaleString():'Free'),
+          (tc>0?'$'+tc.toLocaleString() : s.renewalPeriod==='Pay-as-you-go'?'Variable':'Free'),
           s.owner||'—', s.status
         ];
       }),
@@ -2277,7 +2435,7 @@ function exportUserCSV(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `users-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast(`Users CSV exported (${list.length} record${list.length!==1?'s':''})`);
 }
 
@@ -2332,7 +2490,7 @@ function exportAssetCSV(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `assets-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast(`Assets CSV exported (${list.length} record${list.length!==1?'s':''})`);
 }
 
@@ -2374,12 +2532,13 @@ async function exportAssetPDF(){
 let _swDmCurrentId = null;
 
 function swDmTab(tab){
-  const panels = { overview:'swDmPanelOverview', services:'swDmPanelServices' };
-  const btns   = { overview:'swDmTabOvBtn',      services:'swDmTabSvcBtn' };
+  const panels = { overview:'swDmPanelOverview', services:'swDmPanelServices', edit:'swDmPanelEdit' };
+  const btns   = { overview:'swDmTabOvBtn',      services:'swDmTabSvcBtn',     edit:'swDmTabEditBtn' };
   Object.keys(panels).forEach(t=>{
     document.getElementById(panels[t])?.classList.toggle('active', t===tab);
     document.getElementById(btns[t])?.classList.toggle('active', t===tab);
   });
+  if(tab==='edit') swdePopulateForm();
 }
 
 function openSwDm(id){
@@ -2392,12 +2551,11 @@ function openSwDm(id){
   const activeSvcs = (s.services||[]).filter(sv=>sv.status!=='Inactive');
   const svcCostSum = activeSvcs.reduce((sum,sv)=>sum+(sv.annualCost||0),0);
   const licPct     = s.purchasedLicenses>0 ? Math.min(s.usedLicenses/s.purchasedLicenses,1.2) : 0;
-  const fmtN    = n => (n===0||!n) ? 'Free' : (n>=1000 ? '$'+(n/1000).toFixed(n%1000===0?0:1)+'K' : '$'+n.toLocaleString('en-US'));
-  const fmtFull = n => (n===0||!n) ? 'Free' : '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
-
-  /* ─ Ensure view mode is shown ─ */
-  document.getElementById('swDmViewMode').style.display = '';
-  document.getElementById('swDmEditMode').style.display = 'none';
+  const isPayg     = s.renewalPeriod === 'Pay-as-you-go';
+  const isFreeware = s.renewalPeriod === 'Freeware' || s.deploymentType === 'Freeware' || s.deploymentType === 'Open Source';
+  const zeroLabel  = isPayg ? 'Variable' : (isFreeware ? 'Free' : '—');
+  const fmtN    = n => (!n||n===0) ? zeroLabel : (n>=1000 ? '$'+(n/1000).toFixed(n%1000===0?0:1)+'K' : '$'+n.toLocaleString('en-US'));
+  const fmtFull = n => (!n||n===0) ? zeroLabel : '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 
   /* ─ Reset to Overview tab ─ */
   swDmTab('overview');
@@ -2412,7 +2570,6 @@ function openSwDm(id){
   stEl.textContent = s.status||'Active';
   document.getElementById('swDrPurpose').textContent = s.purpose||'';
   document.getElementById('swDrSites').textContent   = [s.siteUSA&&'🇺🇸',s.siteCAN&&'🇨🇦',s.siteIND&&'🇮🇳'].filter(Boolean).join('  ');
-  document.getElementById('swDrEditBtn').onclick     = ()=>{ closeSwDm(); editSoftware(id); };
 
   /* ─ Cost overview ─ */
   document.getElementById('swDrBaseCost').textContent  = fmtN(s.annualCost||0);
@@ -2492,7 +2649,7 @@ function openSwDm(id){
       </div>
       <div class="sw-plan-annual">
         <span class="pa-label">Annual Cost</span>
-        <span class="pa-val">${opts.annualCost > 0 ? fmtFull(opts.annualCost) : 'Free'}</span>
+        <span class="pa-val">${opts.annualCost > 0 ? fmtFull(opts.annualCost) : (opts.renewal==='Pay-as-you-go' ? '<span style="color:#f59e0b;font-size:13px">Variable</span>' : (opts.renewal==='Freeware' ? 'Free' : '—'))}</span>
       </div>
     </div>`;
   }
@@ -2583,6 +2740,368 @@ function swDmBackToView(){
   if(_swDmCurrentId) openSwDm(_swDmCurrentId);
 }
 
+/* ══════════════════════════════════════════
+   INLINE EDIT PANEL (swde-* functions)
+══════════════════════════════════════════ */
+let _swdeAdminTags = [];
+let _swdeServices  = [];
+
+/* ── Populate form when Edit tab is clicked ── */
+function swdePopulateForm(){
+  const s = software.find(x=>x.id===_swDmCurrentId);
+  if(!s) return;
+  document.getElementById('swdeId').value       = s.id||'';
+  document.getElementById('swdeCsvId').value    = s.csvId||'';
+  document.getElementById('swdeName').value     = s.name||'';
+  document.getElementById('swdeType').value     = s.deploymentType||'SAAS';
+  document.getElementById('swdeRenewal').value  = s.renewalPeriod||'';
+  document.getElementById('swdeDept').value     = s.department||'';
+  document.getElementById('swdePurpose').value  = s.purpose||'';
+  document.getElementById('swdePlan').value     = s.subscriptionPlan||'';
+  document.getElementById('swdeStatus').value   = s.status||'Active';
+  document.getElementById('swdeLicPrice').value = s.licensePricePerUserMonth||0;
+  document.getElementById('swdePurchased').value= s.purchasedLicenses||0;
+  document.getElementById('swdeUsed').value     = s.usedLicenses||0;
+  document.getElementById('swdeCost').value     = s.annualCost||0;
+  document.getElementById('swdeOwner').value    = s.owner||'';
+  document.getElementById('swdeBilledTo').value = s.billedTo||'';
+  document.getElementById('swdeUSA').checked    = s.siteUSA||false;
+  document.getElementById('swdeCAN').checked    = s.siteCAN||false;
+  document.getElementById('swdeIND').checked    = s.siteIND||false;
+  document.getElementById('swdeDeleteBtn').style.display = 'inline-flex';
+  // Admin tags
+  _swdeAdminTags = (s.admins||'').split(',').map(a=>a.trim()).filter(Boolean);
+  swdeRenderAdminChips();
+  swdeRefreshAdminDl();
+  // Services (deep copy)
+  _swdeServices = JSON.parse(JSON.stringify(s.services||[]));
+  swdeRenderServices();
+  // Apply PAYG hint based on current renewal
+  swTogglePaygHint('swdeCostLabel','swdeRecalcBtn','swdeLicPriceRow', s.renewalPeriod||'');
+}
+
+/* ── Annual cost auto-calc ── */
+function swdeCalcCost(){
+  if((document.getElementById('swdeRenewal')?.value||'') === 'Pay-as-you-go') return; // PAYG: manual entry only
+  const p = parseFloat(document.getElementById('swdeLicPrice')?.value)||0;
+  const n = parseInt(document.getElementById('swdePurchased')?.value)||0;
+  const c = document.getElementById('swdeCost');
+  if(c) c.value = (p*n*12).toFixed(2);
+}
+
+/* ── Admin tag-picker ── */
+function swdeRenderAdminChips(){
+  const chips = document.getElementById('swdeAdminChips'); if(!chips) return;
+  chips.innerHTML = _swdeAdminTags.map((name,i)=>
+    `<span class="tag-chip">${name}<span class="tag-chip-x" onclick="swdeRemoveAdmin(${i})">×</span></span>`
+  ).join('');
+}
+function swdeRemoveAdmin(i){ _swdeAdminTags.splice(i,1); swdeRenderAdminChips(); swdeRefreshAdminDl(); }
+function swdeRefreshAdminDl(){
+  const dl = document.getElementById('swdeAdminDl'); if(!dl) return;
+  const existing = new Set(_swdeAdminTags);
+  const opts = users.filter(u=>u.first||u.last)
+    .map(u=>((u.first||'')+' '+(u.last||'')).trim())
+    .filter(n=>n && !existing.has(n));
+  dl.innerHTML = [...new Set(opts)].sort().map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+}
+function swdeAdminInputChange(e){
+  const val = e.target.value.trim();
+  const dl  = document.getElementById('swdeAdminDl');
+  const opts = dl ? [...dl.options].map(o=>o.value) : [];
+  if(opts.includes(val)){ swdeAddAdminTag(val); e.target.value=''; }
+}
+function swdeAdminKeydown(e){
+  const inp = e.target;
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const val = inp.value.trim().replace(/,$/,'').trim();
+    if(val) swdeAddAdminTag(val);
+    inp.value='';
+  } else if(e.key==='Backspace' && inp.value==='' && _swdeAdminTags.length){
+    _swdeAdminTags.pop(); swdeRenderAdminChips(); swdeRefreshAdminDl();
+  }
+}
+function swdeAddAdminTag(name){
+  if(!name || _swdeAdminTags.includes(name)) return;
+  _swdeAdminTags.push(name); swdeRenderAdminChips(); swdeRefreshAdminDl();
+}
+
+/* ── Services editing ── */
+const _swdeRenewalOpts = ['','Annual','Monthly','Quarterly','Freeware','Pay-as-you-go'];
+function swdeRenderServices(){
+  const body = document.getElementById('swdeSvcBody'); if(!body) return;
+  if(!_swdeServices.length){
+    body.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No services yet. Click "+ Add Service".</td></tr>`;
+    return;
+  }
+  const esc=v=>(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  body.innerHTML = _swdeServices.map((sv,i)=>`<tr>
+    <td><input type="text" value="${esc(sv.name)}" placeholder="Service name" oninput="_swdeServices[${i}].name=this.value"></td>
+    <td><input type="text" value="${esc(sv.plan||'')}" placeholder="Plan" oninput="_swdeServices[${i}].plan=this.value"></td>
+    <td><input type="number" value="${sv.licensePricePerUserMonth||0}" min="0" step="0.01" style="width:60px" oninput="_swdeServices[${i}].licensePricePerUserMonth=parseFloat(this.value)||0;swdeCalcSvcRow(${i})"></td>
+    <td><input type="number" value="${sv.purchasedLicenses||0}" min="0" style="width:55px" oninput="_swdeServices[${i}].purchasedLicenses=parseInt(this.value)||0;swdeCalcSvcRow(${i})"></td>
+    <td><input type="number" value="${sv.usedLicenses||0}" min="0" style="width:50px" oninput="_swdeServices[${i}].usedLicenses=parseInt(this.value)||0"></td>
+    <td><input type="number" id="swdeSvcCost_${i}" value="${sv.annualCost||0}" min="0" step="0.01" style="width:80px" oninput="_swdeServices[${i}].annualCost=parseFloat(this.value)||0"></td>
+    <td><select style="width:90px" onchange="_swdeServices[${i}].renewalPeriod=this.value">${_swdeRenewalOpts.map(r=>`<option${sv.renewalPeriod===r?' selected':''}>${r}</option>`).join('')}</select></td>
+    <td><select style="width:72px" onchange="_swdeServices[${i}].status=this.value">
+      <option${sv.status==='Active'?' selected':''}>Active</option>
+      <option${sv.status==='Inactive'?' selected':''}>Inactive</option>
+    </select></td>
+    <td><button class="btn btn-danger btn-sm btn-icon" onclick="swdeRemoveSvcRow(${i})">
+      <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button></td>
+  </tr>`).join('');
+}
+function swdeAddServiceRow(){
+  _swdeServices.push({name:'',plan:'',annualCost:0,licensePricePerUserMonth:0,purchasedLicenses:0,usedLicenses:0,renewalPeriod:'',status:'Active'});
+  swdeRenderServices();
+  const body=document.getElementById('swdeSvcBody');
+  if(body){ const rows=body.querySelectorAll('tr'); const last=rows[rows.length-1]; if(last){ const inp=last.querySelector('input[type=text]'); if(inp) inp.focus(); } }
+}
+function swdeRemoveSvcRow(i){ _swdeServices.splice(i,1); swdeRenderServices(); }
+function swdeCalcSvcRow(i){
+  const sv=_swdeServices[i];
+  sv.annualCost = (sv.purchasedLicenses||0)*(sv.licensePricePerUserMonth||0)*12;
+  const el=document.getElementById(`swdeSvcCost_${i}`);
+  if(el) el.value=sv.annualCost.toFixed(2);
+}
+
+/* ── Save ── */
+async function swdeSave(){
+  const name  = document.getElementById('swdeName').value.trim();
+  const csvId = document.getElementById('swdeCsvId').value.trim().toUpperCase();
+  if(!name||!csvId){ showToast('App ID and Name are required','danger'); return; }
+  const id = document.getElementById('swdeId').value;
+  const data = {
+    csvId, name,
+    deploymentType: document.getElementById('swdeType').value,
+    renewalPeriod:  document.getElementById('swdeRenewal').value,
+    department:     document.getElementById('swdeDept').value.trim(),
+    purpose:        document.getElementById('swdePurpose').value.trim(),
+    subscriptionPlan: document.getElementById('swdePlan').value.trim(),
+    status:         document.getElementById('swdeStatus').value,
+    licensePricePerUserMonth: parseFloat(document.getElementById('swdeLicPrice').value)||0,
+    annualCost:     parseFloat(document.getElementById('swdeCost').value)||0,
+    purchasedLicenses: parseInt(document.getElementById('swdePurchased').value)||0,
+    usedLicenses:   parseInt(document.getElementById('swdeUsed').value)||0,
+    owner:          document.getElementById('swdeOwner').value.trim(),
+    admins:         _swdeAdminTags.join(', '),
+    billedTo:       document.getElementById('swdeBilledTo').value.trim(),
+    siteUSA:        document.getElementById('swdeUSA').checked,
+    siteCAN:        document.getElementById('swdeCAN').checked,
+    siteIND:        document.getElementById('swdeIND').checked,
+    services: _swdeServices.filter(sv=>sv.name).map(sv=>({
+      name:sv.name.trim(), plan:sv.plan||'',
+      annualCost:sv.annualCost||0,
+      licensePricePerUserMonth:sv.licensePricePerUserMonth||0,
+      purchasedLicenses:sv.purchasedLicenses||0,
+      usedLicenses:sv.usedLicenses||0,
+      renewalPeriod:sv.renewalPeriod||'',
+      status:sv.status||'Active',
+    })),
+  };
+  try {
+    const res = await authFetch(`${API}/software/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
+    showToast('Software updated','success');
+    await loadData();
+    openSwDm(id);
+    swDmTab('services');
+  } catch(e){ showToast(e.message,'danger'); }
+}
+
+/* ── Delete from edit panel ── */
+function swdeDeleteApp(){
+  const id = document.getElementById('swdeId').value;
+  const s  = software.find(x=>x.id===id);
+  if(!s) return;
+  openConfirm(`Delete "${s.name}"?`, 'This cannot be undone.', async ()=>{
+    try {
+      const res = await authFetch(`${API}/software/${id}`,{method:'DELETE'});
+      if(!res.ok) throw new Error('Delete failed');
+      showToast('Software deleted','success');
+      closeSwDm();
+      await loadData();
+    } catch(e){ showToast(e.message,'danger'); }
+  });
+}
+
+/* ══════════════════════════════════════════
+   EXPORT COLUMN PICKER
+══════════════════════════════════════════ */
+
+/* Column definitions per section */
+const EXPORT_DEFS = {
+  users: {
+    title: 'Users',
+    pdfTitle: 'TerzoCloud — User Management',
+    filename: () => `users-${new Date().toISOString().slice(0,10)}`,
+    getList: () => filteredUsers(),
+    cols: [
+      { key:'name',    label:'Name',              def:true,  get: u => `${u.first||''} ${u.last||''}`.trim() },
+      { key:'email',   label:'Email',             def:true,  get: u => u.email||'' },
+      { key:'dept',    label:'Department',        def:true,  get: u => u.dept||'' },
+      { key:'jobTitle',label:'Job Title',         def:true,  get: u => u.jobTitle||'' },
+      { key:'manager', label:'Reporting Manager', def:true,  get: u => u.reportingManager||'' },
+      { key:'role',    label:'Role',              def:true,  get: u => u.role||'' },
+      { key:'location',label:'Location',          def:true,  get: u => u.location||'' },
+      { key:'status',  label:'Status',            def:true,  get: u => u.status||'' },
+      { key:'phone',   label:'Phone',             def:false, get: u => u.phone||'' },
+      { key:'assets',  label:'Assigned Assets',   def:true,  get: u => assets.filter(a=>a.assignTo===u.id).map(a=>a.name||a.csvId).join('; ') },
+    ],
+  },
+  assets: {
+    title: 'Devices',
+    pdfTitle: 'TerzoCloud — Device Inventory',
+    filename: () => `assets-${new Date().toISOString().slice(0,10)}`,
+    getList: () => filteredAssets(),
+    cols: [
+      { key:'csvId',      label:'Asset ID',       def:true,  get: a => a.csvId||'' },
+      { key:'name',       label:'Name',           def:true,  get: a => a.name||'' },
+      { key:'serial',     label:'Serial No.',     def:true,  get: a => a.serial||'' },
+      { key:'brand',      label:'Brand',          def:true,  get: a => a.brand||'' },
+      { key:'type',       label:'Type',           def:true,  get: a => a.type||'' },
+      { key:'desc',       label:'Specification',  def:true,  get: a => a.desc||'' },
+      { key:'dept',       label:'Department',     def:false, get: a => a.dept||'' },
+      { key:'location',   label:'Location',       def:true,  get: a => a.location||'' },
+      { key:'assignedTo', label:'Assigned To',    def:true,  get: a => { const u=users.find(x=>x.id===a.assignTo); return u?`${u.first} ${u.last}`:'Unassigned'; } },
+      { key:'purchaseDate',label:'Purchase Date', def:false, get: a => a.purchaseDate||'' },
+      { key:'warrantyEnd', label:'Warranty End',  def:false, get: a => a.warrantyEnd||'' },
+      { key:'status',     label:'Status',         def:true,  get: a => a.status||'' },
+    ],
+  },
+  software: {
+    title: 'Software',
+    pdfTitle: 'TerzoCloud — Software Inventory',
+    filename: () => `software-${new Date().toISOString().slice(0,10)}`,
+    getList: () => filteredSoftware(),
+    cols: [
+      { key:'csvId',    label:'App ID',            def:true,  get: s => s.csvId||'' },
+      { key:'name',     label:'Name',              def:true,  get: s => s.name||'' },
+      { key:'type',     label:'Type',              def:true,  get: s => s.deploymentType||'' },
+      { key:'dept',     label:'Department',        def:true,  get: s => s.department||'' },
+      { key:'purpose',  label:'Purpose',           def:false, get: s => s.purpose||'' },
+      { key:'plan',     label:'Subscription Plan', def:true,  get: s => s.subscriptionPlan||'' },
+      { key:'renewal',  label:'Renewal',           def:true,  get: s => s.renewalPeriod||'' },
+      { key:'licPrice', label:'License $/mo',      def:true,  get: s => s.licensePricePerUserMonth||0 },
+      { key:'purchased',label:'Purchased Lic.',    def:true,  get: s => s.purchasedLicenses||0 },
+      { key:'used',     label:'Used Lic.',         def:true,  get: s => s.usedLicenses||0 },
+      { key:'baseCost', label:'Base Annual Cost',  def:true,  get: s => s.annualCost>0?'$'+s.annualCost.toLocaleString():(s.renewalPeriod==='Pay-as-you-go'?'Variable':'Free') },
+      { key:'addons',   label:'Add-on Services',   def:true,  get: s => { const active=(s.services||[]).filter(sv=>sv.status!=='Inactive'); return active.length ? active.map((sv,i)=>`${i+1}. ${sv.name||'—'}`).join('\n') : '—'; } },
+      { key:'totalCost',label:'Total Annual Cost', def:true,  get: s => { const tc=swTotalCost(s); return tc>0?'$'+tc.toLocaleString():(s.renewalPeriod==='Pay-as-you-go'?'Variable':'Free'); } },
+      { key:'owner',    label:'Owner',             def:true,  get: s => s.owner||'' },
+      { key:'admins',   label:'Admins',            def:false, get: s => s.admins||'' },
+      { key:'billedTo', label:'Billed To',         def:false, get: s => s.billedTo||'' },
+      { key:'status',   label:'Status',            def:true,  get: s => s.status||'' },
+      { key:'sites',    label:'Sites',             def:false, get: s => [s.siteUSA&&'USA',s.siteCAN&&'CAN',s.siteIND&&'IND'].filter(Boolean).join(', ') },
+    ],
+  },
+};
+
+/* State: enabled columns per section (initialised from def) */
+let _excEnabled = {};
+let _excSection = '';
+
+function _excInit(section){
+  if(!_excEnabled[section]){
+    _excEnabled[section] = {};
+    EXPORT_DEFS[section].cols.forEach(c => { _excEnabled[section][c.key] = c.def !== false; });
+  }
+}
+
+function openExportConfig(section){
+  _excSection = section;
+  _excInit(section);
+  const def = EXPORT_DEFS[section];
+  document.getElementById('excTitle').textContent = `⚙️ Export — ${def.title}`;
+  excRenderGrid();
+  document.getElementById('excOverlay').classList.add('open');
+}
+
+function closeExportConfig(){
+  document.getElementById('excOverlay').classList.remove('open');
+}
+
+function excRenderGrid(){
+  const def = EXPORT_DEFS[_excSection];
+  const en  = _excEnabled[_excSection];
+  const grid = document.getElementById('excGrid');
+  grid.innerHTML = def.cols.map(c=>`
+    <div class="exc-chip ${en[c.key]?'on':''}" onclick="excToggle('${c.key}')">
+      <span class="exc-dot"></span>${c.label}
+    </div>`).join('');
+  excUpdateCount();
+}
+
+function excToggle(key){
+  const en = _excEnabled[_excSection];
+  en[key] = !en[key];
+  excRenderGrid();
+}
+
+function excSelectAll(on){
+  const def = EXPORT_DEFS[_excSection];
+  def.cols.forEach(c => { _excEnabled[_excSection][c.key] = on; });
+  excRenderGrid();
+}
+
+function excUpdateCount(){
+  const en = _excEnabled[_excSection];
+  const count = Object.values(en).filter(Boolean).length;
+  document.getElementById('excCount').textContent = `${count} column${count!==1?'s':''} selected`;
+}
+
+function doExportConfig(format){
+  const section = _excSection;
+  const def = EXPORT_DEFS[section];
+  const en  = _excEnabled[section];
+  const activeCols = def.cols.filter(c => en[c.key]);
+  if(!activeCols.length){ showToast('Select at least one column','danger'); return; }
+  const list = def.getList();
+  if(format === 'csv'){
+    const headers = activeCols.map(c=>c.label);
+    const rows = list.map(item => activeCols.map(c => String(c.get(item)??'')));
+    const csv = [headers,...rows].map(r=>r.map(v=>`"${v.replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=def.filename()+'.csv'; a.style.display='none';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    showToast(`${def.title} CSV exported (${list.length} rows)`);
+    closeExportConfig();
+  } else {
+    closeExportConfig();
+    _excDoPDF(section, activeCols, list, def);
+  }
+}
+
+async function _excDoPDF(section, activeCols, list, def){
+  try {
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    }
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    doc.setFontSize(18); doc.setTextColor(30,64,175);
+    doc.text(def.pdfTitle, 14, 16);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   ${def.title}: ${list.length}   |   Columns: ${activeCols.length}`, 14, 23);
+    const colW = Math.max(14, Math.floor(267 / activeCols.length));
+    doc.autoTable({
+      startY: 28,
+      head: [activeCols.map(c=>c.label)],
+      body: list.map(item => activeCols.map(c => String(c.get(item)??'—'))),
+      styles:{fontSize:7.5,cellPadding:2},
+      headStyles:{fillColor:[30,64,175],textColor:255,fontStyle:'bold',fontSize:8},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      columnStyles: Object.fromEntries(activeCols.map((_,i)=>[i,{cellWidth:colW}])),
+    });
+    doc.save(def.filename()+'.pdf');
+    showToast(`${def.title} PDF exported (${list.length} rows)`);
+  } catch(e){ showToast('PDF export failed: '+e.message,'danger'); console.error(e); }
+}
+
 /* ══ THEME ══ */
 function setTheme(t) {
   document.body.className = 'theme-' + t;
@@ -2657,11 +3176,7 @@ function closeDeptModal() {
               <span id="swDrSites" style="font-size:17px;margin-left:2px"></span>
             </div>
             <div id="swDrPurpose" style="font-size:12.5px;color:var(--gray-400);margin-bottom:10px"></div>
-            <div style="display:flex;gap:7px;align-items:center" class="rbac-write">
-              <button class="btn btn-primary btn-sm" id="swDrEditBtn">✏️ Edit</button>
-              <button class="btn btn-secondary btn-sm" onclick="closeSwDm()">✕ Close</button>
-            </div>
-            <div style="display:flex;gap:7px;align-items:center;display:none" id="swDmCloseOnlyWrap">
+            <div style="display:flex;gap:7px;align-items:center">
               <button class="btn btn-secondary btn-sm" onclick="closeSwDm()">✕ Close</button>
             </div>
           </div>
@@ -2670,8 +3185,9 @@ function closeDeptModal() {
       </div>
       <!-- Tabs -->
       <div class="sw-dm-tabs">
-        <button class="sw-dm-tab active" id="swDmTabOvBtn"  onclick="swDmTab('overview')">ℹ️ Overview</button>
-        <button class="sw-dm-tab"        id="swDmTabSvcBtn" onclick="swDmTab('services')">🔧 Services &amp; Costs</button>
+        <button class="sw-dm-tab active" id="swDmTabOvBtn"   onclick="swDmTab('overview')">ℹ️ Overview</button>
+        <button class="sw-dm-tab"        id="swDmTabSvcBtn"  onclick="swDmTab('services')">🔧 Services &amp; Costs</button>
+        <button class="sw-dm-tab rbac-write" id="swDmTabEditBtn" onclick="swDmTab('edit')">✏️ Edit</button>
       </div>
       <!-- Body -->
       <div class="sw-dm-body">
@@ -2740,23 +3256,104 @@ function closeDeptModal() {
           <div id="swDrServicesCostBody"></div>
         </div><!-- /services panel -->
 
-      </div>
+        <!-- ══ EDIT PANEL ══ -->
+        <div class="sw-dm-panel" id="swDmPanelEdit">
+          <input type="hidden" id="swdeId">
+          <div class="swde-grid">
+
+            <div class="swde-section-title">🗂️ App Details</div>
+
+            <div class="form-group"><label>App ID *</label><input type="text" id="swdeCsvId" placeholder="A-34"></div>
+            <div class="form-group"><label>Name *</label><input type="text" id="swdeName" placeholder="e.g. Notion"></div>
+
+            <div class="form-group"><label>Type</label>
+              <select id="swdeType"><option>SAAS</option><option>On-premises</option><option>Freeware</option><option>Open Source</option></select>
+            </div>
+            <div class="form-group"><label>Renewal Period</label>
+              <select id="swdeRenewal" onchange="swTogglePaygHint('swdeCostLabel','swdeRecalcBtn','swdeLicPriceRow',this.value)"><option value="">—</option><option>Annual</option><option>Monthly</option><option>Quarterly</option><option>Freeware</option><option>Pay-as-you-go</option></select>
+            </div>
+
+            <div class="form-group"><label>Department</label><input type="text" id="swdeDept" placeholder="Engineering"></div>
+            <div class="form-group"><label>Purpose</label><input type="text" id="swdePurpose" placeholder="e.g. CI/CD"></div>
+
+            <div class="form-group"><label>Subscription Plan</label><input type="text" id="swdePlan" placeholder="e.g. Business Pro"></div>
+            <div class="form-group"><label>Status</label>
+              <select id="swdeStatus"><option>Active</option><option>Inactive</option></select>
+            </div>
+
+            <div class="swde-section-title">💰 License &amp; Cost</div>
+
+            <div class="form-group" id="swdeLicPriceRow"><label>License Price / User / Month ($)</label><input type="number" id="swdeLicPrice" placeholder="0.00" min="0" step="0.01" oninput="swdeCalcCost()"></div>
+            <div class="form-group"><label>Purchased Licenses</label><input type="number" id="swdePurchased" placeholder="0" min="0" oninput="swdeCalcCost()"></div>
+            <div class="form-group"><label>Used Licenses</label><input type="number" id="swdeUsed" placeholder="0" min="0"></div>
+            <div class="form-group">
+              <label id="swdeCostLabel">Base Annual Cost ($) <span style="font-size:10px;font-weight:400;color:var(--gray-400)">— Purchased × Price × 12</span></label>
+              <div style="display:flex;gap:6px">
+                <input type="number" id="swdeCost" placeholder="0" min="0" step="0.01" style="flex:1">
+                <span id="swdeRecalcBtn"><button type="button" class="btn btn-secondary btn-sm" onclick="swdeCalcCost()">↻</button></span>
+              </div>
+            </div>
+
+            <div class="swde-section-title">👤 Ownership</div>
+
+            <div class="form-group"><label>Owner</label><input type="text" id="swdeOwner" placeholder="Owner name"></div>
+            <div class="form-group"><label>Billed To</label><input type="text" id="swdeBilledTo" placeholder="e.g. Eric Pritchett"></div>
+            <div class="form-group swde-full"><label>Admin(s)</label>
+              <div class="tag-picker" id="swdeAdminPicker" onclick="document.getElementById('swdeAdminInput').focus()">
+                <span id="swdeAdminChips"></span>
+                <input type="text" id="swdeAdminInput" class="tag-picker-input" placeholder="Type to add admin…"
+                  list="swdeAdminDl" autocomplete="off"
+                  onkeydown="swdeAdminKeydown(event)" oninput="swdeAdminInputChange(event)">
+                <datalist id="swdeAdminDl"></datalist>
+              </div>
+            </div>
+
+            <div class="form-group"><label>Sites</label>
+              <div style="display:flex;gap:14px;margin-top:6px;font-size:13px">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swdeUSA"> 🇺🇸 USA</label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swdeCAN"> 🇨🇦 CAN</label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400"><input type="checkbox" id="swdeIND"> 🇮🇳 IND</label>
+              </div>
+            </div>
+
+            <!-- Services section -->
+            <div class="swde-section-title">🔌 Add-on Services</div>
+
+            <div class="swde-full">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:12px;color:var(--gray-400)">Add-on tiers / services within this app</div>
+                <button class="btn btn-primary btn-sm" onclick="swdeAddServiceRow()">+ Add Service</button>
+              </div>
+              <div style="overflow-x:auto">
+                <table class="svc-mini-table">
+                  <thead><tr>
+                    <th>Service Name *</th><th>Plan</th><th>$/User/mo</th><th>Purch.</th><th>Used</th>
+                    <th>Annual Cost ($)</th><th>Renewal</th><th>Status</th><th></th>
+                  </tr></thead>
+                  <tbody id="swdeSvcBody">
+                    <tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No services yet. Click "+ Add Service".</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="swde-footer">
+              <button class="btn btn-secondary" onclick="swDmTab('overview')">Cancel</button>
+              <button class="btn btn-danger" id="swdeDeleteBtn" style="display:none" onclick="swdeDeleteApp()">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                Delete App
+              </button>
+              <button class="btn btn-primary" onclick="swdeSave()">💾 Save Changes</button>
+            </div>
+
+          </div><!-- /swde-grid -->
+        </div><!-- /edit panel -->
+
+      </div><!-- /sw-dm-body -->
     </div><!-- /swDmViewMode -->
-
-    <!-- ── EDIT MODE (inline, same overlay) ── -->
-    <div id="swDmEditMode" style="display:none;flex-direction:column;max-height:90vh">
-      <div class="sw-dm-head" style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn btn-secondary btn-sm" onclick="swDmBackToView()">← Back</button>
-          <h2 style="font-size:16px;font-weight:800;color:var(--gray-800);margin:0" id="swDmEditTitle">Edit App</h2>
-        </div>
-        <button class="btn btn-secondary btn-sm btn-icon" onclick="closeSwDm()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-      </div>
-      <!-- Re-use the existing software modal form inside here by proxy — clicking Edit opens softwareModal -->
-    </div>
-
-  </div>
-</div>
+  </div><!-- /swDmBox -->
+</div><!-- /swDmOverlay -->
 
 <!-- DEPT USERS MODAL -->
 <div id="deptModal" onclick="if(event.target===this)closeDeptModal()">
@@ -2766,6 +3363,40 @@ function closeDeptModal() {
       <button id="deptModalClose" onclick="closeDeptModal()" title="Close">&times;</button>
     </div>
     <div id="deptModalBody"></div>
+  </div>
+</div>
+
+<!-- ══ EXPORT COLUMN PICKER ══ -->
+<div class="exc-overlay" id="excOverlay" onclick="if(event.target===this)closeExportConfig()">
+  <div class="exc-box">
+    <div class="exc-head">
+      <h3 id="excTitle">⚙️ Export Options</h3>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeExportConfig()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="exc-body">
+      <div style="font-size:12px;color:var(--gray-400);margin-bottom:10px">Toggle the columns you want to include in the export:</div>
+      <div class="exc-toolbar">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="excSelectAll(true)">✓ Select All</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="excSelectAll(false)">✕ Deselect All</button>
+      </div>
+      <div class="exc-grid" id="excGrid"></div>
+    </div>
+    <div class="exc-foot">
+      <span class="exc-count" id="excCount">0 columns selected</span>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn btn-secondary" onclick="closeExportConfig()">Cancel</button>
+        <button type="button" class="btn btn-secondary" onclick="doExportConfig('csv')">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          CSV
+        </button>
+        <button type="button" class="btn btn-primary" onclick="doExportConfig('pdf')">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          PDF
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 

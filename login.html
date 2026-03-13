@@ -147,6 +147,49 @@
       font-size: 11.5px;
       color: rgba(153,102,255,0.45);
     }
+
+    .divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 18px 0 4px;
+      color: rgba(153,102,255,0.35); font-size: 11.5px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(153,102,255,0.18);
+    }
+
+    .btn-google {
+      width: 100%;
+      padding: 11px;
+      background: #fff;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: box-shadow .14s, background .14s;
+      margin-top: 10px;
+    }
+    .btn-google:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.18); background: #f8f9fa; }
+    .btn-google svg { width: 18px; height: 18px; flex-shrink: 0; }
+    #googleSsoWrap { display: none; }
+
+    .sso-error {
+      display: none;
+      background: rgba(220,38,38,0.12);
+      border: 1px solid rgba(220,38,38,0.3);
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      align-items: center;
+      gap: 8px;
+    }
+    .sso-error.show { display: flex; }
+    .sso-error svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -190,18 +233,88 @@
       </button>
     </form>
 
+    <!-- Google SSO (shown only when enabled in Integrations settings) -->
+    <div id="googleSsoWrap">
+      <div class="divider">or</div>
+      <button type="button" class="btn-google" onclick="location.href='/api/auth/google'">
+        <!-- Google "G" logo -->
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+      </button>
+
+      <div class="sso-error" id="ssoErrorMsg">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="ssoErrorText"></span>
+      </div>
+    </div>
+
     <p class="hint">TerzoCloud · Internal Portal · Authorized access only</p>
   </div>
 
   <script>
-    // If already logged in, redirect to portal
+    // ── Startup: handle SSO token/error in URL, check SSO status, redirect if already logged in
     (function(){
+      const params = new URLSearchParams(location.search);
+
+      // 1) SSO returned a JWT → store it and go to portal
+      const ssoToken = params.get('sso_token');
+      if (ssoToken) {
+        localStorage.setItem('tcToken', ssoToken);
+        // Fetch user info then redirect
+        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + ssoToken } })
+          .then(r => r.ok ? r.json() : null)
+          .then(u => {
+            if (u) localStorage.setItem('tcUser', JSON.stringify(u));
+            location.href = '/';
+          })
+          .catch(() => { location.href = '/'; });
+        return;
+      }
+
+      // 2) SSO returned an error
+      const ssoError = params.get('sso_error');
+      if (ssoError) {
+        const msgs = {
+          disabled: 'Google SSO is not currently enabled.',
+          denied:   'Sign-in was cancelled or access denied.',
+          nocode:   'Google did not return an authorization code.',
+          token:    'Failed to exchange authorization code. Check your Client Secret.',
+          noemail:  'Could not retrieve your email from Google.',
+          domain:   'Your Google account domain is not authorized for this portal.',
+          notfound: 'Your Google account is not registered as a portal user.',
+          inactive: 'Your portal account is disabled. Contact a Super Admin.',
+          server:   'An unexpected server error occurred. Please try again.',
+        };
+        const wrap = document.getElementById('googleSsoWrap');
+        const errBox  = document.getElementById('ssoErrorMsg');
+        const errText = document.getElementById('ssoErrorText');
+        wrap.style.display = 'block';
+        errText.textContent = msgs[ssoError] || 'Sign-in failed. Please try again.';
+        errBox.classList.add('show');
+        // Clean URL
+        history.replaceState({}, '', '/login');
+      }
+
+      // 3) Already logged in → redirect
       const t = localStorage.getItem('tcToken');
       if (t) {
         fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } })
           .then(r => { if (r.ok) location.href = '/'; })
           .catch(() => {});
       }
+
+      // 4) Check if Google SSO is enabled and show button
+      fetch('/api/auth/google/status')
+        .then(r => r.json())
+        .then(d => {
+          if (d.enabled) document.getElementById('googleSsoWrap').style.display = 'block';
+        })
+        .catch(() => {});
     })();
 
     function togglePw() {
