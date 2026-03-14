@@ -1,0 +1,90 @@
+/**
+ * routes/admin/users.routes.js — Portal User Management (super_admin only)
+ *
+ * GET    /api/admin/users
+ * POST   /api/admin/users
+ * PUT    /api/admin/users/:id
+ * PUT    /api/admin/users/:id/reset-password
+ * DELETE /api/admin/users/:id
+ */
+const router = require('express').Router();
+const { AdminUser } = require('../../db');
+const { requireAuth, onlySuperAdmin } = require('../../middleware/auth');
+
+// ── GET /api/admin/users ───────────────────────────────────────────────────────
+router.get('/', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const users = await AdminUser.find().select('-password').sort({ createdAt: 1 }).lean();
+    res.json(users.map(u => ({
+      id:        u._id.toString(),
+      name:      u.name,
+      email:     u.email,
+      role:      u.role,
+      status:    u.status,
+      lastLogin: u.lastLogin,
+      createdAt: u.createdAt,
+    })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── POST /api/admin/users ──────────────────────────────────────────────────────
+router.post('/', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password)
+      return res.status(400).json({ error: 'name, email and password are required' });
+
+    const user = await AdminUser.create({ name, email, password, role: role || 'viewer' });
+    res.status(201).json({
+      id: user._id.toString(), name: user.name, email: user.email,
+      role: user.role, status: user.status,
+    });
+  } catch (e) {
+    if (e.code === 11000) return res.status(409).json({ error: 'Email already exists' });
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── PUT /api/admin/users/:id ───────────────────────────────────────────────────
+router.put('/:id', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { name, email, role, status } = req.body;
+    const user = await AdminUser.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role, status },
+      { new: true, runValidators: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ error: 'Portal user not found' });
+    res.json({ id: user._id.toString(), name: user.name, email: user.email, role: user.role, status: user.status });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// ── PUT /api/admin/users/:id/reset-password ────────────────────────────────────
+router.put('/:id/reset-password', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 6)
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+    const user = await AdminUser.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Portal user not found' });
+
+    user.password = password; // pre-save hook hashes it
+    await user.save();
+    res.json({ ok: true });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// ── DELETE /api/admin/users/:id ────────────────────────────────────────────────
+router.delete('/:id', requireAuth, onlySuperAdmin, async (req, res) => {
+  try {
+    if (req.params.id === req.user.id)
+      return res.status(400).json({ error: 'You cannot delete your own account' });
+
+    const user = await AdminUser.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Portal user not found' });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+module.exports = router;

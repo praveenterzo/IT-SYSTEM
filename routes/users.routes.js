@@ -1,0 +1,142 @@
+/**
+ * routes/users.routes.js — User management + app access
+ *
+ * GET    /api/users
+ * POST   /api/users
+ * PUT    /api/users/:id
+ * DELETE /api/users/:id
+ * PUT    /api/users/:id/app-access
+ */
+const router = require('express').Router();
+const { User, Asset, Software, AppConnector } = require('../db');
+const { requireAuth, canWriteUsers } = require('../middleware/auth');
+const { fmt, diffObjects } = require('../utils/format');
+const { writeLog } = require('../services/log.service');
+const { sendAppInvite } = require('../services/connector.service');
+
+const TRACKED_FIELDS = [
+  'first', 'last', 'email', 'dept', 'role', 'location', 'status',
+  'jobTitle', 'reportingManager', 'phone', 'employmentType',
+];
+
+// ── GET /api/users ─────────────────────────────────────────────────────────────
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const users = await User.find().sort({ first: 1 });
+    res.json(users.map(fmt));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── POST /api/users ────────────────────────────────────────────────────────────
+router.post('/', requireAuth, canWriteUsers, async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    const u    = fmt(user);
+    await writeLog({
+      eventType:   'user_created',
+      entityType:  'user',
+      entityId:    u.id,
+      entityLabel: `${u.first} ${u.last}`.trim(),
+      summary:     `New user created: ${u.first} ${u.last} (${u.dept}, ${u.email})`,
+    });
+    res.status(201).json(u);
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// ── PUT /api/users/:id ─────────────────────────────────────────────────────────
+router.put('/:id', requireAuth, canWriteUsers, async (req, res) => {
+  try {
+    const oldUser = await User.findById(req.params.id).lean();
+    const user    = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true, runValidators: true,
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const u = fmt(user);
+
+    const changes = diffObjects(oldUser || {}, req.body, TRACKED_FIELDS);
+    if (changes.length > 0) {
+      await writeLog({
+        eventType:   'user_updated',
+        entityType:  'user',
+        entityId:    u.id,
+        entityLabel: `${u.first} ${u.last}`.trim(),
+        changes,
+        summary:     `User info updated: ${u.first} ${u.last} — ${changes.map(c => c.field).join(', ')} changed`,
+      });
+    }
+    res.json(u);
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// ── DELETE /api/users/:id ──────────────────────────────────────────────────────
+router.delete('/:id', requireAuth, canWriteUsers, async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    // Release assigned assets
+    await Asset.updateMany(
+      { assignedTo: req.params.id },
+      { $set: { assignedTo: null, status: 'Available' } }
+    );
+    await writeLog({
+      eventType:   'user_deleted',
+      entityType:  'user',
+      entityId:    req.params.id,
+      entityLabel: `${user.first} ${user.last}`.trim(),
+      summary:     `User deleted: ${user.first} ${user.last} (${user.dept}, ${user.email})`,
+    });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── PUT /api/users/:id/app-access ─────────────────────────────────────────────
+// Body: { appAccess: ['A-01', 'A-11', ...] }
+router.put('/:id/app-access', requireAuth, canWriteUsers, async (req, res) => {
+  try {
+    const { appAccess } = req.body;
+    if (!Array.isArray(appAccess))
+      return res.status(400).json({ error: 'appAccess must be an array of software IDs' });
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const oldAccess  = Array.isArray(user.appAccess) ? user.appAccess : [];
+    const newlyAdded = appAccess.filter(id => !oldAccess.includes(id));
+
+    user.appAccess = appAccess;
+    await user.save();
+
+    // Fire invites for newly added apps
+    const inviteResults = [];
+    for (const csvId of newlyAdded) {
+      const software  = await Software.findOne({ csvId }).lean();
+      if (!software) {
+        inviteResults.push({ csvId, appName: csvId, status: 'no_software', message: 'Software record not found' });
+        continue;
+      }
+      const connector = await AppConnector.findOne({ softwareCsvId: csvId, enabled: true }).lean();
+      if (!connector) {
+        inviteResults.push({ csvId, appName: software.name, status: 'no_connector', message: 'No active connector configured for this app' });
+        continue;
+      }
+      const result = await sendAppInvite(connector, user);
+      inviteResults.push({ csvId, appName: software.name, ...result });
+    }
+
+    if (newlyAdded.length > 0) {
+      const names    = await Software.find({ csvId: { $in: newlyAdded } }).select('name').lean();
+      const nameList = names.map(s => s.name).join(', ');
+      await writeLog({
+        eventType:   'user_updated',
+        entityType:  'user',
+        entityId:    user._id.toString(),
+        entityLabel: `${user.first} ${user.last}`.trim(),
+        summary:     `App access granted: ${nameList} → ${user.first} ${user.last}`,
+      });
+    }
+
+    res.json({ ok: true, appAccess: user.appAccess, inviteResults });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+module.exports = router;

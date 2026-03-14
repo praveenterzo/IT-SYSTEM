@@ -5,7 +5,7 @@ const AppConnectorSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    enum: ['github', 'slack', 'google_workspace'],
+    enum: ['github', 'slack', 'google_workspace', 'zoom', 'microsoft_365', 'aws'],
   },
   displayName:    { type: String, default: '' },
   softwareCsvId:  { type: String, default: '' },   // links to Software record (e.g. 'A-05')

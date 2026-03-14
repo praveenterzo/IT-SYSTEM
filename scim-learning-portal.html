@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCIM Learning Portal — TerzoCloud IT</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1e40af; --primary-light: #3b82f6; --primary-lighter: #eff6ff;
+      --primary-dark: #1e3a8a; --accent: #7c3aed;
+      --success: #16a34a; --success-bg: #f0fdf4; --success-border: #bbf7d0;
+      --warning: #d97706; --warning-bg: #fffbeb; --warning-border: #fde68a;
+      --danger: #dc2626; --danger-bg: #fef2f2; --danger-border: #fecaca;
+      --info-bg: #f0f9ff; --info-border: #bae6fd;
+      --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1; --gray-400: #94a3b8; --gray-500: #64748b;
+      --gray-600: #475569; --gray-700: #334155; --gray-800: #1e293b;
+      --sidebar-w: 280px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-50); color: var(--gray-800); display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--gray-200);
+      position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand {
+      padding: 20px 18px 16px; border-bottom: 1px solid var(--gray-200);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #1e40af, #7c3aed);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .brand-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; }
+    .brand-text { font-size: 13px; font-weight: 700; color: var(--gray-800); line-height: 1.3; }
+    .brand-sub { font-size: 10.5px; color: var(--gray-400); }
+
+    .nav-section { padding: 14px 12px 6px; }
+    .nav-label { font-size: 10px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: .1em; padding: 6px 8px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 9px; padding: 7px 10px;
+      border-radius: 8px; cursor: pointer; color: var(--gray-600); font-size: 12.5px;
+      font-weight: 500; transition: all .14s; text-decoration: none; margin-bottom: 1px;
+    }
+    .nav-item:hover { background: var(--gray-100); color: var(--gray-800); }
+    .nav-item.active { background: var(--primary-lighter); color: var(--primary); }
+    .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-badge {
+      margin-left: auto; font-size: 10px; font-weight: 700; padding: 1px 6px;
+      border-radius: 9999px; background: var(--success-bg); color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+    .nav-badge.warn { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
+    .progress-wrap { padding: 14px 18px; border-top: 1px solid var(--gray-100); margin-top: auto; }
+    .progress-label { font-size: 11px; color: var(--gray-500); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .progress-bar { height: 6px; background: var(--gray-200); border-radius: 9999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #1e40af, #7c3aed); border-radius: 9999px; transition: width .4s ease; }
+
+    /* ── MAIN ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #4f46e5 100%);
+      padding: 48px 48px 40px; color: #fff;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+      padding: 4px 12px; border-radius: 9999px; font-size: 11.5px; font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .hero h1 { font-size: 30px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
+    .hero p { font-size: 15px; color: rgba(255,255,255,.8); max-width: 620px; line-height: 1.6; }
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 28px; flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-num { font-size: 26px; font-weight: 800; }
+    .hero-stat-label { font-size: 11px; color: rgba(255,255,255,.65); margin-top: 2px; }
+
+    /* ── CONTENT ── */
+    .content { padding: 36px 48px 60px; max-width: 900px; }
+    .section { margin-bottom: 52px; scroll-margin-top: 24px; }
+    .section-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+      padding-bottom: 14px; border-bottom: 2px solid var(--gray-200);
+    }
+    .section-icon {
+      width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+    }
+    .section-icon.blue { background: var(--primary-lighter); }
+    .section-icon.purple { background: #f3e8ff; }
+    .section-icon.green { background: var(--success-bg); }
+    .section-icon.orange { background: var(--warning-bg); }
+    .section-icon svg { width: 18px; height: 18px; stroke-width: 2; fill: none; }
+    .section-icon.blue svg { stroke: var(--primary); }
+    .section-icon.purple svg { stroke: #7c3aed; }
+    .section-icon.green svg { stroke: var(--success); }
+    .section-icon.orange svg { stroke: var(--warning); }
+    .section-title { font-size: 19px; font-weight: 700; color: var(--gray-800); }
+    .section-desc { font-size: 12.5px; color: var(--gray-500); margin-top: 2px; }
+
+    /* ── CARDS ── */
+    .card { background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; padding: 20px 22px; margin-bottom: 14px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+    /* ── CALLOUTS ── */
+    .callout { border-radius: 10px; padding: 13px 16px; margin: 14px 0; display: flex; gap: 10px; font-size: 13px; line-height: 1.6; }
+    .callout svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke-width: 2; margin-top: 1px; }
+    .callout.info { background: var(--info-bg); border: 1px solid var(--info-border); color: #0369a1; }
+    .callout.info svg { stroke: #0369a1; }
+    .callout.success { background: var(--success-bg); border: 1px solid var(--success-border); color: #15803d; }
+    .callout.success svg { stroke: #15803d; }
+    .callout.warning { background: var(--warning-bg); border: 1px solid var(--warning-border); color: #92400e; }
+    .callout.warning svg { stroke: #d97706; }
+    .callout.danger { background: var(--danger-bg); border: 1px solid var(--danger-border); color: #991b1b; }
+    .callout.danger svg { stroke: var(--danger); }
+
+    /* ── STEPS ── */
+    .steps { counter-reset: step-counter; }
+    .step {
+      display: flex; gap: 16px; padding: 16px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--primary-lighter); color: var(--primary);
+      font-size: 12px; font-weight: 800; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; margin-top: 2px;
+      counter-increment: step-counter;
+    }
+    .step-body { flex: 1; }
+    .step-title { font-size: 13.5px; font-weight: 700; color: var(--gray-800); margin-bottom: 5px; }
+    .step-text { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+    /* ── CODE ── */
+    .code-block {
+      background: #0f172a; border-radius: 10px; padding: 14px 18px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12.5px;
+      color: #94a3b8; margin: 10px 0; overflow-x: auto; position: relative;
+    }
+    .code-block .kw { color: #7dd3fc; }
+    .code-block .str { color: #86efac; }
+    .code-block .cmt { color: #64748b; }
+    .code-block .val { color: #fde68a; }
+    .code-block .key { color: #f9a8d4; }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15); color: #94a3b8; font-size: 11px;
+      padding: 3px 9px; border-radius: 6px; cursor: pointer; transition: all .14s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; flex-wrap: wrap; }
+    .tab {
+      padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--gray-500); border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all .14s; display: flex; align-items: center; gap: 6px;
+    }
+    .tab:hover { color: var(--primary); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── APP CONNECTORS ── */
+    .connector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .connector-card {
+      background: #fff; border: 2px solid var(--gray-200); border-radius: 12px;
+      padding: 16px; cursor: pointer; transition: all .2s;
+    }
+    .connector-card:hover { border-color: var(--primary-light); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(59,130,246,.15); }
+    .connector-card.selected { border-color: var(--primary); background: var(--primary-lighter); }
+    .connector-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .connector-logo {
+      width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .connector-card-title { font-size: 13.5px; font-weight: 700; color: var(--gray-800); }
+    .connector-card-plan { font-size: 11px; color: var(--success); font-weight: 600; margin-top: 1px; }
+    .connector-card-desc { font-size: 12px; color: var(--gray-500); line-height: 1.5; }
+
+    /* ── REQUIREMENTS TABLE ── */
+    .req-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+    .req-table th { background: var(--gray-50); padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid var(--gray-200); }
+    .req-table td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+    .req-table tr:last-child td { border-bottom: none; }
+    .req-table tr:hover td { background: var(--gray-50); }
+    .tag-req { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; }
+    .tag-req.req { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+    .tag-req.opt { background: var(--info-bg); color: #0369a1; border: 1px solid var(--info-border); }
+
+    /* ── CHECKLIST ── */
+    .checklist { list-style: none; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;
+      border-bottom: 1px solid var(--gray-100); font-size: 13px; color: var(--gray-700);
+      line-height: 1.5;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before {
+      content: ''; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--success-bg); border: 1px solid var(--success-border);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+      background-size: 11px; background-repeat: no-repeat; background-position: center;
+    }
+
+    /* ── DETAIL PANELS ── */
+    .connector-detail { display: none; }
+    .connector-detail.active { display: block; }
+    .field-row {
+      display: flex; align-items: flex-start; gap: 14px; padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .field-icon svg { width: 15px; height: 15px; stroke: var(--gray-500); fill: none; stroke-width: 2; }
+    .field-name { font-size: 12.5px; font-weight: 700; color: var(--gray-800); }
+    .field-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; line-height: 1.5; }
+    .field-example { font-family: monospace; font-size: 11.5px; background: var(--gray-100); color: var(--primary-dark); padding: 2px 7px; border-radius: 5px; display: inline-block; margin-top: 4px; }
+
+    /* ── ARCH DIAGRAM ── */
+    .arch-diagram {
+      background: #fff; border: 1px solid var(--gray-200); border-radius: 14px;
+      padding: 28px; margin: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 0;
+    }
+    .arch-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 6px 0; }
+    .arch-box {
+      background: var(--primary-lighter); border: 2px solid #bfdbfe; border-radius: 10px;
+      padding: 10px 18px; font-size: 12px; font-weight: 700; color: var(--primary);
+      text-align: center; min-width: 120px;
+    }
+    .arch-box.green { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
+    .arch-box.purple { background: #f3e8ff; border-color: #d8b4fe; color: #7c3aed; }
+    .arch-box.gray { background: var(--gray-100); border-color: var(--gray-300); color: var(--gray-600); }
+    .arch-arrow { font-size: 18px; color: var(--gray-400); }
+    .arch-label { font-size: 10.5px; color: var(--gray-400); text-align: center; margin-top: 3px; }
+
+    /* ── MISC ── */
+    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+    .pill.blue { background: var(--primary-lighter); color: var(--primary); border: 1px solid #bfdbfe; }
+    .pill.green { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+    .pill.orange { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+    p { line-height: 1.7; color: var(--gray-600); font-size: 13.5px; margin-bottom: 10px; }
+    h3 { font-size: 14.5px; font-weight: 700; color: var(--gray-800); margin: 18px 0 8px; }
+    h4 { font-size: 13px; font-weight: 700; color: var(--gray-700); margin: 14px 0 6px; }
+    code { background: var(--gray-100); color: var(--primary-dark); padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; }
+    a { color: var(--primary-light); }
+    .divider { height: 1px; background: var(--gray-200); margin: 24px 0; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .content { padding: 24px 20px 48px; }
+      .hero { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+    </div>
+    <div>
+      <div class="brand-text">SCIM Learning Portal</div>
+      <div class="brand-sub">TerzoCloud IT — Admin Guide</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Getting Started</div>
+    <a class="nav-item active" href="#what-is-scim">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      What is SCIM?
+    </a>
+    <a class="nav-item" href="#how-it-works">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+      How It Works
+    </a>
+    <a class="nav-item" href="#prerequisites">
+      <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Prerequisites
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">SCIM Server Setup</div>
+    <a class="nav-item" href="#scim-server-config">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Server Configuration
+    </a>
+    <a class="nav-item" href="#api-endpoints">
+      <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      API Endpoints
+    </a>
+    <a class="nav-item" href="#auth-guide">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Authentication
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">App Connectors</div>
+    <a class="nav-item" href="#connector-zoom">
+      <span style="font-size:13px">📹</span> Zoom
+      <span class="nav-badge">Ready</span>
+    </a>
+    <a class="nav-item" href="#connector-github">
+      <span style="font-size:13px">🐙</span> GitHub
+      <span class="nav-badge">Ready</span>
+    </a>
+    <a class="nav-item" href="#connector-google">
+      <span style="font-size:13px">🔵</span> Google Workspace
+      <span class="nav-badge">Ready</span>
+    </a>
+    <a class="nav-item" href="#connector-slack">
+      <span style="font-size:13px">💬</span> Slack
+      <span class="nav-badge">Ready</span>
+    </a>
+    <a class="nav-item" href="#connector-m365">
+      <span style="font-size:13px">🪟</span> Microsoft 365
+      <span class="nav-badge">Ready</span>
+    </a>
+    <a class="nav-item" href="#connector-aws">
+      <span style="font-size:13px">☁️</span> AWS IAM Identity Center
+      <span class="nav-badge">Ready</span>
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <a class="nav-item" href="#troubleshooting">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+      Troubleshooting
+    </a>
+    <a class="nav-item" href="#faq">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      FAQ
+    </a>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Setup Progress</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div style="font-size:10.5px;color:var(--gray-400);margin-top:6px">Check off steps as you complete them</div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">
+      <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      TerzoCloud SCIM Integration Guide
+    </div>
+    <h1>SCIM Server &amp; App Connector<br>Configuration Guide</h1>
+    <p>Learn how to set up automated user provisioning across all your SaaS applications using SCIM 2.0 — keeping user access in sync with your HR system automatically.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num">6</div><div class="hero-stat-label">App Connectors</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">SCIM 2.0</div><div class="hero-stat-label">Protocol</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">Auto</div><div class="hero-stat-label">Provisioning</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">JWT</div><div class="hero-stat-label">Auth Required</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ WHAT IS SCIM ══ -->
+    <section class="section" id="what-is-scim">
+      <div class="section-header">
+        <div class="section-icon blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+        <div><div class="section-title">What is SCIM?</div><div class="section-desc">System for Cross-domain Identity Management</div></div>
+      </div>
+
+      <p>SCIM (System for Cross-domain Identity Management) is an open standard that automates user provisioning between your identity provider and SaaS applications. Instead of manually creating/deleting users in each app, SCIM does it automatically.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0">
+        <div class="card" style="border-left:4px solid var(--danger)">
+          <div class="card-title">❌ Without SCIM</div>
+          <ul style="font-size:12.5px;color:var(--gray-600);line-height:2;padding-left:16px">
+            <li>Manual user creation in every app</li>
+            <li>Delayed offboarding (security risk)</li>
+            <li>Inconsistent user attributes</li>
+            <li>IT tickets for every change</li>
+            <li>Orphaned accounts accumulate</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left:4px solid var(--success)">
+          <div class="card-title">✅ With SCIM</div>
+          <ul style="font-size:12.5px;color:var(--gray-600);line-height:2;padding-left:16px">
+            <li>Users auto-provisioned on hire</li>
+            <li>Instant deprovisioning on exit</li>
+            <li>Consistent profile data everywhere</li>
+            <li>Zero manual IT effort</li>
+            <li>Audit trail for compliance</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>SCIM 2.0 is defined in <strong>RFC 7642, RFC 7643, and RFC 7644</strong>. Your TerzoCloud SCIM server implements the full SCIM 2.0 protocol at <code>/scim/v2/</code> endpoints.</div>
+      </div>
+    </section>
+
+    <!-- ══ HOW IT WORKS ══ -->
+    <section class="section" id="how-it-works">
+      <div class="section-header">
+        <div class="section-icon purple"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div><div class="section-title">How It Works</div><div class="section-desc">Architecture and data flow</div></div>
+      </div>
+
+      <div class="arch-diagram">
+        <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:14px;text-transform:uppercase;letter-spacing:.08em">Data Flow Architecture</div>
+        <div class="arch-row">
+          <div>
+            <div class="arch-box green">HR System / Portal<br><span style="font-size:10px;font-weight:400">User events</span></div>
+            <div class="arch-label">Source of truth</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div>
+            <div class="arch-box" style="background:linear-gradient(135deg,#eff6ff,#f3e8ff);border-color:#c4b5fd;color:#5b21b6">TerzoCloud<br>SCIM Server<br><span style="font-size:10px;font-weight:400">localhost:3000/scim/v2</span></div>
+            <div class="arch-label">Orchestrator</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div>
+            <div class="arch-box purple">App Connectors<br><span style="font-size:10px;font-weight:400">6 integrations</span></div>
+            <div class="arch-label">Sync agents</div>
+          </div>
+        </div>
+        <div class="arch-arrow" style="font-size:14px;margin:4px 0">↓</div>
+        <div class="arch-row">
+          <div class="arch-box gray" style="min-width:80px">Zoom</div>
+          <div class="arch-box gray" style="min-width:80px">GitHub</div>
+          <div class="arch-box gray" style="min-width:80px">Google WS</div>
+          <div class="arch-box gray" style="min-width:80px">Slack</div>
+          <div class="arch-box gray" style="min-width:80px">M365</div>
+          <div class="arch-box gray" style="min-width:80px">AWS IAM</div>
+        </div>
+        <div class="arch-label" style="margin-top:8px">Target SaaS Applications (auto-provisioned)</div>
+      </div>
+
+      <h3>What happens when a user is added?</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">User created in TerzoCloud portal</div><div class="step-text">HR adds a new employee in the User Management section. The user record is saved to MongoDB.</div></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">SCIM event triggered</div><div class="step-text">The portal calls <code>POST /scim/v2/Users</code> with the user's profile data (name, email, department).</div></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Connector routing</div><div class="step-text">The SCIM server checks which App Connectors are enabled and routes the provisioning request to each one.</div></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">User created in each app</div><div class="step-text">Each connector calls the target app's API to create the user account (e.g. GitHub API, Slack API, Zoom API).</div></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body"><div class="step-title">Confirmation logged</div><div class="step-text">The SCIM server logs the result. Success or failure is visible in the Admin → Connectors panel.</div></div></div>
+      </div>
+    </section>
+
+    <!-- ══ PREREQUISITES ══ -->
+    <section class="section" id="prerequisites">
+      <div class="section-header">
+        <div class="section-icon green"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div><div class="section-title">Prerequisites</div><div class="section-desc">What you need before configuring SCIM</div></div>
+      </div>
+
+      <h3>System Requirements</h3>
+      <ul class="checklist">
+        <li>TerzoCloud Portal running at <code>http://localhost:3000</code> with MongoDB connected</li>
+        <li>Admin account with <strong>Super Admin</strong> role (SCIM endpoints require <code>onlySuperAdmin</code> middleware)</li>
+        <li>Node.js 18+ and the <code>AppConnector</code> Mongoose model deployed</li>
+        <li>Outbound internet access from the server to each app's API endpoint</li>
+        <li>HTTPS recommended for production (required by some app APIs)</li>
+      </ul>
+
+      <h3>Per-App Plan Requirements</h3>
+      <p>SCIM provisioning requires a minimum subscription tier for each app. Make sure your current plan supports SCIM before configuring the connector.</p>
+
+      <table class="req-table">
+        <thead>
+          <tr><th>App</th><th>Min. Plan for SCIM</th><th>Your Plan</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>📹 Zoom</td><td>Business or above</td><td>Workspace Business Plus</td><td><span class="pill green">✓ Ready</span></td></tr>
+          <tr><td>🐙 GitHub</td><td>Enterprise Cloud</td><td>GitHub (Microsoft) Enterprise</td><td><span class="pill green">✓ Ready</span></td></tr>
+          <tr><td>🔵 Google Workspace</td><td>Business Starter+</td><td>Business Starter</td><td><span class="pill green">✓ Ready</span></td></tr>
+          <tr><td>💬 Slack</td><td>Business+</td><td>Slack Business+</td><td><span class="pill green">✓ Ready</span></td></tr>
+          <tr><td>🪟 Microsoft 365</td><td>Any paid plan</td><td>Microsoft 365 Business Basic</td><td><span class="pill green">✓ Ready</span></td></tr>
+          <tr><td>☁️ AWS IAM Identity Center</td><td>Any AWS account</td><td>AWS (Free Tier)</td><td><span class="pill green">✓ Ready</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>If your Zoom or GitHub plan does not include SCIM, you will need to upgrade before the connector will work. Check the SCIM Audit in the Software Inventory tab for upgrade costs.</div>
+      </div>
+    </section>
+
+    <!-- ══ SCIM SERVER CONFIG ══ -->
+    <section class="section" id="scim-server-config">
+      <div class="section-header">
+        <div class="section-icon blue"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div><div class="section-title">SCIM Server Configuration</div><div class="section-desc">Setting up your TerzoCloud SCIM server</div></div>
+      </div>
+
+      <p>The TerzoCloud SCIM server is built into <code>server.js</code> and runs on the same Node.js/Express process as the main API. No additional setup is needed — just make sure the server is running and you are authenticated as Super Admin.</p>
+
+      <h3>Environment Variables</h3>
+      <p>Ensure your <code>.env</code> file contains the following:</p>
+      <div class="code-block" style="position:relative">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt"># MongoDB connection</span>
+<span class="key">MONGODB_URI</span>=<span class="str">mongodb://localhost:27017/terzocloud</span>
+
+<span class="cmt"># JWT secret (keep this secret!)</span>
+<span class="key">JWT_SECRET</span>=<span class="str">your-super-secret-key-here</span>
+
+<span class="cmt"># Port (default 3000)</span>
+<span class="key">PORT</span>=<span class="val">3000</span>
+
+<span class="cmt"># Optional: encryption key for stored API tokens</span>
+<span class="key">TOKEN_ENCRYPTION_KEY</span>=<span class="str">32-char-random-string-here</span>
+      </div>
+
+      <h3>Starting the Server</h3>
+      <div class="code-block" style="position:relative">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt"># Navigate to your IT-SYSTEM directory</span>
+<span class="kw">cd</span> IT-SYSTEM
+
+<span class="cmt"># Install dependencies (first time)</span>
+<span class="kw">npm</span> install
+
+<span class="cmt"># Start the server</span>
+<span class="kw">node</span> server.js
+
+<span class="cmt"># Or with nodemon for development</span>
+<span class="kw">npx</span> nodemon server.js
+      </div>
+
+      <div class="callout success">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <div>Once running, the SCIM server is accessible at <strong>http://localhost:3000/scim/v2/</strong>. You can test it with a GET request to <code>/scim/v2/ServiceProviderConfig</code>.</div>
+      </div>
+
+      <h3>Verifying the Server</h3>
+      <div class="code-block" style="position:relative">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt"># Test SCIM Service Provider Config endpoint</span>
+<span class="kw">curl</span> http://localhost:3000/scim/v2/ServiceProviderConfig
+
+<span class="cmt"># Should return JSON with supported SCIM operations</span>
+<span class="cmt"># Expected: {"schemas":["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],...}</span>
+      </div>
+    </section>
+
+    <!-- ══ API ENDPOINTS ══ -->
+    <section class="section" id="api-endpoints">
+      <div class="section-header">
+        <div class="section-icon purple"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+        <div><div class="section-title">SCIM API Endpoints</div><div class="section-desc">All available SCIM 2.0 and Connector API routes</div></div>
+      </div>
+
+      <div class="tabs" id="endpointTabs">
+        <div class="tab active" onclick="switchTab('endpointTabs','scim-ep')">SCIM 2.0 Endpoints</div>
+        <div class="tab" onclick="switchTab('endpointTabs','connector-ep')">Connector API</div>
+      </div>
+
+      <div class="tab-panel active" id="scim-ep">
+        <table class="req-table">
+          <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill blue">GET</span></td><td><code>/scim/v2/ServiceProviderConfig</code></td><td>SCIM capabilities</td><td>None</td></tr>
+            <tr><td><span class="pill blue">GET</span></td><td><code>/scim/v2/Users</code></td><td>List all users</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill green">POST</span></td><td><code>/scim/v2/Users</code></td><td>Provision new user</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill blue">GET</span></td><td><code>/scim/v2/Users/:id</code></td><td>Get user by ID</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill orange">PUT</span></td><td><code>/scim/v2/Users/:id</code></td><td>Replace user</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill orange">PATCH</span></td><td><code>/scim/v2/Users/:id</code></td><td>Update user attributes</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">DELETE</span></td><td><code>/scim/v2/Users/:id</code></td><td>Deprovision user</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill blue">GET</span></td><td><code>/scim/v2/Groups</code></td><td>List groups</td><td>Bearer token</td></tr>
+            <tr><td><span class="pill green">POST</span></td><td><code>/scim/v2/Groups</code></td><td>Create group</td><td>Bearer token</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tab-panel" id="connector-ep">
+        <table class="req-table">
+          <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill blue">GET</span></td><td><code>/api/admin/connectors</code></td><td>List all connectors</td><td>Super Admin</td></tr>
+            <tr><td><span class="pill orange">PUT</span></td><td><code>/api/admin/connectors/:app</code></td><td>Save/update connector config</td><td>Super Admin</td></tr>
+            <tr><td><span class="pill" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">DELETE</span></td><td><code>/api/admin/connectors/:app</code></td><td>Remove connector</td><td>Super Admin</td></tr>
+            <tr><td><span class="pill green">POST</span></td><td><code>/api/admin/connectors/:app/test</code></td><td>Test connection</td><td>Super Admin</td></tr>
+            <tr><td><span class="pill green">POST</span></td><td><code>/api/admin/connectors/:app/sync</code></td><td>Force sync now</td><td>Super Admin</td></tr>
+          </tbody>
+        </table>
+        <div class="callout info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div>The <code>:app</code> parameter must be one of: <code>github</code>, <code>slack</code>, <code>google_workspace</code>, <code>zoom</code>, <code>microsoft_365</code>, <code>aws</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ AUTH GUIDE ══ -->
+    <section class="section" id="auth-guide">
+      <div class="section-header">
+        <div class="section-icon orange"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div><div class="section-title">Authentication</div><div class="section-desc">How the SCIM server authenticates requests</div></div>
+      </div>
+
+      <p>All connector management endpoints require a valid JWT token with Super Admin privileges. Get your token by logging in through the portal.</p>
+
+      <div class="code-block" style="position:relative">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt"># Login to get a JWT token</span>
+<span class="kw">curl</span> -X POST http://localhost:3000/api/login \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d '<span class="val">{"email":"admin@terzocloud.com","password":"yourpassword"}</span>'
+
+<span class="cmt"># Use the returned token in subsequent requests</span>
+<span class="kw">curl</span> http://localhost:3000/api/admin/connectors \
+  -H <span class="str">"Authorization: Bearer &lt;your_jwt_token&gt;"</span>
+      </div>
+
+      <div class="callout warning">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>API tokens for each app connector are stored encrypted in MongoDB. They are never returned in API responses — only the last 4 characters are shown as a hint.</div>
+      </div>
+    </section>
+
+    <!-- ══ CONNECTOR: ZOOM ══ -->
+    <section class="section" id="connector-zoom">
+      <div class="section-header">
+        <div class="section-icon" style="background:#e8f4ff">
+          <span style="font-size:20px">📹</span>
+        </div>
+        <div><div class="section-title">Zoom Connector</div><div class="section-desc">Sync licensed user count from Zoom account</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="pill green">✓ SCIM Ready</span>
+        <span class="pill blue">Plan: Workspace Business Plus</span>
+        <span class="pill" style="background:#f3e8ff;color:#7c3aed;border:1px solid #d8b4fe">API: REST v2</span>
+      </div>
+
+      <h3>What this connector does</h3>
+      <p>The Zoom connector syncs the number of active licensed users and plan details from your Zoom account into the Software Inventory. When a user is offboarded, the connector can also remove their Zoom license automatically.</p>
+
+      <h3>Step-by-step Setup</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Go to Zoom Marketplace</div>
+          <div class="step-text">Navigate to <a href="https://marketplace.zoom.us" target="_blank">marketplace.zoom.us</a> → Develop → Build App → Choose <strong>Server-to-Server OAuth</strong>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Create a Server-to-Server OAuth App</div>
+          <div class="step-text">Name it "TerzoCloud SCIM". Copy the <strong>Account ID</strong>, <strong>Client ID</strong>, and <strong>Client Secret</strong>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Add Required Scopes</div>
+          <div class="step-text">Under Scopes, add: <code>user:read:admin</code> and <code>user:write:admin</code>. These are required to read and manage users.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Activate the app</div>
+          <div class="step-text">Click <strong>Activate your app</strong> in the Marketplace. Generate an <strong>Account-Level OAuth token</strong> using your Client ID and Client Secret.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Configure in TerzoCloud</div>
+          <div class="step-text">Go to <strong>Admin → App Connectors → Add Connector → Zoom</strong>. Paste your OAuth token and Account ID, then click Save.</div>
+        </div></div>
+      </div>
+
+      <h3>Connector Fields</h3>
+      <div class="card" style="padding:0">
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div><div class="field-name">Account-Level OAuth Token</div><div class="field-desc">Bearer token generated from your Server-to-Server OAuth app. Used for all API calls.</div><div class="field-example">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…</div></div>
+        </div>
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+          <div><div class="field-name">Account ID</div><div class="field-desc">Your Zoom Account ID from the Server-to-Server OAuth app settings.</div><div class="field-example">ABC123XYZ</div></div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>Zoom SCIM is available on <strong>Business plan and above</strong>. Your current plan (Workspace Business Plus) fully supports SCIM. <a href="https://support.zoom.us/hc/en-us/articles/360000012523" target="_blank">Zoom SCIM Guide →</a></div>
+      </div>
+    </section>
+
+    <!-- ══ CONNECTOR: GITHUB ══ -->
+    <section class="section" id="connector-github">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f0f0f0">
+          <span style="font-size:20px">🐙</span>
+        </div>
+        <div><div class="section-title">GitHub Connector</div><div class="section-desc">Sync active member count from your GitHub organisation</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="pill green">✓ SCIM Ready</span>
+        <span class="pill blue">Plan: Enterprise Cloud</span>
+        <span class="pill" style="background:#f3e8ff;color:#7c3aed;border:1px solid #d8b4fe">API: GitHub REST v3</span>
+      </div>
+
+      <h3>What this connector does</h3>
+      <p>The GitHub connector reads the number of active members in your GitHub organisation and syncs the count to the Software Inventory. With SCIM, it can also auto-provision new engineers and remove access when someone leaves.</p>
+
+      <h3>Step-by-step Setup</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Go to GitHub Settings</div>
+          <div class="step-text">Navigate to <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> → Generate new token (classic).</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Set Token Scopes</div>
+          <div class="step-text">Select scope: <code>read:org</code> (to read org member count). For full SCIM provisioning, also add <code>admin:org</code> and <code>scim:enterprise</code>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Copy the token</div>
+          <div class="step-text">GitHub shows the token only once. Copy it immediately — you cannot view it again.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Configure in TerzoCloud</div>
+          <div class="step-text">Go to <strong>Admin → App Connectors → Add Connector → GitHub</strong>. Enter your <strong>Organisation slug</strong> (e.g. <code>terzocloud</code>) and paste the PAT.</div>
+        </div></div>
+      </div>
+
+      <h3>Connector Fields</h3>
+      <div class="card" style="padding:0">
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div><div class="field-name">Personal Access Token (PAT)</div><div class="field-desc">Classic or fine-grained PAT from GitHub Settings → Developer Settings → Personal access tokens.</div><div class="field-example">ghp_xxxxxxxxxxxxxxxxxxxx</div></div>
+        </div>
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div><div class="field-name">Organisation Slug</div><div class="field-desc">Your GitHub organisation name as it appears in the URL (case-sensitive).</div><div class="field-example">terzocloud</div></div>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>Full SCIM provisioning requires <strong>GitHub Enterprise Cloud</strong>. The sync feature (reading member counts) works with any GitHub plan.</div>
+      </div>
+    </section>
+
+    <!-- ══ CONNECTOR: GOOGLE WORKSPACE ══ -->
+    <section class="section" id="connector-google">
+      <div class="section-header">
+        <div class="section-icon" style="background:#e8f4ff">
+          <span style="font-size:20px">🔵</span>
+        </div>
+        <div><div class="section-title">Google Workspace Connector</div><div class="section-desc">Sync users via Service Account and Admin SDK</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="pill green">✓ SCIM Ready</span>
+        <span class="pill blue">Plan: Business Starter+</span>
+        <span class="pill" style="background:#f3e8ff;color:#7c3aed;border:1px solid #d8b4fe">API: Admin SDK Directory</span>
+      </div>
+
+      <h3>What this connector does</h3>
+      <p>Uses Google's Admin SDK Directory API to read the total number of active users in your Google Workspace domain, and optionally provision/suspend users automatically.</p>
+
+      <h3>Step-by-step Setup</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Create a Google Cloud Project</div>
+          <div class="step-text">Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> → Create a new project (e.g. "TerzoCloud SCIM").</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Enable Admin SDK API</div>
+          <div class="step-text">In your project: APIs &amp; Services → Enable APIs → Search for <strong>"Admin SDK API"</strong> → Enable.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Create a Service Account</div>
+          <div class="step-text">IAM &amp; Admin → Service Accounts → Create service account. Download the <strong>JSON key file</strong>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Enable Domain-Wide Delegation</div>
+          <div class="step-text">In the service account settings, enable <strong>Domain-wide delegation</strong>. Then in your Google Workspace Admin Console: Security → API Controls → Domain-wide delegation → Add your service account's Client ID with scope <code>https://www.googleapis.com/auth/admin.directory.user.readonly</code>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Configure in TerzoCloud</div>
+          <div class="step-text">Go to <strong>Admin → App Connectors → Google Workspace</strong>. Paste the full service account JSON key and enter your Admin email (e.g. <code>admin@yourcompany.com</code>).</div>
+        </div></div>
+      </div>
+
+      <h3>Connector Fields</h3>
+      <div class="card" style="padding:0">
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="field-name">Service Account Key JSON</div><div class="field-desc">The full JSON key file downloaded from Google Cloud Console. Contains the private key for API authentication.</div><div class="field-example">{"type":"service_account","project_id":"terzocloud-scim","private_key":"-----BEGIN RSA PRIVATE KEY-----…"}</div></div>
+        </div>
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div><div class="field-name">Admin Email (for impersonation)</div><div class="field-desc">A Google Workspace Super Admin email. The service account will impersonate this user to call the Directory API.</div><div class="field-example">admin@terzocloud.com</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CONNECTOR: SLACK ══ -->
+    <section class="section" id="connector-slack">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fff0f5">
+          <span style="font-size:20px">💬</span>
+        </div>
+        <div><div class="section-title">Slack Connector</div><div class="section-desc">Sync workspace members and plan details from Slack</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="pill green">✓ SCIM Ready</span>
+        <span class="pill blue">Plan: Business+</span>
+        <span class="pill" style="background:#f3e8ff;color:#7c3aed;border:1px solid #d8b4fe">API: Slack Web API + SCIM</span>
+      </div>
+
+      <h3>What this connector does</h3>
+      <p>Reads active workspace member count and plan information from Slack. With SCIM enabled, can auto-provision users and deactivate accounts when employees leave.</p>
+
+      <h3>Step-by-step Setup</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Go to Slack API Dashboard</div>
+          <div class="step-text">Navigate to <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a> → Create New App → From scratch.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Add Bot Token Scopes</div>
+          <div class="step-text">Under OAuth &amp; Permissions → Scopes → Bot Token Scopes, add: <code>users:read</code>, <code>users:read.email</code>, <code>team:info</code>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Install to Workspace</div>
+          <div class="step-text">Click <strong>Install to Workspace</strong>. Authorize the app. Copy the <strong>Bot User OAuth Token</strong> (starts with <code>xoxb-</code>).</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Configure in TerzoCloud</div>
+          <div class="step-text">Go to <strong>Admin → App Connectors → Slack</strong>. Paste the <code>xoxb-</code> token and enter your workspace domain.</div>
+        </div></div>
+      </div>
+
+      <h3>Connector Fields</h3>
+      <div class="card" style="padding:0">
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div><div class="field-name">Bot OAuth Token</div><div class="field-desc">The Bot User OAuth Token generated after installing the app to your workspace.</div><div class="field-example">xoxb-YOUR-BOT-TOKEN-HERE</div></div>
+        </div>
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div><div class="field-name">Workspace Domain</div><div class="field-desc">Your Slack workspace domain (the part before .slack.com).</div><div class="field-example">terzocloud</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CONNECTOR: MICROSOFT 365 ══ -->
+    <section class="section" id="connector-m365">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f0f4ff">
+          <span style="font-size:20px">🪟</span>
+        </div>
+        <div><div class="section-title">Microsoft 365 Connector</div><div class="section-desc">Sync users via Azure AD / Microsoft Entra ID</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="pill green">✓ SCIM Ready</span>
+        <span class="pill blue">Plan: Any M365 paid plan</span>
+        <span class="pill" style="background:#f3e8ff;color:#7c3aed;border:1px solid #d8b4fe">API: Microsoft Graph</span>
+      </div>
+
+      <h3>What this connector does</h3>
+      <p>Uses the Microsoft Graph API to read the number of licensed Microsoft 365 users in your Azure Active Directory / Entra ID tenant and syncs the count to Software Inventory.</p>
+
+      <h3>Step-by-step Setup</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Register an App in Azure Portal</div>
+          <div class="step-text">Go to <a href="https://portal.azure.com" target="_blank">portal.azure.com</a> → Azure Active Directory → App registrations → New registration. Name it "TerzoCloud SCIM".</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Copy Tenant ID and Client ID</div>
+          <div class="step-text">From the app overview page, copy the <strong>Directory (tenant) ID</strong> and <strong>Application (client) ID</strong>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Create a Client Secret</div>
+          <div class="step-text">Under Certificates &amp; secrets → Client secrets → New client secret. Copy the <strong>Value</strong> (not the Secret ID). It's only shown once.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Grant API Permissions</div>
+          <div class="step-text">API permissions → Add permission → Microsoft Graph → Application permissions → Add: <code>User.Read.All</code>. Then click <strong>Grant admin consent</strong>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Configure in TerzoCloud</div>
+          <div class="step-text">Go to <strong>Admin → App Connectors → Microsoft 365</strong>. Enter your <strong>Tenant ID</strong> and paste the <strong>Client Secret Value</strong>.</div>
+        </div></div>
+      </div>
+
+      <h3>Connector Fields</h3>
+      <div class="card" style="padding:0">
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div><div class="field-name">Azure AD App Client Secret</div><div class="field-desc">The client secret value from your Azure AD App registration. Used with your Client ID to authenticate to Microsoft Graph.</div><div class="field-example">~8Q8Q8Q8Q8Q8Q8Q8Q.abcdefghijk</div></div>
+        </div>
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div><div class="field-name">Tenant ID / Domain</div><div class="field-desc">Your Azure tenant ID (GUID) or your primary domain (e.g. <code>terzocloud.onmicrosoft.com</code>).</div><div class="field-example">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CONNECTOR: AWS ══ -->
+    <section class="section" id="connector-aws">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fff8ec">
+          <span style="font-size:20px">☁️</span>
+        </div>
+        <div><div class="section-title">AWS IAM Identity Center Connector</div><div class="section-desc">Sync users via SCIM 2.0 from AWS Identity Center</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="pill green">✓ SCIM Ready</span>
+        <span class="pill blue">Plan: Any AWS account</span>
+        <span class="pill" style="background:#f3e8ff;color:#7c3aed;border:1px solid #d8b4fe">API: SCIM 2.0 Native</span>
+      </div>
+
+      <h3>What this connector does</h3>
+      <p>AWS IAM Identity Center has native SCIM 2.0 support. This connector reads the number of provisioned users and can push user creation/deletion events directly to AWS.</p>
+
+      <h3>Step-by-step Setup</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Open IAM Identity Center</div>
+          <div class="step-text">In the AWS Management Console, search for <strong>IAM Identity Center</strong> (formerly AWS SSO). Enable it if not already active.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Enable Automatic Provisioning</div>
+          <div class="step-text">Settings → Identity source → Actions → <strong>Enable automatic provisioning</strong>. This reveals the SCIM endpoint URL and a bearer token.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Copy SCIM Endpoint URL and Token</div>
+          <div class="step-text">Copy both the <strong>SCIM endpoint URL</strong> (e.g. <code>https://scim.us-east-1.amazonaws.com/xxxx/scim/v2</code>) and the <strong>Access token</strong>. The token is only shown once.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Configure in TerzoCloud</div>
+          <div class="step-text">Go to <strong>Admin → App Connectors → AWS IAM Identity Center</strong>. Paste the <strong>SCIM Endpoint URL</strong> as the org field and the <strong>Access token</strong> as the token field.</div>
+        </div></div>
+      </div>
+
+      <h3>Connector Fields</h3>
+      <div class="card" style="padding:0">
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div><div class="field-name">SCIM Bearer Token</div><div class="field-desc">The access token generated by AWS when enabling automatic provisioning. Only shown once — store it securely.</div><div class="field-example">eyJr… (long token)</div></div>
+        </div>
+        <div class="field-row" style="padding:12px 16px">
+          <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+          <div><div class="field-name">SCIM Endpoint URL</div><div class="field-desc">The full SCIM endpoint URL from your IAM Identity Center settings. This is where TerzoCloud will send user provisioning requests.</div><div class="field-example">https://scim.us-east-1.amazonaws.com/xxxxxxxx/scim/v2</div></div>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <div>AWS IAM Identity Center provides <strong>native SCIM 2.0</strong> — no extra plan required. It works on any AWS account (including Free Tier).</div>
+      </div>
+    </section>
+
+    <!-- ══ TROUBLESHOOTING ══ -->
+    <section class="section" id="troubleshooting">
+      <div class="section-header">
+        <div class="section-icon orange"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg></div>
+        <div><div class="section-title">Troubleshooting</div><div class="section-desc">Common issues and how to fix them</div></div>
+      </div>
+
+      <table class="req-table">
+        <thead><tr><th>Error</th><th>Likely Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>401 Unauthorized</code></td>
+            <td>Token expired or wrong</td>
+            <td>Re-generate the API token in the app's settings and update the connector</td>
+          </tr>
+          <tr>
+            <td><code>403 Forbidden</code></td>
+            <td>Token missing required scope</td>
+            <td>Check the scopes/permissions on your token match what's listed in this guide</td>
+          </tr>
+          <tr>
+            <td><code>404 Not Found</code> (GitHub)</td>
+            <td>Wrong organisation slug</td>
+            <td>Verify the org name in the URL at github.com/orgs/&lt;slug&gt;</td>
+          </tr>
+          <tr>
+            <td>Test Connection fails (Google)</td>
+            <td>Domain-wide delegation not set</td>
+            <td>Re-check step 4 of the Google Workspace setup — the DWD scope must be granted in Admin Console</td>
+          </tr>
+          <tr>
+            <td>Sync count is 0</td>
+            <td>Software record not linked</td>
+            <td>In the connector card, select the correct software record from the "Software Record" dropdown and save again</td>
+          </tr>
+          <tr>
+            <td>Connector saves but shows "Never synced"</td>
+            <td>Not synced yet</td>
+            <td>Click <strong>Sync Now</strong> in the connector card to trigger the first sync manually</td>
+          </tr>
+          <tr>
+            <td>AWS token rejected</td>
+            <td>Token was regenerated in AWS</td>
+            <td>In IAM Identity Center → Settings, regenerate the provisioning token and update the connector</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Checking Server Logs</h3>
+      <div class="code-block" style="position:relative">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmt"># View real-time logs (if using nodemon or pm2)</span>
+<span class="kw">tail</span> -f logs/server.log
+
+<span class="cmt"># Or if running directly, check console output</span>
+<span class="cmt"># Look for lines containing [CONNECTOR] or [SCIM]</span>
+      </div>
+    </section>
+
+    <!-- ══ FAQ ══ -->
+    <section class="section" id="faq">
+      <div class="section-header">
+        <div class="section-icon blue"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div><div class="section-title">Frequently Asked Questions</div><div class="section-desc">Common questions about SCIM setup</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-title">❓ How often does the connector sync?</div>
+        <p style="margin:0;font-size:13px;color:var(--gray-600)">The SCIM Audit auto-refreshes every 60 seconds. Manual syncs happen when you click "Sync Now". Full automated provisioning (user create/delete) is triggered by user events in the portal.</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-title">❓ Are API tokens stored securely?</div>
+        <p style="margin:0;font-size:13px;color:var(--gray-600)">Yes — tokens are stored encrypted in MongoDB. Only the last 4 characters are displayed in the UI. Setting <code>TOKEN_ENCRYPTION_KEY</code> in your .env enables AES encryption at rest.</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-title">❓ Can I have multiple connectors active at the same time?</div>
+        <p style="margin:0;font-size:13px;color:var(--gray-600)">Yes — all 6 connectors can be enabled simultaneously. Each connector operates independently and only affects its own target app.</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-title">❓ What happens if a connector sync fails?</div>
+        <p style="margin:0;font-size:13px;color:var(--gray-600)">The connector status dot turns red and the last error message is stored. The Software Inventory count is not updated. Fix the issue and click "Test Connection" then "Sync Now".</p>
+      </div>
+      <div class="card">
+        <div class="card-title">❓ Do I need all 6 connectors?</div>
+        <p style="margin:0;font-size:13px;color:var(--gray-600)">No — configure only the ones you need. Each connector is fully optional and independent. You can add or remove connectors at any time from Admin → App Connectors.</p>
+      </div>
+
+      <div class="divider"></div>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:22px;margin-bottom:8px">🚀</div>
+        <div style="font-size:15px;font-weight:700;color:var(--gray-800);margin-bottom:6px">Ready to configure SCIM?</div>
+        <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Go to the TerzoCloud Admin panel to add your first connector.</div>
+        <a href="http://localhost:3000/admin.html" target="_blank"
+          style="display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:#fff;padding:10px 22px;border-radius:10px;font-size:13.5px;font-weight:700;text-decoration:none;transition:background .14s"
+          onmouseover="this.style.background='#1e3a8a'" onmouseout="this.style.background='var(--primary)'">
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Open Admin Panel
+        </a>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  /* ── Tab switching ── */
+  function switchTab(groupId, panelId){
+    const group = document.getElementById(groupId);
+    if(!group) return;
+    const allTabs = group.querySelectorAll('.tab');
+    const allPanels = group.parentElement.querySelectorAll('.tab-panel');
+    allTabs.forEach((t,i) => { t.classList.toggle('active', t.getAttribute('onclick').includes(panelId)); });
+    allPanels.forEach(p => { p.classList.toggle('active', p.id === panelId); });
+  }
+
+  /* ── Active nav link on scroll ── */
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-item');
+  function updateActiveNav(){
+    let current = '';
+    sections.forEach(s => {
+      const rect = s.getBoundingClientRect();
+      if(rect.top <= 80) current = s.id;
+    });
+    navLinks.forEach(l => {
+      const href = l.getAttribute('href');
+      l.classList.toggle('active', href === '#'+current);
+    });
+  }
+  document.querySelector('.main').addEventListener('scroll', updateActiveNav);
+  window.addEventListener('scroll', updateActiveNav);
+
+  /* ── Copy code ── */
+  function copyCode(btn){
+    const block = btn.closest('.code-block');
+    const text = block.innerText.replace('Copy','').trim();
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent = 'Copied!';
+      setTimeout(()=>btn.textContent='Copy', 2000);
+    });
+  }
+
+  /* ── Progress tracking ── */
+  let completedSections = new Set();
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting && e.intersectionRatio > 0.3){
+        completedSections.add(e.target.id);
+        updateProgress();
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+
+  function updateProgress(){
+    const total = sections.length;
+    const done = completedSections.size;
+    const pct = Math.round(done/total*100);
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressPct').textContent = pct+'%';
+  }
+</script>
+</body>
+</html>

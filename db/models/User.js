@@ -99,6 +99,11 @@ const userSchema = new mongoose.Schema(
       index: true,
       comment: 'Google Workspace immutable user ID, set by SCIM provisioner',
     },
+    appAccess: {
+      type: [String],
+      default: [],
+      comment: 'Array of Software csvIds this user has been granted access to',
+    },
   },
   {
     timestamps: true, // adds createdAt & updatedAt

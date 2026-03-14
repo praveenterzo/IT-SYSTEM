@@ -449,6 +449,21 @@
     body.theme-purple .exc-chip { background:#2d1260 !important; border-color:#6b21a8 !important; color:#c084fc !important; }
     body.theme-purple .exc-chip.on { background:#4c1d95 !important; border-color:#a855f7 !important; color:#e9d5ff !important; }
 
+    /* ── Column Picker ── */
+    .col-picker-wrap { position:relative; display:inline-flex; }
+    .col-picker-drop { position:absolute; right:0; top:calc(100% + 6px); background:#fff; border:1px solid var(--gray-200); border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,0.13); padding:6px 4px; min-width:210px; z-index:60; display:none; }
+    .col-picker-drop.open { display:block; }
+    .col-picker-head { font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;padding:4px 10px 8px;border-bottom:1px solid var(--gray-100);margin-bottom:4px; }
+    .col-picker-item { display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12.5px;color:var(--gray-700);cursor:pointer;border-radius:6px;transition:background .12s;user-select:none; }
+    .col-picker-item:hover { background:var(--gray-50); }
+    .col-picker-item input[type="checkbox"] { width:14px;height:14px;accent-color:var(--primary);cursor:pointer;flex-shrink:0; }
+    .col-picker-item.locked { color:var(--gray-400);cursor:default; }
+    .col-picker-item.locked input { opacity:.4;cursor:default; }
+    body.theme-dark .col-picker-drop { background:#1e1525;border-color:rgba(153,102,255,.2); }
+    body.theme-dark .col-picker-item { color:#ccc; }
+    body.theme-dark .col-picker-item:hover { background:rgba(255,255,255,.05); }
+    body.theme-dark .col-picker-head { color:rgba(153,102,255,.6);border-color:rgba(255,255,255,.08); }
+
     /* ── Advanced Search Panel ── */
     .adv-search-panel { padding:12px 18px 14px; border-bottom:1px solid var(--gray-100); background:var(--gray-50); display:none; flex-wrap:wrap; gap:8px; align-items:flex-end; }
     .adv-search-panel.open { display:flex; }
@@ -579,6 +594,19 @@
     </div>
   </nav>
   <div class="sidebar-footer">
+    <!-- Learning Portal link -->
+    <a href="scim-learning-portal.html" target="_blank"
+      style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;margin-bottom:10px;background:linear-gradient(135deg,#eff6ff,#f3e8ff);border:1px solid #c4b5fd;text-decoration:none;transition:box-shadow .15s"
+      onmouseover="this.style.boxShadow='0 2px 10px rgba(124,58,237,.2)'" onmouseout="this.style.boxShadow='none'">
+      <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:#1e40af;white-space:nowrap">SCIM Setup Guide</div>
+        <div style="font-size:10.5px;color:#7c3aed;white-space:nowrap">Learning Portal →</div>
+      </div>
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#7c3aed;fill:none;stroke-width:2;flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>
     <div class="theme-switcher" id="themeSwitcher">
       <button class="theme-btn" id="btn-dark"   onclick="setTheme('dark')"   title="Dark">🌑 Dark</button>
       <button class="theme-btn" id="btn-purple" onclick="setTheme('purple')" title="Purple">🔮 Purple</button>
@@ -617,18 +645,8 @@
         <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px">Users by Department</div>
         <div class="dept-grid" id="deptGrid"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Recent Users</div></div>
-          <table><thead><tr><th>Name</th><th>Dept</th><th>Location</th></tr></thead>
-          <tbody id="recentUsers"></tbody></table>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Recent Assets</div></div>
-          <table><thead><tr><th>Asset</th><th>Spec</th><th>Status</th></tr></thead>
-          <tbody id="recentAssets"></tbody></table>
-        </div>
-      </div>
+      <!-- SOFTWARE STAT TILES -->
+      <div id="swDashTiles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px"></div>
 
       <!-- SOFTWARE BUDGET OVERVIEW -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" id="softwareBudgetSection">
@@ -669,6 +687,15 @@
               <option value="">All Status</option><option>Active</option><option>Inactive</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="usersAdvBtn" onclick="toggleAdvSearch('users')">🔍 Advanced ▼</button>
+            <div class="col-picker-wrap">
+              <button class="btn btn-secondary btn-sm" onclick="toggleColPicker('users',event)">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Columns
+              </button>
+              <div class="col-picker-drop" id="colDrop-users">
+                <div class="col-picker-head">Show / Hide Columns</div>
+              </div>
+            </div>
             <button class="btn btn-secondary btn-sm" onclick="openExportConfig('users')">
               <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export
@@ -714,6 +741,15 @@
               <option value="">All Status</option><option>In-Use</option><option>Available</option><option>Under Repair</option><option>Retired</option>
             </select>
             <button class="btn btn-secondary btn-sm" id="assetsAdvBtn" onclick="toggleAdvSearch('assets')">🔍 Advanced ▼</button>
+            <div class="col-picker-wrap">
+              <button class="btn btn-secondary btn-sm" onclick="toggleColPicker('assets',event)">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Columns
+              </button>
+              <div class="col-picker-drop" id="colDrop-assets">
+                <div class="col-picker-head">Show / Hide Columns</div>
+              </div>
+            </div>
             <button class="btn btn-secondary btn-sm" onclick="openExportConfig('assets')">
               <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export
@@ -748,12 +784,18 @@
 
     <!-- SOFTWARE INVENTORY -->
     <div class="page" id="page-software">
-      <!-- Budget summary chips -->
-      <div id="swBudgetChips" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+      <!-- Software Inventory summary tile -->
+      <div id="swInventoryTile" style="margin-bottom:16px"></div>
 
       <div class="card">
         <div class="card-header" style="flex-wrap:wrap;gap:10px">
-          <div class="card-title">Software Inventory <span style="color:var(--gray-400);font-weight:400;font-size:12px" id="swCountLabel"></span></div>
+          <div class="card-title" style="display:flex;align-items:center;gap:10px;flex:1">
+            Software Inventory <span style="color:var(--gray-400);font-weight:400;font-size:12px" id="swCountLabel"></span>
+            <button class="btn btn-secondary btn-sm" onclick="openScimAudit()" style="margin-left:auto;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-color:#bfdbfe;color:#1e40af;font-weight:700;gap:6px">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              SCIM Audit
+            </button>
+          </div>
           <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
             <select class="filter-select" id="swTypeFilter" onchange="renderSoftware()">
               <option value="">All Types</option>
@@ -779,6 +821,15 @@
               <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export
             </button>
+            <div class="col-picker-wrap">
+              <button class="btn btn-secondary btn-sm" onclick="toggleColPicker('software',event)">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Columns
+              </button>
+              <div class="col-picker-drop" id="colDrop-software">
+                <div class="col-picker-head">Show / Hide Columns</div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="adv-search-panel" id="softwareAdvPanel">
@@ -888,8 +939,27 @@
         <div class="form-group" style="grid-column:1/-1"><label>Reporting Manager</label><input type="text" id="userReportingManager" placeholder="e.g. Vasanth Pandian"></div>
         <!-- Software Admin Insight (only visible when editing existing user) -->
         <div id="userSwAdminSection" style="display:none;grid-column:1/-1">
-          <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding-top:4px;border-top:1px solid var(--gray-100)">🛡️ Software Admin Access</div>
+          <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding-top:4px;border-top:1px solid var(--gray-100)">🛡️ Privileged Access</div>
           <div id="userSwAdminList"></div>
+        </div>
+
+        <!-- App Access (only visible when editing existing user) -->
+        <div id="userAppAccessSection" style="display:none;grid-column:1/-1">
+          <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-top:4px;border-top:1px solid var(--gray-100)">📱 App Access</div>
+          <!-- Chips for currently granted apps -->
+          <div id="appAccessChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:28px"></div>
+          <!-- Add-app row -->
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="appAccessSelect" style="flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--gray-200);border-radius:6px;background:var(--gray-50);color:var(--gray-700)">
+              <option value="">— Grant access to an app —</option>
+            </select>
+            <button type="button" onclick="addAppAccess()"
+              style="font-size:12px;padding:5px 14px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600">
+              + Grant
+            </button>
+          </div>
+          <!-- Invite status feedback -->
+          <div id="appAccessStatus" style="margin-top:8px;font-size:11px"></div>
         </div>
       </div>
     </div>
@@ -1001,7 +1071,7 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Owner</label><input type="text" id="swOwner" placeholder="Owner name"></div>
+        <div class="form-group"><label>Owner</label><input type="text" id="swOwner" placeholder="Type to search user…" list="dlSwOwnerPicker" autocomplete="off"><datalist id="dlSwOwnerPicker"></datalist></div>
         <div class="form-group"><label>Admin(s)</label>
           <div class="tag-picker" id="swAdminPicker" onclick="document.getElementById('swAdminInput').focus()">
             <span id="swAdminChips"></span>
@@ -1013,7 +1083,7 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Billed To</label><input type="text" id="swBilledTo" placeholder="e.g. Eric Pritchett"></div>
+        <div class="form-group"><label>Billed To</label><input type="text" id="swBilledTo" placeholder="Type to search user…" list="dlSwBilledToPicker" autocomplete="off"><datalist id="dlSwBilledToPicker"></datalist></div>
         <div class="form-group"><label>Status</label>
           <select id="swStatus"><option>Active</option><option>Inactive</option></select>
         </div>
@@ -1162,6 +1232,7 @@ const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN',{year:'numeric',
 let users = [];
 let assets = [];
 let software = [];
+let appConnectors = [];   // SCIM app connector configs from /api/admin/connectors
 const API = 'http://localhost:3000/api';
 
 async function loadData(){
@@ -1189,6 +1260,81 @@ const PAGE_SIZE=10;
 /* ══ SORT STATE ══ */
 let userSort={col:null,dir:1};
 let assetSort={col:null,dir:1};
+
+/* ══ COLUMN VISIBILITY ══ */
+const userColVis = {
+  name:             { label:'Name',              locked:true,  visible:true  },
+  email:            { label:'Email',             locked:false, visible:true  },
+  dept:             { label:'Department',        locked:false, visible:true  },
+  jobTitle:         { label:'Job Title',         locked:false, visible:true  },
+  reportingManager: { label:'Reporting Manager', locked:false, visible:true  },
+  role:             { label:'Role',              locked:false, visible:true  },
+  location:         { label:'Location',          locked:false, visible:true  },
+  status:           { label:'Status',            locked:false, visible:true  },
+  assets:           { label:'Assets',            locked:false, visible:true  },
+  privilegedAccess: { label:'Privileged Access', locked:false, visible:false },
+  appAccess:        { label:'App Access',        locked:false, visible:false },
+};
+const assetColVis = {
+  csvId:    { label:'Asset ID',    locked:true,  visible:true  },
+  name:     { label:'Name & Spec', locked:false, visible:true  },
+  serial:   { label:'Serial No.',  locked:false, visible:true  },
+  assignTo: { label:'Assigned To', locked:false, visible:true  },
+  dept:     { label:'Department',  locked:false, visible:true  },
+  location: { label:'Location',    locked:false, visible:true  },
+  status:   { label:'Status',      locked:false, visible:true  },
+  brand:    { label:'Brand',       locked:false, visible:false },
+  type:     { label:'Type',        locked:false, visible:false },
+};
+const swColVis = {
+  csvId:           { label:'ID',           locked:true,  visible:true  },
+  name:            { label:'Name',         locked:false, visible:true  },
+  department:      { label:'Dept',         locked:false, visible:true  },
+  deploymentType:  { label:'Type',         locked:false, visible:true  },
+  subscriptionPlan:{ label:'Plan',         locked:false, visible:true  },
+  renewalPeriod:   { label:'Renewal',      locked:false, visible:true  },
+  licenses:        { label:'Licenses',     locked:false, visible:true  },
+  sites:           { label:'Sites',        locked:false, visible:true  },
+  owner:           { label:'Owner',        locked:false, visible:false },
+  annualCost:      { label:'Annual Cost',  locked:false, visible:false },
+};
+
+function toggleColPicker(section, e){
+  e.stopPropagation();
+  const drop = document.getElementById('colDrop-'+section);
+  if(!drop) return;
+  const isOpen = drop.classList.contains('open');
+  document.querySelectorAll('.col-picker-drop.open').forEach(d=>d.classList.remove('open'));
+  if(!isOpen) drop.classList.add('open');
+}
+
+function initColPickers(){
+  const defs = {
+    users:    { vis: userColVis,  render: ()=>renderUsers()  },
+    assets:   { vis: assetColVis, render: ()=>renderAssets() },
+    software: { vis: swColVis,    render: ()=>renderSoftware() },
+  };
+  for(const [section, {vis, render}] of Object.entries(defs)){
+    const drop = document.getElementById('colDrop-'+section);
+    if(!drop) continue;
+    drop.querySelectorAll('.col-picker-item').forEach(el=>el.remove());
+    for(const [key, cfg] of Object.entries(vis)){
+      const item = document.createElement('label');
+      item.className = 'col-picker-item' + (cfg.locked ? ' locked' : '');
+      item.innerHTML = `<input type="checkbox" ${cfg.visible?'checked':''} ${cfg.locked?'disabled':''}> ${cfg.label}`;
+      item.querySelector('input').addEventListener('change', function(){
+        vis[key].visible = this.checked;
+        render();
+      });
+      drop.appendChild(item);
+    }
+  }
+}
+
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.col-picker-wrap') && !e.target.closest('.export-wrap'))
+    document.querySelectorAll('.col-picker-drop.open').forEach(d=>d.classList.remove('open'));
+});
 
 function thSort(col, sortState, renderFn){
   if(sortState.col===col){ sortState.dir*=-1; }
@@ -1273,6 +1419,12 @@ function renderDashboard(){
     </div>`).join('');
 
   const totalSwBudget = software.reduce((s,x)=>s+swTotalCost(x),0);
+  const paidApps      = software.filter(x=>swTotalCost(x)>0);
+  const freeApps      = software.filter(x=>swTotalCost(x)===0);
+  const totalLicD     = software.reduce((s,x)=>s+(x.purchasedLicenses||0),0);
+  const usedLicD      = software.reduce((s,x)=>s+(x.usedLicenses||0),0);
+  const licPctD       = totalLicD>0 ? Math.round(usedLicD/totalLicD*100) : 0;
+
   document.getElementById('statGrid').innerHTML=`
     ${sc('blue','<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',users.length,'Total Users')}
     ${sc('green','<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',users.filter(u=>u.status==='Active').length,'Active Users')}
@@ -1280,33 +1432,34 @@ function renderDashboard(){
     ${sc('blue','<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',inUse,'Assets In-Use')}
     ${sc('green','<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',avail,'Available')}
     ${sc('purple','<rect x="2" y="3" width="20" height="14" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M10 10h8"/>',Object.keys(deptCounts).length,'Departments')}
-    <div class="stat-card" onclick="navigate('software',document.querySelector('.nav-item[onclick*=software]'))" style="cursor:pointer">
+  `;
+
+  // Software stat tiles row (4 tiles)
+  const swNav = `navigate('software',document.querySelector('.nav-item[onclick*=software]'))`;
+  document.getElementById('swDashTiles').innerHTML = `
+    <div class="stat-card" onclick="${swNav}" style="cursor:pointer;border-top:3px solid var(--primary)">
       <div class="stat-icon yellow"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-      <div><div class="stat-num" id="statSoftwareBudget" style="font-size:18px">${totalSwBudget>0?'$'+(totalSwBudget/1000).toFixed(0)+'K':'—'}</div><div class="stat-label">Software Spend</div></div>
+      <div><div class="stat-num" style="font-size:18px;color:var(--primary)">${totalSwBudget>0?'$'+(totalSwBudget>=1000000?(totalSwBudget/1000000).toFixed(1)+'M':(totalSwBudget/1000).toFixed(1)+'K'):'—'}</div><div class="stat-label">Total Annual Spend</div></div>
     </div>
-    <div class="stat-card" onclick="navigate('software',document.querySelector('.nav-item[onclick*=software]'))" style="cursor:pointer">
-      <div class="stat-icon purple"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-      <div><div class="stat-num" id="statSoftwareApps">${software.length}</div><div class="stat-label">Software Apps</div></div>
+    <div class="stat-card" onclick="${swNav};setTimeout(()=>swBudgetChipClick('paid'),200)" style="cursor:pointer;border-top:3px solid #3b82f6">
+      <div class="stat-icon blue"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+      <div><div class="stat-num" style="color:#3b82f6">${paidApps.length}</div><div class="stat-label">Paid Apps</div></div>
+    </div>
+    <div class="stat-card" onclick="${swNav};setTimeout(()=>swBudgetChipClick('free'),200)" style="cursor:pointer;border-top:3px solid var(--success)">
+      <div class="stat-icon green"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div><div class="stat-num" style="color:var(--success)">${freeApps.length}</div><div class="stat-label">Free / Open Source</div></div>
+    </div>
+    <div class="stat-card" onclick="${swNav}" style="cursor:pointer;border-top:3px solid #8b5cf6">
+      <div class="stat-icon purple"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+      <div>
+        <div class="stat-num" style="font-size:18px;color:#8b5cf6">${usedLicD}<span style="font-size:12px;color:var(--gray-400);font-weight:500">/${totalLicD}</span></div>
+        <div class="stat-label">License Utilization <span style="color:${licPctD>100?'var(--danger)':licPctD>85?'#d97706':'var(--success)'};font-weight:700">${licPctD}%</span></div>
+      </div>
     </div>
   `;
-  // Render budget widgets asynchronously
+
+  // Render budget widgets
   renderSoftwareBudgetWidget();
-
-  // recent users
-  document.getElementById('recentUsers').innerHTML=[...users].slice(-5).reverse().map(u=>`<tr>
-    <td><div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div><strong>${u.first} ${u.last}</strong></div></td>
-    <td><span class="tag">${u.dept}</span></td>
-    <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
-  </tr>`).join('');
-
-  document.getElementById('recentAssets').innerHTML=[...assets].slice(-5).reverse().map(a=>{
-    const sc2={Available:'available','In-Use':'in-use','Under Repair':'under-repair','Retired':'retired'}[a.status]||'available';
-    return `<tr>
-      <td><strong>${a.name}</strong> <span style="color:var(--gray-400);font-size:10.5px">${a.csvId}</span></td>
-      <td style="color:var(--gray-400);font-size:11.5px">${a.desc}</td>
-      <td><span class="badge ${sc2}">${a.status}</span></td>
-    </tr>`;
-  }).join('');
 }
 
 function sc(color,icon,num,label){
@@ -1364,34 +1517,62 @@ function renderUsers(){
   const slice=list.slice((userPage-1)*PAGE_SIZE, userPage*PAGE_SIZE);
   const lbl=document.getElementById('userCountLabel');
   if(lbl) lbl.textContent=`(${list.length} of ${users.length})`;
+
+  const visCols = Object.entries(userColVis).filter(([,c])=>c.visible);
+  const colCount = visCols.length;
+  const sortableKeys = new Set(['name','email','dept','jobTitle','reportingManager','role','location','status']);
+
   const head=document.getElementById('userTableHead');
   if(head){
-    const cols=[
-      {key:'name',label:'Name'},{key:'email',label:'Email'},{key:'dept',label:'Department'},
-      {key:'jobTitle',label:'Job Title'},{key:'reportingManager',label:'Reporting Manager'},
-      {key:'role',label:'Role'},{key:'location',label:'Location'},{key:'status',label:'Status'},
-      {key:'assets',label:'Assets'}
-    ];
-    head.innerHTML='<tr>'+cols.map(c=>`<th class="${sortClass(c.key,userSort)}" onclick="thSort('${c.key}',userSort,renderUsers)">${c.label}${sortArrow(c.key,userSort)}</th>`).join('')+'</tr>';
+    head.innerHTML='<tr>'+visCols.map(([key,cfg])=>{
+      if(sortableKeys.has(key))
+        return `<th class="${sortClass(key,userSort)}" onclick="thSort('${key}',userSort,renderUsers)">${cfg.label}${sortArrow(key,userSort)}</th>`;
+      return `<th>${cfg.label}</th>`;
+    }).join('')+'</tr>';
   }
+
   const body=document.getElementById('userTableBody');
   if(!body) return;
-  if(!slice.length){ body.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray-400)">No users found</td></tr>`; }
-  else {
+  if(!slice.length){
+    body.innerHTML=`<tr><td colspan="${colCount}" style="text-align:center;padding:40px;color:var(--gray-400)">No users found</td></tr>`;
+  } else {
     body.innerHTML=slice.map(u=>{
       const uAssets=assets.filter(a=>a.assignTo===u.id);
-      return `<tr>
-        <td><div class="user-cell" onclick="editUser('${u.id}')" style="cursor:pointer"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div>
-          <strong style="color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${u.first} ${u.last}</strong></div></td>
-        <td style="color:var(--gray-600);font-size:12px">${u.email}</td>
-        <td><span class="tag">${u.dept}</span></td>
-        <td style="color:var(--gray-600);font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.jobTitle||''}">${u.jobTitle||'<span style="color:var(--gray-300)">—</span>'}</td>
-        <td style="color:var(--gray-600);font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.reportingManager||''}">${u.reportingManager||'<span style="color:var(--gray-300)">—</span>'}</td>
-        <td><span class="badge role-${(u.role||'staff').toLowerCase()}">${u.role}</span></td>
-        <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>
-        <td><span class="badge ${u.status.toLowerCase()}">${u.status}</span></td>
-        <td style="color:var(--gray-600)">${uAssets.length?`<span class="tag">${uAssets.length} asset${uAssets.length>1?'s':''}</span>`:'<span style="color:var(--gray-400)">—</span>'}</td>
-      </tr>`;
+      const fullNameLow=((u.first||'')+' '+(u.last||'')).trim().toLowerCase();
+
+      function userCell(key){
+        switch(key){
+          case 'name':
+            return `<td><div class="user-cell" onclick="editUser('${u.id}')" style="cursor:pointer"><div class="ava-sm" style="background:${aColor(u.first)}">${ini(u.first,u.last)}</div><strong style="color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${u.first} ${u.last}</strong></div></td>`;
+          case 'email':
+            return `<td style="color:var(--gray-600);font-size:12px">${u.email}</td>`;
+          case 'dept':
+            return `<td><span class="tag">${u.dept}</span></td>`;
+          case 'jobTitle':
+            return `<td style="color:var(--gray-600);font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.jobTitle||''}">${u.jobTitle||'<span style="color:var(--gray-300)">—</span>'}</td>`;
+          case 'reportingManager':
+            return `<td style="color:var(--gray-600);font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${u.reportingManager||''}">${u.reportingManager||'<span style="color:var(--gray-300)">—</span>'}</td>`;
+          case 'role':
+            return `<td><span class="badge role-${(u.role||'staff').toLowerCase()}">${u.role}</span></td>`;
+          case 'location':
+            return `<td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${u.location}</span></td>`;
+          case 'status':
+            return `<td><span class="badge ${u.status.toLowerCase()}">${u.status}</span></td>`;
+          case 'assets':
+            return `<td style="color:var(--gray-600)">${uAssets.length?`<span class="tag">${uAssets.length} asset${uAssets.length>1?'s':''}</span>`:'<span style="color:var(--gray-400)">—</span>'}</td>`;
+          case 'privilegedAccess': {
+            const privApps = software.filter(s=>(s.admins||'').split(',').map(a=>a.trim().toLowerCase()).includes(fullNameLow));
+            return `<td style="font-size:12px">${privApps.length?privApps.map(s=>`<span class="tag" style="margin:1px">${s.name}</span>`).join(''):'<span style="color:var(--gray-400)">—</span>'}</td>`;
+          }
+          case 'appAccess': {
+            const appList = software.filter(s=>s.department===u.dept||(s.admins||'').split(',').map(a=>a.trim().toLowerCase()).includes(fullNameLow));
+            return `<td style="font-size:12px;max-width:240px">${appList.length?appList.map(s=>`<span class="tag" style="margin:1px;font-size:11px">${s.name}</span>`).join(''):'<span style="color:var(--gray-400)">—</span>'}</td>`;
+          }
+          default:
+            return `<td>${u[key]||'—'}</td>`;
+        }
+      }
+      return `<tr>${visCols.map(([key])=>userCell(key)).join('')}</tr>`;
     }).join('');
   }
   renderPag('userPagination',userPage,pages,p=>{userPage=p;renderUsers();});
@@ -1448,35 +1629,45 @@ function renderAssets(){
   const slice=list.slice((assetPage-1)*PAGE_SIZE, assetPage*PAGE_SIZE);
   const lbl=document.getElementById('assetCountLabel');
   if(lbl) lbl.textContent=`(${list.length} of ${assets.length})`;
+
+  const visCols = Object.entries(assetColVis).filter(([,c])=>c.visible);
+  const colCount = visCols.length;
+  const sortableKeys = new Set(['csvId','name','serial','assignTo','dept','location','status']);
+
   const head=document.getElementById('assetTableHead');
   if(head){
-    const cols=[
-      {key:'csvId',label:'Asset ID'},{key:'name',label:'Name & Spec'},{key:'serial',label:'Serial No.'},
-      {key:'assignTo',label:'Assigned To'},{key:'dept',label:'Department'},
-      {key:'location',label:'Location'},{key:'status',label:'Status'}
-    ];
-    head.innerHTML='<tr>'+cols.map(c=>`<th class="${sortClass(c.key,assetSort)}" onclick="thSort('${c.key}',assetSort,renderAssets)">${c.label}${sortArrow(c.key,assetSort)}</th>`).join('')+'</tr>';
+    head.innerHTML='<tr>'+visCols.map(([key,cfg])=>{
+      if(sortableKeys.has(key))
+        return `<th class="${sortClass(key,assetSort)}" onclick="thSort('${key}',assetSort,renderAssets)">${cfg.label}${sortArrow(key,assetSort)}</th>`;
+      return `<th>${cfg.label}</th>`;
+    }).join('')+'</tr>';
   }
+
   const body=document.getElementById('assetTableBody');
   if(!body) return;
-  if(!slice.length){ body.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray-400)">No assets found</td></tr>`; }
-  else {
+  if(!slice.length){
+    body.innerHTML=`<tr><td colspan="${colCount}" style="text-align:center;padding:40px;color:var(--gray-400)">No assets found</td></tr>`;
+  } else {
     body.innerHTML=slice.map(a=>{
       const stcls={Available:'available','In-Use':'in-use','Under Repair':'under-repair','Retired':'retired'}[a.status]||'available';
       const u=users.find(x=>x.id===a.assignTo);
       const assignHtml=u?`<div class="user-cell"><div class="ava-sm" style="background:${aColor(u.first)};width:22px;height:22px;font-size:9px">${ini(u.first,u.last)}</div><span>${u.first} ${u.last}</span></div>`:'<span style="color:var(--gray-400)">—</span>';
-      return `<tr>
-        <td class="mono" style="color:var(--gray-400)">${a.csvId}</td>
-        <td onclick="editAsset('${a.id}')" style="cursor:pointer">
-          <strong style="color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${a.name}</strong><br>
-          <span style="color:var(--gray-400);font-size:11px">${a.desc}</span>${a.notes?`<div class="svc-note">⚠ ${a.notes}</div>`:''}
-        </td>
-        <td class="mono" style="font-size:11px;color:var(--gray-600)">${a.serial}</td>
-        <td>${assignHtml}</td>
-        <td><span class="tag">${a.dept}</span></td>
-        <td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${a.location}</span></td>
-        <td><span class="badge ${stcls}">${a.status}</span></td>
-      </tr>`;
+
+      function assetCell(key){
+        switch(key){
+          case 'csvId':    return `<td class="mono" style="color:var(--gray-400)">${a.csvId}</td>`;
+          case 'name':     return `<td onclick="editAsset('${a.id}')" style="cursor:pointer"><strong style="color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${a.name}</strong><br><span style="color:var(--gray-400);font-size:11px">${a.desc}</span>${a.notes?`<div class="svc-note">⚠ ${a.notes}</div>`:''}</td>`;
+          case 'serial':   return `<td class="mono" style="font-size:11px;color:var(--gray-600)">${a.serial}</td>`;
+          case 'assignTo': return `<td>${assignHtml}</td>`;
+          case 'dept':     return `<td><span class="tag">${a.dept}</span></td>`;
+          case 'location': return `<td><span class="loc-tag"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>${a.location}</span></td>`;
+          case 'status':   return `<td><span class="badge ${stcls}">${a.status}</span></td>`;
+          case 'brand':    return `<td style="font-size:12px;color:var(--gray-600)">${a.brand||'—'}</td>`;
+          case 'type':     return `<td style="font-size:12px;color:var(--gray-600)">${a.type||'—'}</td>`;
+          default:         return `<td>${a[key]||'—'}</td>`;
+        }
+      }
+      return `<tr>${visCols.map(([key])=>assetCell(key)).join('')}</tr>`;
     }).join('');
   }
   renderPag('assetPagination',assetPage,pages,p=>{assetPage=p;renderAssets();});
@@ -1573,7 +1764,120 @@ function openUserModal(u=null){
   } else if(swAdminSection){
     swAdminSection.style.display='none';
   }
+
+  // App Access section
+  const appAccessSection = document.getElementById('userAppAccessSection');
+  if(u && appAccessSection){
+    appAccessSection.style.display = 'block';
+    // Store the current access list on the section element for later use
+    appAccessSection.dataset.userId = u.id;
+    window._currentAppAccess = Array.isArray(u.appAccess) ? [...u.appAccess] : [];
+    // Populate the app select (exclude already-granted apps)
+    populateAppAccessSelect();
+    renderAppAccessChips();
+    document.getElementById('appAccessStatus').innerHTML = '';
+  } else if(appAccessSection){
+    appAccessSection.style.display = 'none';
+    window._currentAppAccess = [];
+  }
+
   showOverlay('userModal');
+}
+
+// ── App Access helpers ────────────────────────────────────────────────────────
+function populateAppAccessSelect(){
+  const sel = document.getElementById('appAccessSelect');
+  if(!sel) return;
+  const granted = new Set(window._currentAppAccess||[]);
+  const opts = software
+    .filter(s => !granted.has(s.csvId))
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  sel.innerHTML = '<option value="">— Grant access to an app —</option>'
+    + opts.map(s=>`<option value="${s.csvId}">${s.name} (${s.csvId})</option>`).join('');
+}
+
+function renderAppAccessChips(){
+  const container = document.getElementById('appAccessChips');
+  if(!container) return;
+  const granted = window._currentAppAccess||[];
+  if(!granted.length){
+    container.innerHTML = `<span style="font-size:12px;color:var(--gray-400);font-style:italic">No apps granted yet.</span>`;
+    return;
+  }
+  container.innerHTML = granted.map(csvId=>{
+    const sw = software.find(s=>s.csvId===csvId);
+    const label = sw ? sw.name : csvId;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--primary-lighter);color:var(--primary);font-size:11px;font-weight:600;padding:3px 10px 3px 10px;border-radius:99px;border:1px solid rgba(153,102,255,.2)">
+      ${label}
+      <span onclick="removeAppAccess('${csvId}')" style="cursor:pointer;font-size:14px;line-height:1;opacity:.7;margin-left:2px" title="Revoke access">×</span>
+    </span>`;
+  }).join('');
+}
+
+async function addAppAccess(){
+  const sel = document.getElementById('appAccessSelect');
+  const csvId = sel?.value;
+  if(!csvId){ showToast('Please select an app to grant','warning'); return; }
+
+  const section = document.getElementById('userAppAccessSection');
+  const userId  = section?.dataset.userId;
+  if(!userId){ showToast('Save the user first before granting app access','warning'); return; }
+
+  window._currentAppAccess = [...(window._currentAppAccess||[]), csvId];
+  renderAppAccessChips();
+  populateAppAccessSelect();
+
+  // Persist + trigger invite
+  await saveAppAccess(userId);
+}
+
+async function removeAppAccess(csvId){
+  const section = document.getElementById('userAppAccessSection');
+  const userId  = section?.dataset.userId;
+  if(!userId) return;
+
+  window._currentAppAccess = (window._currentAppAccess||[]).filter(id=>id!==csvId);
+  renderAppAccessChips();
+  populateAppAccessSelect();
+
+  // Persist (no invite for removal)
+  try {
+    await authFetch(`${API}/users/${userId}/app-access`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ appAccess: window._currentAppAccess }),
+    });
+    const sw = software.find(s=>s.csvId===csvId);
+    showToast(`App access removed: ${sw?.name||csvId}`,'success');
+    document.getElementById('appAccessStatus').innerHTML='';
+  } catch(e){ showToast('Failed to update app access','danger'); }
+}
+
+async function saveAppAccess(userId){
+  const statusEl = document.getElementById('appAccessStatus');
+  try {
+    const res = await authFetch(`${API}/users/${userId}/app-access`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ appAccess: window._currentAppAccess }),
+    });
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error||'Server error'); }
+    const data = await res.json();
+
+    // Show invite results
+    if(data.inviteResults && data.inviteResults.length){
+      const lines = data.inviteResults.map(r=>{
+        const icon = r.status==='invited'   ? '✅'
+                   : r.status==='skipped'   ? '⏭️'
+                   : r.status==='manual'    ? '⚠️'
+                   : r.status==='no_connector' ? 'ℹ️'
+                   : '❌';
+        return `<div style="margin:2px 0">${icon} <strong>${r.appName}</strong>: ${r.message}</div>`;
+      }).join('');
+      statusEl.innerHTML = `<div style="padding:8px 10px;background:var(--gray-50);border:1px solid var(--gray-100);border-radius:6px">${lines}</div>`;
+    }
+    showToast('App access updated','success');
+  } catch(e){ showToast(e.message,'danger'); statusEl.innerHTML=''; }
 }
 
 function deleteCurrentUser(){
@@ -2005,42 +2309,68 @@ function renderSoftware(){
   document.getElementById('swCountLabel').textContent = `${total} app${total!==1?'s':''}${swBudgetFilter?' (filtered)':''}`;
   document.getElementById('navSoftwareCount').textContent = software.length;
 
-  // Budget summary chips at top of page (include service costs in totals)
+  // Software Inventory summary tile (replaces budget chips)
   const totalBudget = software.reduce((s,x)=>s+swTotalCost(x),0);
   const paidList    = software.filter(x=>swTotalCost(x)>0);
   const freeList    = software.filter(x=>swTotalCost(x)===0);
   const totalLic    = software.reduce((s,x)=>s+(x.purchasedLicenses||0),0);
   const usedLic     = software.reduce((s,x)=>s+(x.usedLicenses||0),0);
-
+  const licPct      = totalLic>0 ? Math.round(usedLic/totalLic*100) : 0;
+  const licColor    = licPct>100?'var(--danger)':licPct>85?'#d97706':'var(--success)';
   const activeStyle = 'border-color:var(--primary);box-shadow:0 0 0 2px rgba(59,130,246,.2);';
-  document.getElementById('swBudgetChips').innerHTML =
-    `<div class="sw-budget-chip" style="${swBudgetFilter===''?activeStyle:''}">
-       <span>💰</span><span><span class="chip-val">${fmtCostPlain(totalBudget)}</span><span class="chip-lbl">Total Annual Spend</span></span>
-     </div>
-     <div class="sw-budget-chip" style="cursor:pointer;${swBudgetFilter==='paid'?activeStyle+';background:rgba(59,130,246,.08)':''}" onclick="swBudgetChipClick('paid')" title="Click to filter paid apps">
-       <span>📦</span><span><span class="chip-val" style="color:var(--primary)">${paidList.length}</span><span class="chip-lbl">Paid Apps ${swBudgetFilter==='paid'?'✓':''}</span></span>
-     </div>
-     <div class="sw-budget-chip" style="cursor:pointer;${swBudgetFilter==='free'?activeStyle+';background:rgba(22,163,74,.08)':''}" onclick="swBudgetChipClick('free')" title="Click to filter free/open-source apps">
-       <span>🆓</span><span><span class="chip-val" style="color:var(--success)">${freeList.length}</span><span class="chip-lbl">Free / Open Source ${swBudgetFilter==='free'?'✓':''}</span></span>
-     </div>
-     <div class="sw-budget-chip">
-       <span>🎫</span><span><span class="chip-val">${usedLic}/${totalLic}</span><span class="chip-lbl">License Utilization</span></span>
-     </div>`;
 
-  // Table head
-  const cols = [
-    ['csvId','ID',55],['name','Name',210],['department','Dept',130],
-    ['deploymentType','Type',100],['subscriptionPlan','Plan',130],
-    ['renewalPeriod','Renewal',90],
-    [null,'Licenses',90],[null,'Sites',72],
-  ];
-  document.getElementById('swTableHead').innerHTML = '<tr>'+cols.map(([col,lbl,w])=>
-    col ? `<th class="${sortClass(col,swSort)} sortable" style="width:${w}px" onclick="thSort('${col}',swSort,renderSoftware)">${lbl}${sortArrow(col,swSort)}</th>`
-        : `<th style="width:${w}px">${lbl}</th>`
-  ).join('')+'</tr>';
+  document.getElementById('swInventoryTile').innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);divide-x:1px solid var(--gray-100)">
+        <div style="padding:18px 22px;border-right:1px solid var(--gray-100)">
+          <div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total Annual Spend</div>
+          <div style="font-size:26px;font-weight:800;color:var(--primary);line-height:1.1">${totalBudget>=1000000?'$'+(totalBudget/1000000).toFixed(2)+'M':'$'+(totalBudget/1000).toFixed(1)+'K'}</div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">across ${software.length} apps</div>
+        </div>
+        <div style="padding:18px 22px;border-right:1px solid var(--gray-100);cursor:pointer;transition:background .15s${swBudgetFilter==='paid'?';background:rgba(59,130,246,.05)':''}" onclick="swBudgetChipClick('paid')" title="Click to filter paid apps">
+          <div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Paid Apps ${swBudgetFilter==='paid'?'<span style="color:var(--primary)">✓</span>':''}</div>
+          <div style="font-size:26px;font-weight:800;color:#3b82f6;line-height:1.1">${paidList.length}</div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">${Math.round(paidList.length/Math.max(software.length,1)*100)}% of inventory</div>
+        </div>
+        <div style="padding:18px 22px;border-right:1px solid var(--gray-100);cursor:pointer;transition:background .15s${swBudgetFilter==='free'?';background:rgba(22,163,74,.05)':''}" onclick="swBudgetChipClick('free')" title="Click to filter free / open-source">
+          <div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Free / Open Source ${swBudgetFilter==='free'?'<span style="color:var(--success)">✓</span>':''}</div>
+          <div style="font-size:26px;font-weight:800;color:var(--success);line-height:1.1">${freeList.length}</div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">${Math.round(freeList.length/Math.max(software.length,1)*100)}% of inventory</div>
+        </div>
+        <div style="padding:18px 22px">
+          <div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">License Utilization</div>
+          <div style="font-size:26px;font-weight:800;color:${licColor};line-height:1.1">${licPct}%</div>
+          <div style="margin-top:6px;background:var(--gray-100);border-radius:99px;height:5px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(licPct,100)}%;background:${licColor};border-radius:99px;transition:width .4s"></div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">${usedLic} used of ${totalLic} total</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Table head — driven by swColVis
+  const swVisCols = Object.entries(swColVis).filter(([,c])=>c.visible);
+  const swColDefs = {
+    csvId:           { label:'ID',          sortable:true,  w:55  },
+    name:            { label:'Name',         sortable:true,  w:210 },
+    department:      { label:'Dept',         sortable:true,  w:130 },
+    deploymentType:  { label:'Type',         sortable:true,  w:100 },
+    subscriptionPlan:{ label:'Plan',         sortable:true,  w:130 },
+    renewalPeriod:   { label:'Renewal',      sortable:true,  w:90  },
+    licenses:        { label:'Licenses',     sortable:false, w:90  },
+    sites:           { label:'Sites',        sortable:false, w:72  },
+    owner:           { label:'Owner',        sortable:true,  w:120 },
+    annualCost:      { label:'Annual Cost',  sortable:true,  w:120 },
+  };
+  document.getElementById('swTableHead').innerHTML = '<tr>'+swVisCols.map(([key])=>{
+    const def = swColDefs[key] || { label: key, sortable: false, w: 100 };
+    return def.sortable
+      ? `<th class="${sortClass(key,swSort)} sortable" style="width:${def.w}px" onclick="thSort('${key}',swSort,renderSoftware)">${def.label}${sortArrow(key,swSort)}</th>`
+      : `<th style="width:${def.w}px">${def.label}</th>`;
+  }).join('')+'</tr>';
 
   // Table body
-  const NCOLS = cols.length;
+  const NCOLS = swVisCols.length;
   if(!slice.length){
     document.getElementById('swTableBody').innerHTML=`<tr><td colspan="${NCOLS}" style="text-align:center;padding:32px;color:var(--gray-400)">No software found.</td></tr>`;
   } else {
@@ -2051,24 +2381,34 @@ function renderSoftware(){
       const sites    = [s.siteUSA&&'🇺🇸',s.siteCAN&&'🇨🇦',s.siteIND&&'🇮🇳'].filter(Boolean).join(' ');
       const typeKey  = s.deploymentType?.replace(' ','-') || 'SAAS';
       const totalCost= swTotalCost(s);
-      const activeSvcs = (s.services||[]).filter(sv=>sv.status!=='Inactive');
-      const licPrice = s.licensePricePerUserMonth;
-      return `<tr>
-        <td style="font-size:11px;color:var(--gray-400);font-weight:600">${s.csvId}</td>
-        <td onclick="openSwDrawer('${s.id}')" style="cursor:pointer" title="Click to view details">
-          <div style="font-weight:600;font-size:13px;color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${s.name}</div>
-          ${s.purpose?`<div style="font-size:11px;color:var(--gray-400)">${s.purpose}</div>`:''}
-        </td>
-        <td style="font-size:12px;color:var(--gray-600)">${s.department||'—'}</td>
-        <td><span class="sw-type-badge ${typeKey}">${s.deploymentType}</span></td>
-        <td style="font-size:11.5px;color:var(--gray-600)">${s.subscriptionPlan||'—'}</td>
-        <td style="font-size:12px">${s.renewalPeriod||'—'}</td>
-        <td>
-          <div style="font-size:12px">${licLabel}</div>
-          ${s.purchasedLicenses>0?`<div><div class="lic-bar"><div class="lic-bar-fill ${licClass}" style="width:${Math.min(licPct*100,100)}%"></div></div></div>`:''}
-        </td>
-        <td style="font-size:15px">${sites||'—'}</td>
-      </tr>`;
+
+      function swCell(key){
+        switch(key){
+          case 'csvId':
+            return `<td style="font-size:11px;color:var(--gray-400);font-weight:600">${s.csvId}</td>`;
+          case 'name':
+            return `<td onclick="openSwDrawer('${s.id}')" style="cursor:pointer" title="Click to view details"><div style="font-weight:600;font-size:13px;color:var(--primary-light);text-decoration:underline;text-underline-offset:3px">${s.name}</div>${s.purpose?`<div style="font-size:11px;color:var(--gray-400)">${s.purpose}</div>`:''}</td>`;
+          case 'department':
+            return `<td style="font-size:12px;color:var(--gray-600)">${s.department||'—'}</td>`;
+          case 'deploymentType':
+            return `<td><span class="sw-type-badge ${typeKey}">${s.deploymentType}</span></td>`;
+          case 'subscriptionPlan':
+            return `<td style="font-size:11.5px;color:var(--gray-600)">${s.subscriptionPlan||'—'}</td>`;
+          case 'renewalPeriod':
+            return `<td style="font-size:12px">${s.renewalPeriod||'—'}</td>`;
+          case 'licenses':
+            return `<td><div style="font-size:12px">${licLabel}</div>${s.purchasedLicenses>0?`<div><div class="lic-bar"><div class="lic-bar-fill ${licClass}" style="width:${Math.min(licPct*100,100)}%"></div></div></div>`:''}</td>`;
+          case 'sites':
+            return `<td style="font-size:15px">${sites||'—'}</td>`;
+          case 'owner':
+            return `<td style="font-size:12px;color:var(--gray-600)">${s.owner||'—'}</td>`;
+          case 'annualCost':
+            return `<td style="font-size:12px;font-weight:600;color:var(--gray-700)">${totalCost>0?'$'+totalCost.toLocaleString():'<span style="color:var(--gray-400)">Free</span>'}</td>`;
+          default:
+            return `<td>${s[key]||'—'}</td>`;
+        }
+      }
+      return `<tr>${swVisCols.map(([key])=>swCell(key)).join('')}</tr>`;
     }).join('');
   }
   renderPag('swPagination', swPage, pages, p=>{swPage=p;renderSoftware();});
@@ -2205,6 +2545,7 @@ function openSoftwareModal(s=null){
   _swAdminTags = (s?.admins||'').split(',').map(a=>a.trim()).filter(Boolean);
   swRenderAdminChips();
   swRefreshAdminPickerDl();
+  refreshOwnerBilledToDatalists();
   document.getElementById('swUSA').checked    = s?.siteUSA||false;
   document.getElementById('swCAN').checked    = s?.siteCAN||false;
   document.getElementById('swIND').checked    = s?.siteIND||false;
@@ -2773,6 +3114,7 @@ function swdePopulateForm(){
   _swdeAdminTags = (s.admins||'').split(',').map(a=>a.trim()).filter(Boolean);
   swdeRenderAdminChips();
   swdeRefreshAdminDl();
+  refreshOwnerBilledToDatalists();
   // Services (deep copy)
   _swdeServices = JSON.parse(JSON.stringify(s.services||[]));
   swdeRenderServices();
@@ -2939,16 +3281,23 @@ const EXPORT_DEFS = {
     filename: () => `users-${new Date().toISOString().slice(0,10)}`,
     getList: () => filteredUsers(),
     cols: [
-      { key:'name',    label:'Name',              def:true,  get: u => `${u.first||''} ${u.last||''}`.trim() },
-      { key:'email',   label:'Email',             def:true,  get: u => u.email||'' },
-      { key:'dept',    label:'Department',        def:true,  get: u => u.dept||'' },
-      { key:'jobTitle',label:'Job Title',         def:true,  get: u => u.jobTitle||'' },
-      { key:'manager', label:'Reporting Manager', def:true,  get: u => u.reportingManager||'' },
-      { key:'role',    label:'Role',              def:true,  get: u => u.role||'' },
-      { key:'location',label:'Location',          def:true,  get: u => u.location||'' },
-      { key:'status',  label:'Status',            def:true,  get: u => u.status||'' },
-      { key:'phone',   label:'Phone',             def:false, get: u => u.phone||'' },
-      { key:'assets',  label:'Assigned Assets',   def:true,  get: u => assets.filter(a=>a.assignTo===u.id).map(a=>a.name||a.csvId).join('; ') },
+      { key:'name',             label:'Name',              def:true,  get: u => `${u.first||''} ${u.last||''}`.trim() },
+      { key:'email',            label:'Email',             def:true,  get: u => u.email||'' },
+      { key:'dept',             label:'Department',        def:true,  get: u => u.dept||'' },
+      { key:'jobTitle',         label:'Job Title',         def:true,  get: u => u.jobTitle||'' },
+      { key:'manager',          label:'Reporting Manager', def:true,  get: u => u.reportingManager||'' },
+      { key:'role',             label:'Role',              def:true,  get: u => u.role||'' },
+      { key:'location',         label:'Location',          def:true,  get: u => u.location||'' },
+      { key:'status',           label:'Status',            def:true,  get: u => u.status||'' },
+      { key:'phone',            label:'Phone',             def:false, get: u => u.phone||'' },
+      { key:'assets',           label:'Assigned Assets',   def:true,  get: u => assets.filter(a=>a.assignTo===u.id).map(a=>a.name||a.csvId).join('; ') },
+      { key:'privilegedAccess', label:'Privileged Access', def:false, get: u => {
+          const n = ((u.first||'')+' '+(u.last||'')).trim().toLowerCase();
+          return software.filter(s=>(s.admins||'').split(',').map(a=>a.trim().toLowerCase()).includes(n)).map(s=>s.name).join('; ') || '—';
+        }},
+      { key:'appAccess',        label:'App Access',        def:false, get: u => {
+          return (u.appAccess||[]).map(id=>software.find(s=>s.csvId===id)).filter(Boolean).map(s=>s.name).join('; ') || '—';
+        }},
     ],
   },
   assets: {
@@ -3007,6 +3356,14 @@ function _excInit(section){
   if(!_excEnabled[section]){
     _excEnabled[section] = {};
     EXPORT_DEFS[section].cols.forEach(c => { _excEnabled[section][c.key] = c.def !== false; });
+  }
+  // Sync enabled state from the table's column-picker visibility (runs every open)
+  const colVisMap = { users: userColVis, assets: assetColVis, software: swColVis };
+  const vis = colVisMap[section];
+  if(vis){
+    EXPORT_DEFS[section].cols.forEach(c => {
+      if(vis[c.key] !== undefined) _excEnabled[section][c.key] = vis[c.key].visible;
+    });
   }
 }
 
@@ -3117,12 +3474,690 @@ function initThemeButtons() {
   setTheme(saved);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   SCIM CONNECTOR DEFINITIONS
+   Maps each SCIM-ready app to its connector metadata and
+   required credential fields shown in the setup modal.
+══════════════════════════════════════════════════════════════ */
+const SCIM_CONNECTOR_DEFS = {
+  zoom: {
+    appName: 'zoom',
+    label: 'Zoom',
+    icon: '📹',
+    tokenLabel: 'Account-Level OAuth Token',
+    tokenPlaceholder: 'Paste your Zoom OAuth Bearer token…',
+    orgLabel: 'Account ID',
+    orgPlaceholder: 'e.g. ABC123XYZ',
+    helpUrl: 'https://support.zoom.us/hc/en-us/articles/360000012523',
+    helpText: 'Enable SCIM under Admin → Advanced → SCIM Provisioning.',
+  },
+  github: {
+    appName: 'github',
+    label: 'GitHub',
+    icon: '🐙',
+    tokenLabel: 'Personal Access Token (PAT)',
+    tokenPlaceholder: 'ghp_…',
+    orgLabel: 'Organisation Slug',
+    orgPlaceholder: 'e.g. terzocloud',
+    helpUrl: 'https://docs.github.com/en/enterprise-cloud@latest/admin/identity-and-access-management/provisioning-user-accounts-with-scim',
+    helpText: 'Token needs admin:org and scim:enterprise scope. Requires GitHub Enterprise Cloud.',
+  },
+  google_workspace: {
+    appName: 'google_workspace',
+    label: 'Google Workspace',
+    icon: '🔵',
+    tokenLabel: 'Service Account JSON',
+    tokenPlaceholder: 'Paste entire service account JSON here…',
+    orgLabel: 'Admin Email',
+    orgPlaceholder: 'admin@yourdomain.com',
+    helpUrl: 'https://developers.google.com/identity/protocols/oauth2/service-account',
+    helpText: 'Enable domain-wide delegation; grant admin.directory and provisioning API scopes.',
+  },
+  slack: {
+    appName: 'slack',
+    label: 'Slack',
+    icon: '💬',
+    tokenLabel: 'Bot OAuth Token',
+    tokenPlaceholder: 'xoxb-…',
+    orgLabel: 'Workspace Domain',
+    orgPlaceholder: 'e.g. terzocloud.slack.com',
+    helpUrl: 'https://api.slack.com/scim',
+    helpText: 'Install the app in your workspace with users:read and users:write scopes.',
+  },
+  microsoft_365: {
+    appName: 'microsoft_365',
+    label: 'Microsoft 365',
+    icon: '🪟',
+    tokenLabel: 'Azure AD App Client Secret',
+    tokenPlaceholder: 'Paste client secret value…',
+    orgLabel: 'Tenant ID / Domain',
+    orgPlaceholder: 'e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+    helpUrl: 'https://learn.microsoft.com/en-us/azure/active-directory/app-provisioning/use-scim-to-provision-users-and-groups',
+    helpText: 'Register an Azure AD app; grant User.ReadWrite.All and Directory.ReadWrite.All permissions.',
+  },
+  aws: {
+    appName: 'aws',
+    label: 'AWS IAM Identity Center',
+    icon: '☁️',
+    tokenLabel: 'SCIM Bearer Token',
+    tokenPlaceholder: 'Paste token from IAM Identity Center SCIM settings…',
+    orgLabel: 'SCIM Endpoint URL',
+    orgPlaceholder: 'https://scim.us-east-1.amazonaws.com/…',
+    helpUrl: 'https://docs.aws.amazon.com/singlesignon/latest/userguide/provision-automatically.html',
+    helpText: 'Enable automatic provisioning in IAM Identity Center; copy the endpoint URL and token.',
+  },
+};
+
+/* Map a software inventory app name to a SCIM_CONNECTOR_DEFS key */
+function scimConnectorKey(appName){
+  if(!appName) return null;
+  const n = appName.toLowerCase().trim();
+  if(n.includes('zoom'))            return 'zoom';
+  if(n.includes('github'))          return 'github';
+  if(n.includes('google workspace') || n==='google_workspace') return 'google_workspace';
+  if(n.includes('slack'))           return 'slack';
+  if(n.includes('microsoft') || n.includes('office 365') || n.includes('microsoft_365')) return 'microsoft_365';
+  if(n.includes('aws') || n.includes('amazon'))  return 'aws';
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCIM READINESS AUDIT
+   Knowledge base: app name (lowercase key) → vendor plans
+   pricePerUserMonth = null means "contact sales / custom pricing"
+══════════════════════════════════════════════════════════════ */
+const SCIM_PLAN_DB = {
+  // ── Inventory apps ───────────────────────────────────────────────────────
+  'zoom': { vendor:'Zoom', plans:[
+    { name:'Free',          aliases:['free','basic'],                                       ppu:0,     scim:false },
+    { name:'Pro',           aliases:['pro plan','zoom pro'],                                ppu:13.33, scim:false },
+    { name:'Business',      aliases:['zoom business'],                                      ppu:18.33, scim:true  },
+    { name:'Business Plus', aliases:['business+','zoom workspace business plus','zoom workspace business+'], ppu:22.49, scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan','zoom enterprise'],                  ppu:null,  scim:true  },
+  ]},
+  'adobe': { vendor:'Adobe Acrobat', plans:[
+    { name:'Business Plan', aliases:['business','teams','adobe acrobat business'],          ppu:29.99, scim:false },
+    { name:'Enterprise',    aliases:['enterprise plan','adobe enterprise'],                 ppu:null,  scim:true  },
+  ]},
+  'asana': { vendor:'Asana', plans:[
+    { name:'Personal',      aliases:['free','personal plan'],                               ppu:0,     scim:false },
+    { name:'Starter',       aliases:['starter plan'],                                       ppu:10.99, scim:false },
+    { name:'Advanced',      aliases:['advanced plan','business starter plan','business starter'], ppu:24.99, scim:false },
+    { name:'Enterprise',    aliases:['enterprise plan'],                                    ppu:null,  scim:true  },
+    { name:'Enterprise+',   aliases:['enterprise plus'],                                    ppu:null,  scim:true  },
+  ]},
+  'jira': { vendor:'Atlassian Jira', plans:[
+    { name:'Free',          aliases:[],                                                     ppu:0,     scim:false },
+    { name:'Standard',      aliases:['standard plan','atlassian standard'],                 ppu:7.53,  scim:false },
+    { name:'Premium',       aliases:['premium plan','atlassian premium'],                   ppu:13.53, scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan','atlassian enterprise'],             ppu:null,  scim:true  },
+  ]},
+  'atlassian': { vendor:'Atlassian', plans:[
+    { name:'Free',          aliases:[],                                                     ppu:0,     scim:false },
+    { name:'Standard',      aliases:['standard plan'],                                      ppu:7.53,  scim:false },
+    { name:'Premium',       aliases:['premium plan'],                                       ppu:13.53, scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan'],                                    ppu:null,  scim:true  },
+  ]},
+  'confluence': { vendor:'Atlassian Confluence', plans:[
+    { name:'Free',          aliases:[],                                                     ppu:0,     scim:false },
+    { name:'Standard',      aliases:['standard plan'],                                      ppu:5.75,  scim:false },
+    { name:'Premium',       aliases:['premium plan'],                                       ppu:11,    scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan'],                                    ppu:null,  scim:true  },
+  ]},
+  'github': { vendor:'GitHub', plans:[
+    { name:'Free',             aliases:[],                                                  ppu:0,     scim:false },
+    { name:'Team',             aliases:['team plan','github team'],                         ppu:3.67,  scim:false },
+    { name:'Enterprise Cloud', aliases:['enterprise','enterprise plan','enterprise cloud'], ppu:21,    scim:true  },
+  ]},
+  'google workspace': { vendor:'Google Workspace', plans:[
+    { name:'Business Starter',   aliases:['business starter'],                             ppu:7,     scim:true  },
+    { name:'Business Standard',  aliases:['business standard'],                            ppu:14,    scim:true  },
+    { name:'Business Plus',      aliases:['business+','business plus plan'],               ppu:22,    scim:true  },
+    { name:'Enterprise Starter', aliases:['enterprise starter'],                           ppu:null,  scim:true  },
+    { name:'Enterprise Standard',aliases:['enterprise standard'],                          ppu:null,  scim:true  },
+    { name:'Enterprise Plus',    aliases:['enterprise plus','enterprise'],                 ppu:null,  scim:true  },
+  ]},
+  'google': { vendor:'Google Workspace', plans:[
+    { name:'Business Starter',   aliases:['business starter'],                             ppu:7,     scim:true  },
+    { name:'Business Standard',  aliases:['business standard'],                            ppu:14,    scim:true  },
+    { name:'Business Plus',      aliases:['business plus','business+'],                    ppu:22,    scim:true  },
+    { name:'Enterprise Standard',aliases:['enterprise standard','enterprise'],             ppu:null,  scim:true  },
+  ]},
+  'hubspot': { vendor:'HubSpot', plans:[
+    { name:'Free',          aliases:[],                                                     ppu:0,     scim:false },
+    { name:'Starter',       aliases:['starter plan'],                                       ppu:15,    scim:false },
+    { name:'Professional',  aliases:['professional plan','hubspot professional'],           ppu:90,    scim:false },
+    { name:'Enterprise',    aliases:['enterprise plan','hubspot enterprise'],               ppu:150,   scim:true  },
+  ]},
+  'intellij': { vendor:'IntelliJ IDEA', plans:[
+    { name:'IntelliJ Ultimate', aliases:['intellij','ultimate','intellij idea ultimate','intellij ultimate'], ppu:24.9, scim:false },
+  ]},
+  'jetbrains': { vendor:'JetBrains', plans:[
+    { name:'IntelliJ Ultimate', aliases:['intellij','ultimate'],                            ppu:24.9,  scim:false },
+  ]},
+  'loom': { vendor:'Loom', plans:[
+    { name:'Starter',       aliases:['free','starter plan'],                                ppu:0,     scim:false },
+    { name:'Business',      aliases:['loom business','business plan'],                      ppu:8,     scim:false },
+    { name:'Business+AI',   aliases:['business ai','loom business ai'],                     ppu:12.5,  scim:false },
+    { name:'Enterprise',    aliases:['enterprise plan','loom enterprise'],                  ppu:null,  scim:true  },
+  ]},
+  'microsoft 365': { vendor:'Microsoft 365', plans:[
+    { name:'Business Basic',    aliases:['basic','m365 basic'],                             ppu:6,     scim:true  },
+    { name:'Business Standard', aliases:['standard','m365 standard'],                      ppu:12.5,  scim:true  },
+    { name:'Business Premium',  aliases:['premium','m365 premium'],                        ppu:22,    scim:true  },
+    { name:'E3',                aliases:['enterprise e3'],                                  ppu:36,    scim:true  },
+    { name:'E5',                aliases:['enterprise e5'],                                  ppu:57,    scim:true  },
+  ]},
+  'office 365': { vendor:'Microsoft 365', plans:[
+    { name:'Business Basic',    aliases:['basic'],                                          ppu:6,     scim:true  },
+    { name:'Business Standard', aliases:['standard'],                                      ppu:12.5,  scim:true  },
+    { name:'Business Premium',  aliases:['premium'],                                       ppu:22,    scim:true  },
+  ]},
+  'microsoft': { vendor:'Microsoft 365', plans:[
+    { name:'Business Premium',  aliases:['premium','business premium'],                    ppu:22,    scim:true  },
+  ]},
+  'slack': { vendor:'Slack', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Pro',               aliases:['slack pro','pro plan'],                           ppu:7.25,  scim:false },
+    { name:'Business+',         aliases:['business plus','slack business+','slack business plus'], ppu:15, scim:true  },
+    { name:'Enterprise Grid',   aliases:['enterprise','enterprise grid'],                  ppu:null,  scim:true  },
+  ]},
+  'mosyle': { vendor:'Mosyle MDM', plans:[
+    { name:'Free',              aliases:['free','mosyle fuse','mosyle free'],               ppu:0,     scim:false },
+    { name:'Business',          aliases:['mosyle business','business plan'],                ppu:1,     scim:true  },
+    { name:'Business+Security', aliases:['business security'],                             ppu:1.5,   scim:true  },
+  ]},
+  'openvpn': { vendor:'OpenVPN', plans:[
+    { name:'Self-hosted',       aliases:['open source','self-hosted','access server','openvpn'], ppu:0, scim:false },
+  ]},
+  'canva': { vendor:'Canva', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Pro',               aliases:['canva pro','pro plan'],                           ppu:15,    scim:false },
+    { name:'Teams',             aliases:['canva teams','teams plan'],                       ppu:8.33,  scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','canva enterprise'],             ppu:null,  scim:true  },
+  ]},
+  'postman': { vendor:'Postman', plans:[
+    { name:'Free',              aliases:['free','freeware'],                                ppu:0,     scim:false },
+    { name:'Basic',             aliases:['basic plan'],                                     ppu:19,    scim:false },
+    { name:'Professional',      aliases:['professional plan'],                              ppu:39,    scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','postman enterprise'],           ppu:49,    scim:true  },
+  ]},
+  'freshworks': { vendor:'Freshworks', plans:[
+    { name:'Growth',            aliases:['growth plan'],                                    ppu:null,  scim:false },
+    { name:'Pro',               aliases:['pro plan'],                                       ppu:null,  scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','freshworks enterprise'],        ppu:null,  scim:true  },
+  ]},
+  'windsurf': { vendor:'Windsurf', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Pro',               aliases:['pro plan'],                                       ppu:15,    scim:false },
+    { name:'Teams',             aliases:['teams plan','team plan','windsurf teams'],        ppu:30,    scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','windsurf enterprise'],          ppu:60,    scim:true  },
+  ]},
+  'plaid': { vendor:'Plaid', plans:[
+    { name:'Pay-as-you-go',     aliases:['payg','pay as you go'],                           ppu:0,     scim:false },
+  ]},
+  'productboard': { vendor:'ProductBoard', plans:[
+    { name:'Maker',             aliases:['maker plan'],                                     ppu:19,    scim:false },
+    { name:'Pro',               aliases:['pro plan','productboard pro'],                    ppu:59,    scim:false },
+    { name:'Scale',             aliases:['scale plan'],                                     ppu:null,  scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','productboard enterprise'],      ppu:null,  scim:true  },
+  ]},
+  'docusign': { vendor:'DocuSign', plans:[
+    { name:'Personal',          aliases:['personal plan'],                                  ppu:10,    scim:false },
+    { name:'Standard',          aliases:['standard plan'],                                  ppu:25,    scim:false },
+    { name:'Business Pro',      aliases:['business pro','business pro envelope','envelope edition','envelope'], ppu:40, scim:false },
+    { name:'Enterprise Pro',    aliases:['enterprise pro','enterprise plan','enterprise'],  ppu:null,  scim:true  },
+  ]},
+  'vercel': { vendor:'Vercel', plans:[
+    { name:'Hobby',             aliases:['hobby plan','free'],                              ppu:0,     scim:false },
+    { name:'Pro',               aliases:['pro plan','vercel pro'],                          ppu:20,    scim:false },
+    { name:'Pro+SCIM Add-on',   aliases:['pro scim','pro addon'],                           ppu:null,  scim:true  },
+    { name:'Enterprise',        aliases:['enterprise plan','vercel enterprise'],            ppu:null,  scim:true  },
+  ]},
+  'twilio': { vendor:'Twilio SendGrid', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Essentials',        aliases:['essentials plan'],                                ppu:15,    scim:false },
+    { name:'Pro',               aliases:['pro plan','pro 100k','100k mails'],               ppu:90,    scim:false },
+    { name:'Premier',           aliases:['premier plan'],                                   ppu:null,  scim:false },
+  ]},
+  'sendgrid': { vendor:'Twilio SendGrid', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Pro',               aliases:['pro plan'],                                       ppu:90,    scim:false },
+    { name:'Premier',           aliases:['premier plan'],                                   ppu:null,  scim:false },
+  ]},
+  'datadog': { vendor:'Datadog', plans:[
+    { name:'Free',              aliases:['free','pay as you go','pay-as-you-go','payg'],    ppu:0,     scim:false },
+    { name:'Pro',               aliases:['infrastructure pro','datadog pro'],               ppu:15,    scim:true  },
+    { name:'Enterprise',        aliases:['infrastructure enterprise','datadog enterprise'], ppu:23,    scim:true  },
+  ]},
+  'gong': { vendor:'Gong', plans:[
+    { name:'Foundation',        aliases:['foundation plan'],                                ppu:null,  scim:true  },
+    { name:'Full Bundle',       aliases:['full bundle','bundle'],                           ppu:null,  scim:true  },
+    { name:'Enterprise',        aliases:['enterprise plan'],                                ppu:null,  scim:true  },
+  ]},
+  'figma': { vendor:'Figma', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Professional',      aliases:['professional plan','figma professional'],         ppu:16,    scim:false },
+    { name:'Organization',      aliases:['org plan','organization plan'],                   ppu:55,    scim:true  },
+    { name:'Enterprise',        aliases:['enterprise plan','figma enterprise'],             ppu:90,    scim:true  },
+  ]},
+  'chatgpt': { vendor:'ChatGPT (OpenAI)', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Plus',              aliases:['chatgpt plus'],                                   ppu:20,    scim:false },
+    { name:'Business',          aliases:['teams','teams plan','chatgpt teams','chatgpt business'], ppu:25, scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','chatgpt enterprise'],           ppu:null,  scim:true  },
+  ]},
+  'openai': { vendor:'ChatGPT (OpenAI)', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Business',          aliases:['teams','teams plan'],                             ppu:25,    scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan'],                                ppu:null,  scim:true  },
+  ]},
+  'jenkins': { vendor:'Jenkins', plans:[
+    { name:'Open Source',       aliases:['open source','opensource','free'],                ppu:0,     scim:false },
+  ]},
+  'orum': { vendor:'Orum', plans:[
+    { name:'Enterprise',        aliases:['enterprise plan'],                                ppu:null,  scim:true  },
+  ]},
+  'apple business manager': { vendor:'Apple Business Manager', plans:[
+    { name:'Freeware',          aliases:['free','freeware'],                                ppu:0,     scim:false },
+  ]},
+  'apple': { vendor:'Apple Business Manager', plans:[
+    { name:'Freeware',          aliases:['free','freeware'],                                ppu:0,     scim:false },
+  ]},
+  'chatprd': { vendor:'ChatPRD', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Pro',               aliases:['pro plan','chatprd pro'],                         ppu:15,    scim:false },
+  ]},
+  'aws': { vendor:'AWS', plans:[
+    { name:'Pay-as-you-go',     aliases:['pay as you go','pay-as-you-go','payg','aws iam'], ppu:0,     scim:true  },
+  ]},
+  'amazon': { vendor:'AWS', plans:[
+    { name:'Pay-as-you-go',     aliases:['pay as you go'],                                  ppu:0,     scim:true  },
+  ]},
+  'miro': { vendor:'Miro', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Starter',           aliases:['starter plan','miro starter'],                    ppu:8,     scim:false },
+    { name:'Business',          aliases:['business plan','miro business'],                  ppu:16,    scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','miro enterprise'],              ppu:null,  scim:true  },
+  ]},
+  'claude': { vendor:'Claude (Anthropic)', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Pro',               aliases:['claude pro'],                                     ppu:20,    scim:false },
+    { name:'Teams',             aliases:['teams plan','teams plan standard','claude teams'], ppu:30,   scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan','claude enterprise'],            ppu:null,  scim:true  },
+  ]},
+  'anthropic': { vendor:'Claude (Anthropic)', plans:[
+    { name:'Free',              aliases:[],                                                 ppu:0,     scim:false },
+    { name:'Teams',             aliases:['teams plan','teams plan standard'],               ppu:30,    scim:false },
+    { name:'Enterprise',        aliases:['enterprise plan'],                                ppu:null,  scim:true  },
+  ]},
+  // ── Legacy / other entries ───────────────────────────────────────────────
+  'notion': { vendor:'Notion', plans:[
+    { name:'Free',          aliases:[],                 ppu:0,    scim:false },
+    { name:'Plus',          aliases:['plus plan'],      ppu:10,   scim:false },
+    { name:'Business',      aliases:['business plan'],  ppu:15,   scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan'],ppu:null, scim:true  },
+  ]},
+  'linear': { vendor:'Linear', plans:[
+    { name:'Free',          aliases:[],                 ppu:0,    scim:false },
+    { name:'Basic',         aliases:['basic plan'],     ppu:8,    scim:false },
+    { name:'Business',      aliases:['business plan'],  ppu:16,   scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan'],ppu:null, scim:true  },
+  ]},
+  '1password': { vendor:'1Password', plans:[
+    { name:'Teams',         aliases:['teams plan'],     ppu:4,    scim:false },
+    { name:'Business',      aliases:['business plan'],  ppu:8,    scim:true  },
+    { name:'Enterprise',    aliases:['enterprise plan'],ppu:null, scim:true  },
+  ]},
+};
+
+/* ── Lookup: find the best matching DB entry for an app name ── */
+function scimDbLookup(appName){
+  const n = appName.toLowerCase().trim();
+  // Exact match
+  if(SCIM_PLAN_DB[n]) return SCIM_PLAN_DB[n];
+  // Partial match — app name contains or is contained by a key
+  for(const key of Object.keys(SCIM_PLAN_DB)){
+    if(n.includes(key) || key.includes(n)) return SCIM_PLAN_DB[key];
+  }
+  return null;
+}
+
+/* ── Lookup current plan in db entry (fuzzy + alias matching) ── */
+function scimPlanLookup(dbEntry, planName){
+  if(!dbEntry || !planName) return null;
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const p = norm(planName);
+  for(const pl of dbEntry.plans){
+    const names = [pl.name, ...(pl.aliases||[])].map(norm);
+    if(names.some(n => {
+      if(n === p) return true;
+      // DB plan name is contained in the inventory plan name (e.g. "business plus" in "zoom workspace business plus")
+      if(n.length >= 5 && p.includes(n)) return true;
+      // Inventory plan name is contained in DB plan name (e.g. "enterprise plan" inside "enterprise cloud")
+      if(p.length >= 5 && n.includes(p)) return true;
+      return false;
+    })) return pl;
+  }
+  return null;
+}
+
+/* ── Find minimum SCIM-capable plan ── */
+function scimMinPlan(dbEntry){
+  if(!dbEntry) return null;
+  return dbEntry.plans.find(pl=>pl.scim) || null;
+}
+
+let _scimFilter = 'all';
+
+function setScimFilter(f){
+  _scimFilter = f;
+  ['all','ready','upgrade','unknown'].forEach(k=>{
+    const btn = document.getElementById('scimFilter'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(btn){ btn.className = k===f ? 'btn btn-sm' : 'btn btn-secondary btn-sm'; btn.style.background = k===f?'var(--primary)':''; btn.style.color = k===f?'#fff':''; btn.style.border = k===f?'none':''; }
+  });
+  renderScimAuditRows();
+}
+
+async function openScimAudit(){
+  _scimFilter = 'all';
+  setScimFilter('all');
+  const modal = document.getElementById('scimAuditModal');
+  modal.style.display = 'flex';
+  // Fetch latest connector states before rendering
+  try {
+    const resp = await authFetch(`${API}/admin/connectors`);
+    if(resp.ok) appConnectors = await resp.json();
+  } catch(e){ /* non-fatal */ }
+  renderScimAuditRows();
+}
+
+function closeScimAudit(){
+  document.getElementById('scimAuditModal').style.display = 'none';
+}
+
+function renderScimAuditRows(){
+  // Only SAAS apps
+  const saasList = software.filter(s => s.deploymentType === 'SAAS' && s.status !== 'Inactive');
+
+  // Build row data
+  const rows = saasList.map(s => {
+    const dbEntry  = scimDbLookup(s.name);
+    const curPlan  = scimPlanLookup(dbEntry, s.subscriptionPlan);
+    const minScim  = scimMinPlan(dbEntry);
+    const licenses = s.purchasedLicenses || s.usedLicenses || 0;
+
+    let status, statusLabel, statusColor, statusBg;
+    let reqPlan = null, reqPpu = null;
+    let curPpu  = curPlan ? curPlan.ppu : (s.licensePricePerUserMonth || null);
+    let annualDelta = null;
+
+    if(!dbEntry){
+      status = 'unknown'; statusLabel = '⚪ Unknown'; statusColor = 'var(--gray-500)'; statusBg = 'var(--gray-100)';
+    } else if(!curPlan){
+      // Plan name not matched in DB — show vendor known but plan not matched
+      status = 'unknown'; statusLabel = '⚪ Plan Not Matched'; statusColor = 'var(--gray-500)'; statusBg = 'var(--gray-100)';
+      // Still show the minimum SCIM plan as reference
+      if(minScim){ reqPlan = minScim.name; reqPpu = minScim.ppu; }
+    } else if(curPlan.scim){
+      status = 'ready'; statusLabel = '✅ SCIM Ready'; statusColor = '#16a34a'; statusBg = '#f0fdf4';
+    } else {
+      status = 'upgrade'; statusLabel = '🔶 Needs Upgrade'; statusColor = '#d97706'; statusBg = '#fffbeb';
+      if(minScim){ reqPlan = minScim.name; reqPpu = minScim.ppu; }
+      // Compute annual delta
+      if(curPpu !== null && reqPpu !== null && licenses > 0){
+        annualDelta = (reqPpu - curPpu) * licenses * 12;
+      }
+    }
+
+    return { s, status, statusLabel, statusColor, statusBg, curPlan, reqPlan, curPpu, reqPpu, licenses, annualDelta, dbEntry };
+  });
+
+  // Summary chips
+  const ready   = rows.filter(r=>r.status==='ready').length;
+  const upgrade = rows.filter(r=>r.status==='upgrade').length;
+  const unknown = rows.filter(r=>r.status==='unknown').length;
+  const totalDelta = rows.filter(r=>r.annualDelta!==null).reduce((a,r)=>a+r.annualDelta,0);
+
+  document.getElementById('scimAuditSummary').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;flex:1;min-width:160px">
+      <span style="font-size:20px">✅</span>
+      <div><div style="font-size:22px;font-weight:800;color:#16a34a;line-height:1">${ready}</div><div style="font-size:11px;color:#15803d;font-weight:600">SCIM Ready</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;flex:1;min-width:160px">
+      <span style="font-size:20px">🔶</span>
+      <div><div style="font-size:22px;font-weight:800;color:#d97706;line-height:1">${upgrade}</div><div style="font-size:11px;color:#b45309;font-weight:600">Needs Upgrade</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:10px;flex:1;min-width:160px">
+      <span style="font-size:20px">⚪</span>
+      <div><div style="font-size:22px;font-weight:800;color:var(--gray-600);line-height:1">${unknown}</div><div style="font-size:11px;color:var(--gray-500);font-weight:600">Plan Unknown</div></div>
+    </div>
+    ${totalDelta>0?`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;flex:1;min-width:180px">
+      <span style="font-size:20px">💸</span>
+      <div><div style="font-size:18px;font-weight:800;color:#dc2626;line-height:1">$${totalDelta.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}/yr</div><div style="font-size:11px;color:#b91c1c;font-weight:600">Total Upgrade Cost Delta</div></div>
+    </div>`:''}
+  `;
+
+  // Filter
+  const visible = _scimFilter === 'all' ? rows : rows.filter(r=>r.status===_scimFilter);
+
+  const body = document.getElementById('scimAuditBody');
+  if(!visible.length){
+    body.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray-400)">No apps match this filter.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = visible.map(({ s, status, statusLabel, statusColor, statusBg, curPlan, reqPlan, curPpu, reqPpu, licenses, annualDelta, dbEntry }) => {
+    const curPpuStr  = curPpu  !== null && curPpu  !== undefined ? `$${curPpu.toFixed(2)}` : '<span style="color:var(--gray-400)">—</span>';
+    const reqPpuStr  = reqPpu  !== null && reqPpu  !== undefined ? `$${reqPpu.toFixed(2)}`  : (reqPlan ? '<span style="color:var(--gray-400)">Custom</span>' : '<span style="color:var(--gray-400)">—</span>');
+    const deltaStr   = annualDelta !== null
+      ? `<span style="font-weight:700;color:#dc2626">+$${annualDelta.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</span>`
+      : (status==='ready' ? '<span style="color:#16a34a;font-weight:600">No cost</span>' : '<span style="color:var(--gray-400)">—</span>');
+    const reqPlanStr = reqPlan
+      ? `<span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600">${reqPlan}</span>`
+      : (status==='ready' ? '<span style="color:var(--gray-400);font-size:12px">Already on SCIM plan</span>' : '<span style="color:var(--gray-400)">—</span>');
+    const curPlanStr = s.subscriptionPlan
+      ? `<span style="background:#eff6ff;color:var(--primary);border:1px solid #bfdbfe;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600">${s.subscriptionPlan}</span>`
+      : '<span style="color:var(--gray-400);font-size:12px;font-style:italic">Not set</span>';
+
+    // Connector cell — only shown for SCIM-ready apps that have a connector def
+    const connKey = scimConnectorKey(s.name);
+    const connDef = connKey ? SCIM_CONNECTOR_DEFS[connKey] : null;
+    let connCell = `<td style="padding:10px 16px;text-align:center;background:#f8faff"></td>`;
+    if(status === 'ready' && connDef){
+      const existing = appConnectors.find(c => c.appName === connDef.appName);
+      if(existing && existing.enabled){
+        connCell = `<td style="padding:10px 16px;text-align:center;background:#f8faff">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <span style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:3px 10px;border-radius:9999px;font-size:11.5px;font-weight:700;white-space:nowrap">✓ Connected</span>
+            <button onclick="openConnectorSetup('${connDef.appName}','${s.csvId}')" style="background:none;border:none;color:var(--primary-light);font-size:11px;cursor:pointer;text-decoration:underline;padding:0">Edit</button>
+          </div>
+        </td>`;
+      } else {
+        connCell = `<td style="padding:10px 16px;text-align:center;background:#f8faff">
+          <button onclick="openConnectorSetup('${connDef.appName}','${s.csvId}')"
+            style="background:var(--primary);color:#fff;border:none;padding:5px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+            🔌 Set Up
+          </button>
+        </td>`;
+      }
+    }
+
+    return `<tr style="border-top:1px solid var(--gray-100)">
+      <td style="padding:12px 16px">
+        <div style="font-weight:700;font-size:13px;color:var(--gray-800)">${s.name}</div>
+        <div style="font-size:11px;color:var(--gray-400)">${dbEntry ? dbEntry.vendor : s.deploymentType}</div>
+      </td>
+      <td style="padding:12px 16px">${curPlanStr}</td>
+      <td style="padding:12px 16px;font-size:12px;color:var(--gray-600)">${licenses > 0 ? `<span class="tag">${licenses}</span>` : '<span style="color:var(--gray-400)">—</span>'}</td>
+      <td style="padding:12px 16px">
+        <span style="background:${statusBg};color:${statusColor};padding:3px 9px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap">${statusLabel}</span>
+      </td>
+      <td style="padding:12px 16px">${reqPlanStr}</td>
+      <td style="padding:12px 16px;text-align:right;font-size:12.5px;color:var(--gray-700)">${curPpuStr}</td>
+      <td style="padding:12px 16px;text-align:right;font-size:12.5px;color:var(--gray-700)">${reqPpuStr}</td>
+      <td style="padding:12px 16px;text-align:right;background:#fefce8">${deltaStr}</td>
+      ${connCell}
+    </tr>`;
+  }).join('');
+}
+
+function refreshOwnerBilledToDatalists(){
+  const names = users.filter(u=>u.first||u.last).map(u=>((u.first||'')+' '+(u.last||'')).trim());
+  const opts = names.map(n=>`<option value="${n}">`).join('');
+  ['dlSwOwnerPicker','dlSwBilledToPicker','dlSwdeOwnerPicker','dlSwdeBilledToPicker'].forEach(id=>{
+    const dl = document.getElementById(id);
+    if(dl) dl.innerHTML = opts;
+  });
+}
+
+/* ══ APP CONNECTOR SETUP ══ */
+let _connCurrentApp = null;  // appName key being edited
+
+function openConnectorSetup(appName, csvId){
+  const def = SCIM_CONNECTOR_DEFS[appName];
+  if(!def) return;
+  _connCurrentApp = appName;
+
+  // Populate modal fields from def
+  document.getElementById('connModalIcon').textContent  = def.icon;
+  document.getElementById('connModalTitle').textContent = `${def.label} — SCIM Connector`;
+  document.getElementById('connModalHelpText').textContent = def.helpText;
+  document.getElementById('connHelpLink').href          = def.helpUrl;
+  document.getElementById('connTokenLabel').textContent = def.tokenLabel;
+  document.getElementById('connTokenInput').placeholder = def.tokenPlaceholder;
+  document.getElementById('connOrgLabel').textContent   = def.orgLabel;
+  document.getElementById('connOrgInput').placeholder   = def.orgPlaceholder;
+
+  // Pre-fill existing values if connector already saved
+  const existing = appConnectors.find(c => c.appName === appName);
+  document.getElementById('connTokenInput').value   = '';   // never show stored token
+  document.getElementById('connOrgInput').value     = existing ? (existing.orgSlug || '') : '';
+  document.getElementById('connEnabledCheck').checked = existing ? !!existing.enabled : true;
+
+  // Show hint about existing token
+  const tokenArea = document.getElementById('connTokenInput');
+  if(existing && existing.tokenHint){
+    tokenArea.placeholder = `Current token ends in …${existing.tokenHint} — leave blank to keep`;
+  }
+
+  document.getElementById('connectorModal').style.display = 'flex';
+}
+
+function closeConnectorSetup(){
+  document.getElementById('connectorModal').style.display = 'none';
+  _connCurrentApp = null;
+}
+
+async function saveConnectorSetup(){
+  if(!_connCurrentApp) return;
+  const def = SCIM_CONNECTOR_DEFS[_connCurrentApp];
+  const token   = document.getElementById('connTokenInput').value.trim();
+  const orgSlug = document.getElementById('connOrgInput').value.trim();
+  const enabled = document.getElementById('connEnabledCheck').checked;
+
+  const existing = appConnectors.find(c => c.appName === _connCurrentApp);
+  // If no token entered and there's already a saved connector, keep existing token (don't send blank)
+  if(!token && !existing){
+    alert(`Please enter the ${def.tokenLabel} to save this connector.`);
+    return;
+  }
+
+  const btn = document.getElementById('connSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const payload = { enabled, orgSlug, displayName: def.label };
+    if(token) payload.apiToken = token;
+
+    const resp = await authFetch(`${API}/admin/connectors/${_connCurrentApp}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err.error || `HTTP ${resp.status}`);
+    }
+
+    const saved = await resp.json();
+    // Update local cache
+    const idx = appConnectors.findIndex(c => c.appName === _connCurrentApp);
+    if(idx >= 0) appConnectors[idx] = saved;
+    else appConnectors.push(saved);
+
+    closeConnectorSetup();
+    renderScimAuditRows();   // refresh table to show ✓ Connected
+    showToast(`${def.label} connector ${enabled ? 'enabled' : 'saved'} successfully.`, 'success');
+  } catch(e){
+    alert(`Failed to save connector: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Connector`;
+  }
+}
+
+async function testConnectorSetup(){
+  if(!_connCurrentApp) return;
+  const existing = appConnectors.find(c => c.appName === _connCurrentApp);
+  if(!existing){
+    alert('Save the connector first before testing the connection.');
+    return;
+  }
+  const btn = document.getElementById('connTestBtn');
+  const resultDiv = document.getElementById('connTestResult');
+  btn.disabled = true;
+  btn.textContent = 'Testing…';
+  resultDiv.style.display = 'none';
+  try {
+    const resp = await authFetch(`${API}/admin/connectors/${_connCurrentApp}/test`, { method: 'POST' });
+    const data = await resp.json().catch(()=>({}));
+    if(resp.ok && data.ok){
+      resultDiv.style.cssText = 'display:block;margin:0 24px 0;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:500;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0';
+      resultDiv.textContent = `✅ ${data.message || 'Connection successful!'}`;
+    } else {
+      resultDiv.style.cssText = 'display:block;margin:0 24px 0;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:500;background:#fef2f2;color:#dc2626;border:1px solid #fecaca';
+      resultDiv.textContent = `❌ ${data.message || 'Connection test failed.'}`;
+    }
+  } catch(e){
+    resultDiv.style.cssText = 'display:block;margin:0 24px 0;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:500;background:#fef2f2;color:#dc2626;border:1px solid #fecaca';
+    resultDiv.textContent = `❌ Error: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="m5 3 14 9-14 9V3z"/></svg> Test Connection`;
+  }
+}
+
 /* ══ INIT ══ */
 (async () => {
   const ok = await initAuth(); // JWT guard — redirects to /login if invalid
   if (!ok) return;
   await loadData();
+  initColPickers();
+  refreshOwnerBilledToDatalists();
   initThemeButtons();
+
+  // ── SCIM auto-refresh: poll software data every 60s ──────────────────────
+  setInterval(async () => {
+    try {
+      const snap = software.map(s => s.csvId + '|' + (s.subscriptionPlan||'') + '|' + (s.purchasedLicenses||0)).join(',');
+      const resp = await authFetch(`${API}/software`);
+      if(!resp.ok) return;
+      const fresh = await resp.json();
+      const snapFresh = fresh.map(s => s.csvId + '|' + (s.subscriptionPlan||'') + '|' + (s.purchasedLicenses||0)).join(',');
+      if(snap !== snapFresh){
+        software = fresh;
+        renderSoftware();
+        refreshOwnerBilledToDatalists();
+        // If SCIM modal is open, re-render it live
+        const modal = document.getElementById('scimAuditModal');
+        if(modal && modal.style.display === 'flex') renderScimAuditRows();
+      }
+    } catch(e){ /* silent — don't interrupt the user */ }
+  }, 60000);
 })();
 
 /* ══ DEPT USERS MODAL ══ */
@@ -3296,8 +4331,8 @@ function closeDeptModal() {
 
             <div class="swde-section-title">👤 Ownership</div>
 
-            <div class="form-group"><label>Owner</label><input type="text" id="swdeOwner" placeholder="Owner name"></div>
-            <div class="form-group"><label>Billed To</label><input type="text" id="swdeBilledTo" placeholder="e.g. Eric Pritchett"></div>
+            <div class="form-group"><label>Owner</label><input type="text" id="swdeOwner" placeholder="Type to search user…" list="dlSwdeOwnerPicker" autocomplete="off"><datalist id="dlSwdeOwnerPicker"></datalist></div>
+            <div class="form-group"><label>Billed To</label><input type="text" id="swdeBilledTo" placeholder="Type to search user…" list="dlSwdeBilledToPicker" autocomplete="off"><datalist id="dlSwdeBilledToPicker"></datalist></div>
             <div class="form-group swde-full"><label>Admin(s)</label>
               <div class="tag-picker" id="swdeAdminPicker" onclick="document.getElementById('swdeAdminInput').focus()">
                 <span id="swdeAdminChips"></span>
@@ -3356,6 +4391,124 @@ function closeDeptModal() {
 </div><!-- /swDmOverlay -->
 
 <!-- DEPT USERS MODAL -->
+<!-- ══ SCIM AUDIT MODAL ══ -->
+<div id="scimAuditModal" onclick="if(event.target===this)closeScimAudit()" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;backdrop-filter:blur(3px)">
+  <div style="background:#fff;border-radius:16px;width:min(1100px,100%);box-shadow:0 24px 80px rgba(0,0,0,.22);margin:auto">
+    <!-- Header -->
+    <div style="padding:20px 26px 16px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#1e40af;fill:none;stroke-width:2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--gray-800)">SCIM Readiness Audit</div>
+          <div style="font-size:11.5px;color:var(--gray-400)">Which SAAS apps can use SCIM and what upgrades are needed</div>
+        </div>
+      </div>
+      <button onclick="closeScimAudit()" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:22px;line-height:1;padding:4px 8px;border-radius:8px" title="Close">&times;</button>
+    </div>
+    <!-- Summary chips -->
+    <div id="scimAuditSummary" style="display:flex;gap:12px;padding:16px 26px;border-bottom:1px solid var(--gray-100);flex-wrap:wrap"></div>
+    <!-- Filters -->
+    <div style="padding:10px 26px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--gray-400);font-weight:600">Filter:</span>
+      <button class="btn btn-sm" id="scimFilterAll"    onclick="setScimFilter('all')"     style="background:var(--primary);color:#fff;border:none">All</button>
+      <button class="btn btn-secondary btn-sm" id="scimFilterReady"   onclick="setScimFilter('ready')"   >✅ SCIM Ready</button>
+      <button class="btn btn-secondary btn-sm" id="scimFilterUpgrade" onclick="setScimFilter('upgrade')" >🔶 Needs Upgrade</button>
+      <button class="btn btn-secondary btn-sm" id="scimFilterUnknown" onclick="setScimFilter('unknown')" >⚪ Unknown Plan</button>
+    </div>
+    <!-- Table -->
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:var(--gray-50)">
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">App</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Current Plan</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Licenses</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">SCIM Status</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Required Plan</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Current Cost/user/mo</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Upgrade Cost/user/mo</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;background:#fefce8">Annual Cost Delta</th>
+            <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:600;color:#1e40af;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;background:#eff6ff">Connector</th>
+          </tr>
+        </thead>
+        <tbody id="scimAuditBody"></tbody>
+      </table>
+    </div>
+    <!-- Footer note -->
+    <div style="padding:14px 26px;border-top:1px solid var(--gray-100);font-size:11px;color:var(--gray-400);display:flex;align-items:center;gap:8px">
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      Plan pricing shown is per-user/month (billed annually) based on publicly available rates as of early 2025. Actual pricing may vary — confirm with each vendor.
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONNECTOR SETUP MODAL ══ -->
+<div id="connectorModal" onclick="if(event.target===this)closeConnectorSetup()" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)">
+  <div style="background:#fff;border-radius:16px;width:min(540px,100%);box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden">
+    <!-- Header -->
+    <div style="padding:18px 24px 14px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="connModalIcon" style="font-size:26px;line-height:1"></div>
+        <div>
+          <div id="connModalTitle" style="font-size:15px;font-weight:700;color:var(--gray-800)">Configure Connector</div>
+          <div style="font-size:11.5px;color:var(--gray-400)">SCIM 2.0 Integration</div>
+        </div>
+      </div>
+      <button onclick="closeConnectorSetup()" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:22px;line-height:1;padding:4px 8px;border-radius:8px" title="Close">&times;</button>
+    </div>
+    <!-- Body -->
+    <div style="padding:20px 24px">
+      <!-- Help banner -->
+      <div id="connModalHelp" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#1e40af;display:flex;align-items:flex-start;gap:8px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span id="connModalHelpText"></span>
+      </div>
+      <!-- Token field -->
+      <div style="margin-bottom:14px">
+        <label id="connTokenLabel" style="display:block;font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:5px"></label>
+        <textarea id="connTokenInput" rows="3" placeholder=""
+          style="width:100%;padding:9px 11px;border:1px solid var(--gray-200);border-radius:8px;font-size:12.5px;font-family:monospace;resize:vertical;outline:none;transition:border .14s"
+          onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor='var(--gray-200)'"></textarea>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:3px">Stored encrypted in the database. Only the last 4 characters are shown after saving.</div>
+      </div>
+      <!-- Org / slug field -->
+      <div style="margin-bottom:18px">
+        <label id="connOrgLabel" style="display:block;font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:5px"></label>
+        <input id="connOrgInput" type="text" placeholder=""
+          style="width:100%;padding:9px 11px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;outline:none;transition:border .14s"
+          onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor='var(--gray-200)'" />
+      </div>
+      <!-- Enable toggle -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--gray-50);border-radius:10px;margin-bottom:4px">
+        <input type="checkbox" id="connEnabledCheck" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
+        <label for="connEnabledCheck" style="font-size:13px;font-weight:600;color:var(--gray-700);cursor:pointer">Enable this connector</label>
+        <span style="font-size:11.5px;color:var(--gray-400);margin-left:auto">Uncheck to pause without deleting credentials</span>
+      </div>
+    </div>
+    <!-- Test result banner -->
+    <div id="connTestResult" style="display:none;margin:0 24px 0;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:500"></div>
+    <!-- Footer -->
+    <div style="padding:14px 24px 18px;border-top:1px solid var(--gray-100);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a id="connHelpLink" href="#" target="_blank" rel="noopener"
+        style="font-size:12px;color:var(--primary-light);text-decoration:none;margin-right:auto;display:flex;align-items:center;gap:4px">
+        <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Setup guide
+      </a>
+      <button onclick="testConnectorSetup()" class="btn btn-secondary" id="connTestBtn">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="m5 3 14 9-14 9V3z"/></svg>
+        Test Connection
+      </button>
+      <button onclick="closeConnectorSetup()" class="btn btn-secondary">Cancel</button>
+      <button onclick="saveConnectorSetup()" class="btn btn-primary" id="connSaveBtn">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Connector
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="deptModal" onclick="if(event.target===this)closeDeptModal()">
   <div id="deptModalBox">
     <div id="deptModalHead">
