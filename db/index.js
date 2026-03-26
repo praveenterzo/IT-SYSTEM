@@ -1,6 +1,6 @@
 /**
  * db/index.js
- * MongoDB connection helper for TerzoCloud – User & Asset Management Portal
+ * MongoDB connection helper for Terzo – User & Asset Management Portal
  *
  * Usage:
  *   const { connect, disconnect } = require('./db');

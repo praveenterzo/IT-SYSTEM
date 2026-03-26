@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TerzoCloud – User & Asset Management Portal</title>
+  <title>Terzo – User & Asset Management Portal</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -20,7 +20,7 @@
     .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--gray-200); display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow-y: auto; }
     .logo { padding: 18px 18px 14px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; gap: 10px; }
     .logo-icon { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .logo-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; }
+    .logo-icon svg { width: 20px; height: 20px; fill: white; stroke: none; }
     .logo-text { font-size: 13px; font-weight: 700; color: var(--primary-dark); line-height: 1.2; }
     .logo-sub { font-size: 10px; color: var(--gray-400); }
     nav { padding: 14px 10px; flex: 1; }
@@ -652,10 +652,10 @@ body.support-theme-portal .sw-dm-box, body.support-theme-portal .sw-dm-head, bod
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-icon">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <svg viewBox="0 0 24 24" fill="white"><path d="M2 21L7.5 21L12.5 5L8.5 5Z"/><path d="M15.5 5L21.5 5L16 21L11 21Z"/><path d="M5.5 16L18.5 16L17.5 19L6.5 19Z" opacity="0.55"/></svg>
     </div>
     <div>
-      <div class="logo-text">TerzoCloud</div>
+      <div class="logo-text">Terzo</div>
       <div class="logo-sub">Asset Management Portal</div>
     </div>
   </div>
@@ -3175,7 +3175,7 @@ async function exportSwPDF(){
     const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
     const list = filteredSoftware();
     doc.setFontSize(18); doc.setTextColor(30,64,175);
-    doc.text('TerzoCloud — Software Inventory', 14, 16);
+    doc.text('Terzo — Software Inventory', 14, 16);
     doc.setFontSize(9); doc.setTextColor(100,116,139);
     const totalSpend = list.reduce((s,x)=>s+swTotalCost(x),0);
     const paidCount  = list.filter(x=>swTotalCost(x)>0).length;
@@ -3237,7 +3237,7 @@ async function exportUserPDF(){
     const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
     const list = filteredUsers();
     doc.setFontSize(18); doc.setTextColor(30,64,175);
-    doc.text('TerzoCloud — User Management', 14, 16);
+    doc.text('Terzo — User Management', 14, 16);
     doc.setFontSize(9); doc.setTextColor(100,116,139);
     doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Users: ${list.length}   |   Active: ${list.filter(u=>u.status==='Active').length}`, 14, 23);
     doc.autoTable({
@@ -3293,7 +3293,7 @@ async function exportAssetPDF(){
     const list = filteredAssets();
     const inUse = list.filter(a=>a.status==='In-Use').length;
     doc.setFontSize(18); doc.setTextColor(30,64,175);
-    doc.text('TerzoCloud — Device Inventory', 14, 16);
+    doc.text('Terzo — Device Inventory', 14, 16);
     doc.setFontSize(9); doc.setTextColor(100,116,139);
     doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}   |   Assets: ${list.length}   |   In-Use: ${inUse}`, 14, 23);
     doc.autoTable({
@@ -3909,7 +3909,7 @@ function swdeDeleteApp(){
 const EXPORT_DEFS = {
   users: {
     title: 'Users',
-    pdfTitle: 'TerzoCloud — User Management',
+    pdfTitle: 'Terzo — User Management',
     filename: () => `users-${new Date().toISOString().slice(0,10)}`,
     getList: () => filteredUsers(),
     cols: [
@@ -3934,7 +3934,7 @@ const EXPORT_DEFS = {
   },
   assets: {
     title: 'Devices',
-    pdfTitle: 'TerzoCloud — Device Inventory',
+    pdfTitle: 'Terzo — Device Inventory',
     filename: () => `assets-${new Date().toISOString().slice(0,10)}`,
     getList: () => filteredAssets(),
     cols: [
@@ -3954,7 +3954,7 @@ const EXPORT_DEFS = {
   },
   software: {
     title: 'Software',
-    pdfTitle: 'TerzoCloud — Software Inventory',
+    pdfTitle: 'Terzo — Software Inventory',
     filename: () => `software-${new Date().toISOString().slice(0,10)}`,
     getList: () => filteredSoftware(),
     cols: [

@@ -1,5 +1,5 @@
 /**
- * server.js — TerzoCloud Asset Portal  (modular monolith entry point)
+ * server.js — Terzo Asset Portal  (modular monolith entry point)
  *
  * Start:  node server.js
  * Dev:    npm run dev

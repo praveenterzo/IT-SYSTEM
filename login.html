@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TerzoCloud — Sign In</title>
+  <title>Terzo — Sign In</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -47,7 +47,7 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .logo-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
+    .logo-icon svg { width: 24px; height: 24px; fill: white; stroke: none; }
     .logo-text { font-size: 16px; font-weight: 800; color: #f0eeff; line-height: 1.2; }
     .logo-sub  { font-size: 11px; color: rgba(153,102,255,0.7); }
 
@@ -197,10 +197,10 @@
   <div class="login-card">
     <div class="logo-row">
       <div class="logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <svg viewBox="0 0 24 24" fill="white"><path d="M2 21L7.5 21L12.5 5L8.5 5Z"/><path d="M15.5 5L21.5 5L16 21L11 21Z"/><path d="M5.5 16L18.5 16L17.5 19L6.5 19Z" opacity="0.55"/></svg>
       </div>
       <div>
-        <div class="logo-text">TerzoCloud</div>
+        <div class="logo-text">Terzo</div>
         <div class="logo-sub">Asset Management Portal</div>
       </div>
     </div>
@@ -216,7 +216,7 @@
     <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="field">
         <label>Email address</label>
-        <input type="email" id="email" placeholder="you@terzocloud.com" required autocomplete="email"/>
+        <input type="email" id="email" placeholder="you@terzo.com" required autocomplete="email"/>
       </div>
       <div class="field">
         <label>Password</label>
@@ -254,7 +254,7 @@
       </div>
     </div>
 
-    <p class="hint">TerzoCloud · Internal Portal · Authorized access only</p>
+    <p class="hint">Terzo · Internal Portal · Authorized access only</p>
   </div>
 
   <script>

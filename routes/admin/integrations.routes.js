@@ -36,7 +36,7 @@ router.get('/', requireAuth, canManageIntegrations, async (req, res) => {
         smtpSecure: !!(emailSettings && emailSettings.smtpSecure),
         smtpUser: emailSettings ? emailSettings.smtpUser : '',
         fromEmail: emailSettings ? emailSettings.fromEmail : '',
-        fromName: emailSettings ? emailSettings.fromName : 'TerzoCloud Support',
+        fromName: emailSettings ? emailSettings.fromName : 'Terzo Support',
         appBaseUrl: emailSettings ? emailSettings.appBaseUrl : '',
         hasSmtpPass: !!(emailSettings && emailSettings.smtpPass),
       },
@@ -91,7 +91,7 @@ router.put('/', requireAuth, canManageIntegrations, async (req, res) => {
         smtpSecure: !!email.smtpSecure,
         smtpUser: String(email.smtpUser || '').trim(),
         fromEmail: String(email.fromEmail || '').trim(),
-        fromName: String(email.fromName || 'TerzoCloud Support').trim(),
+        fromName: String(email.fromName || 'Terzo Support').trim(),
         appBaseUrl: String(email.appBaseUrl || '').trim().replace(/\/+$/, ''),
       };
       if (email.smtpPass && String(email.smtpPass).trim()) {
